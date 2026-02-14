@@ -152,6 +152,16 @@ button,
   display: inline-block;
 }
 
+/* 表格中的按钮更紧凑 */
+td button,
+.btn-edit,
+.btn-cancel,
+.btn-danger {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
 button:hover,
 .btn-edit:hover,
 .btn-cancel:hover {
@@ -215,8 +225,11 @@ td form button {
   flex: 1;
 }
 
-.inline-form button {
+.inline-form button,
+.form-row button {
   flex-shrink: 0;
+  white-space: nowrap;
+  min-width: 60px;
 }
 
 /* 响应式设计 */
