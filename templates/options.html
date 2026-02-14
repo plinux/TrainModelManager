@@ -61,11 +61,29 @@
   </div>
 </div>
 
-<!-- 危险操作区域 -->
-<div class="danger-zone">
-  <h3>危险操作</h3>
-  <p class="warning-text">以下操作将删除所有数据并重新初始化数据库，此操作不可撤销！</p>
-  <button onclick="confirmReinit()" class="btn-danger-reinit">重新初始化数据库</button>
+<!-- 重新初始化数据库按钮 - 固定在右上角 -->
+<button onclick="openReinitDialog()" class="btn-danger-reinit">重新初始化数据库</button>
+
+<!-- 重新初始化数据库确认对话框 -->
+<div id="reinit-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>⚠️ 危险操作确认</h3>
+    </div>
+    <div class="modal-body">
+      <p class="warning-text">此操作将删除所有数据并重新初始化数据库！</p>
+      <p class="warning-text">此操作不可撤销，请确认是否继续？</p>
+
+      <div class="confirmation-step">
+        <p>请输入 <strong>yes</strong> 继续</p>
+        <input type="text" id="reinit-input" placeholder="请输入 yes" oninput="checkReinitInput()">
+        <div class="modal-buttons">
+          <button onclick="closeReinitDialog()" class="btn-cancel">取消</button>
+          <button onclick="proceedToFinalConfirmation()" class="btn-danger" id="reinit-confirm-btn" disabled>确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="tabs-container">

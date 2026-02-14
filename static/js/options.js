@@ -174,23 +174,38 @@ function showTab(tabId) {
   }
 }
 
-// 重新初始化数据库确认
-function confirmReinit() {
-  const confirmed = confirm('警告：此操作将删除所有数据并重新初始化数据库！\n\n此操作不可撤销，请确认是否继续？');
+// 重新初始化数据库确认对话框
+function openReinitDialog() {
+  document.getElementById('reinit-modal').style.display = 'flex';
+  document.getElementById('reinit-input').value = '';
+  document.getElementById('reinit-confirm-btn').disabled = true;
+}
 
+function closeReinitDialog() {
+  document.getElementById('reinit-modal').style.display = 'none';
+}
+
+function checkReinitInput() {
+  const input = document.getElementById('reinit-input');
+  const btn = document.getElementById('reinit-confirm-btn');
+  btn.disabled = input.value.trim().toLowerCase() !== 'yes';
+}
+
+function proceedToFinalConfirmation() {
+  closeReinitDialog();
+  const confirmed = confirm('真的要删除所有数据并重新初始化数据库吗？此操作不可撤销！');
   if (confirmed) {
-    // 二次确认
-    const doubleConfirmed = confirm('再次确认：真的要删除所有数据吗？');
-
-    if (doubleConfirmed) {
-      // 创建隐藏的表单并提交
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = '/options/reinit';
-
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-    }
+    submitReinit();
   }
+}
+
+function submitReinit() {
+  // 创建隐藏的表单并提交
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/options/reinit';
+
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
 }
