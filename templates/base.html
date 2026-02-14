@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}火车模型管理系统{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <nav>
+    <ul>
+      <li><a href="{{ url_for('index') }}">首页</a></li>
+      <li><a href="{{ url_for('locomotive') }}">机车模型</a></li>
+      <li><a href="{{ url_for('carriage') }}">车厢模型</a></li>
+      <li><a href="{{ url_for('trainset') }}">动车组模型</a></li>
+      <li><a href="{{ url_for('locomotive_head') }}">先头车模型</a></li>
+      <li><a href="{{ url_for('options') }}">选项维护</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
