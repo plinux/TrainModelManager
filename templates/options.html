@@ -56,7 +56,7 @@
     <h3>动车组信息</h3>
     <div class="tab-group">
       <button onclick="showTab('trainset_series')" class="tab-btn">动车组系列</button>
-      <button onclick="showTab('trainset_models')" class="tab-btn">动车组车型</button>
+      <button onclick="showTab('trainset_models')" class="tab-btn">动车组型号</button>
     </div>
   </div>
 </div>
@@ -450,10 +450,10 @@
 </div>
 
 <div id="trainset_models" class="tab-content" style="display:none;">
-  <h2>动车组车型</h2>
+  <h2>动车组型号</h2>
   <form method="POST" action="{{ url_for('add_trainset_model') }}">
     <div class="form-row">
-      <input type="text" name="name" placeholder="动车组车型" required>
+      <input type="text" name="name" placeholder="动车组型号" required>
       <select name="series_id" required>
         <option value="">选择系列</option>
         {% for series in trainset_series %}
