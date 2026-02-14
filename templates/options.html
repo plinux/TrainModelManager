@@ -85,10 +85,12 @@
     </thead>
     <tbody>
       {% for type in power_types %}
-      <tr>
-        <td>{{ type.name }}</td>
+      <tr data-id="{{ type.id }}" data-type="power_type" data-fields="name">
+        <td data-field="name">{{ type.name }}</td>
         <td>
-          <a href="{{ url_for('edit_power_type', id=type.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'power_type')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_power_type', id=type.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -114,10 +116,12 @@
     </thead>
     <tbody>
       {% for brand in brands %}
-      <tr>
-        <td>{{ brand.name }}</td>
+      <tr data-id="{{ brand.id }}" data-type="brand" data-fields="name">
+        <td data-field="name">{{ brand.name }}</td>
         <td>
-          <a href="{{ url_for('edit_brand', id=brand.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'brand')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_brand', id=brand.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -143,10 +147,12 @@
     </thead>
     <tbody>
       {% for merchant in merchants %}
-      <tr>
-        <td>{{ merchant.name }}</td>
+      <tr data-id="{{ merchant.id }}" data-type="merchant" data-fields="name">
+        <td data-field="name">{{ merchant.name }}</td>
         <td>
-          <a href="{{ url_for('edit_merchant', id=merchant.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'merchant')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_merchant', id=merchant.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -172,10 +178,12 @@
     </thead>
     <tbody>
       {% for depot in depots %}
-      <tr>
-        <td>{{ depot.name }}</td>
+      <tr data-id="{{ depot.id }}" data-type="depot" data-fields="name">
+        <td data-field="name">{{ depot.name }}</td>
         <td>
-          <a href="{{ url_for('edit_depot', id=depot.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'depot')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_depot', id=depot.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -201,10 +209,12 @@
     </thead>
     <tbody>
       {% for interface in chip_interfaces %}
-      <tr>
-        <td>{{ interface.name }}</td>
+      <tr data-id="{{ interface.id }}" data-type="chip_interface" data-fields="name">
+        <td data-field="name">{{ interface.name }}</td>
         <td>
-          <a href="{{ url_for('edit_chip_interface', id=interface.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'chip_interface')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_chip_interface', id=interface.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -230,10 +240,12 @@
     </thead>
     <tbody>
       {% for model in chip_models %}
-      <tr>
-        <td>{{ model.name }}</td>
+      <tr data-id="{{ model.id }}" data-type="chip_model" data-fields="name">
+        <td data-field="name">{{ model.name }}</td>
         <td>
-          <a href="{{ url_for('edit_chip_model', id=model.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'chip_model')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_chip_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -259,10 +271,12 @@
     </thead>
     <tbody>
       {% for series in locomotive_series %}
-      <tr>
-        <td>{{ series.name }}</td>
+      <tr data-id="{{ series.id }}" data-type="locomotive_series" data-fields="name">
+        <td data-field="name">{{ series.name }}</td>
         <td>
-          <a href="{{ url_for('edit_locomotive_series', id=series.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'locomotive_series')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_locomotive_series', id=series.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -304,12 +318,15 @@
     </thead>
     <tbody>
       {% for model in locomotive_models %}
-      <tr>
-        <td>{{ model.name }}</td>
-        <td>{{ model.series.name if model.series else '-' }}</td>
-        <td>{{ model.power_type.name if model.power_type else '-' }}</td>
+      <tr data-id="{{ model.id }}" data-type="locomotive_model" data-fields="name,series_id,power_type_id"
+          data-series="{{ model.series_id or '' }}" data-power="{{ model.power_type_id or '' }}">
+        <td data-field="name">{{ model.name }}</td>
+        <td data-field="series">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="power">{{ model.power_type.name if model.power_type else '-' }}</td>
         <td>
-          <a href="{{ url_for('edit_locomotive_model', id=model.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'locomotive_model')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_locomotive_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -335,10 +352,12 @@
     </thead>
     <tbody>
       {% for series in carriage_series %}
-      <tr>
-        <td>{{ series.name }}</td>
+      <tr data-id="{{ series.id }}" data-type="carriage_series" data-fields="name">
+        <td data-field="name">{{ series.name }}</td>
         <td>
-          <a href="{{ url_for('edit_carriage_series', id=series.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'carriage_series')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_carriage_series', id=series.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -380,12 +399,15 @@
     </thead>
     <tbody>
       {% for model in carriage_models %}
-      <tr>
-        <td>{{ model.name }}</td>
-        <td>{{ model.series.name if model.series else '-' }}</td>
-        <td>{{ model.type }}</td>
+      <tr data-id="{{ model.id }}" data-type="carriage_model" data-fields="name,series_id,type"
+          data-series="{{ model.series_id or '' }}" data-carriage-type="{{ model.type }}">
+        <td data-field="name">{{ model.name }}</td>
+        <td data-field="series">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="carriage_type">{{ model.type }}</td>
         <td>
-          <a href="{{ url_for('edit_carriage_model', id=model.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'carriage_model')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_carriage_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -411,10 +433,12 @@
     </thead>
     <tbody>
       {% for series in trainset_series %}
-      <tr>
-        <td>{{ series.name }}</td>
+      <tr data-id="{{ series.id }}" data-type="trainset_series" data-fields="name">
+        <td data-field="name">{{ series.name }}</td>
         <td>
-          <a href="{{ url_for('edit_trainset_series', id=series.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'trainset_series')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_trainset_series', id=series.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -456,12 +480,15 @@
     </thead>
     <tbody>
       {% for model in trainset_models %}
-      <tr>
-        <td>{{ model.name }}</td>
-        <td>{{ model.series.name if model.series else '-' }}</td>
-        <td>{{ model.power_type.name if model.power_type else '-' }}</td>
+      <tr data-id="{{ model.id }}" data-type="trainset_model" data-fields="name,series_id,power_type_id"
+          data-series="{{ model.series_id or '' }}" data-power="{{ model.power_type_id or '' }}">
+        <td data-field="name">{{ model.name }}</td>
+        <td data-field="series">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="power">{{ model.power_type.name if model.power_type else '-' }}</td>
         <td>
-          <a href="{{ url_for('edit_trainset_model', id=model.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'trainset_model')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
           <form method="POST" action="{{ url_for('delete_trainset_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -472,23 +499,23 @@
   </table>
 </div>
 
-<script src="/static/js/app.js"></script>
+<script src="/static/js/options.js"></script>
 
 <style>
 .tabs {
-  margin-bottom: 1rem;
+  margin-bottom:1rem;
 }
 
 /* 选项分组样式 */
 .option-groups {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap:1.5rem;
+  margin-bottom:2rem;
 }
 
 .option-group {
-  flex: 1;
+  flex:1;
   min-width: 200px;
 }
 
@@ -586,10 +613,6 @@
 
 .tab-content form {
   margin-bottom: 1.5rem;
-}
-
-.tab-content table {
-  margin-top: 1rem;
 }
 
 .tab-content table {

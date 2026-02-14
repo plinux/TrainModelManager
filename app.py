@@ -1217,6 +1217,65 @@ def auto_fill_trainset(model_id):
     'power_type_id': model.power_type_id
   })
 
+# 选项维护 API 路由（用于行内编辑）
+@app.route('/api/options/<string:type>/edit', methods=['POST'])
+def edit_option_api(type):
+  """选项编辑 API"""
+  id = request.form.get('id')
+
+  if type == 'power_type':
+    item = PowerType.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'brand':
+    item = Brand.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'merchant':
+    item = Merchant.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'depot':
+    item = Depot.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'chip_interface':
+    item = ChipInterface.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'chip_model':
+    item = ChipModel.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'locomotive_series':
+    item = LocomotiveSeries.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'carriage_series':
+    item = CarriageSeries.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'trainset_series':
+    item = TrainsetSeries.query.get_or_404(id)
+    item.name = request.form.get('name')
+  elif type == 'locomotive_model':
+    item = LocomotiveModel.query.get_or_404(id)
+    item.name = request.form.get('name')
+    item.series_id = int(request.form.get('series_id'))
+    item.power_type_id = int(request.form.get('power_type_id'))
+  elif type == 'carriage_model':
+    item = CarriageModel.query.get_or_404(id)
+    item.name = request.form.get('name')
+    item.series_id = int(request.form.get('series_id'))
+    item.type = request.form.get('type')
+  elif type == 'trainset_model':
+    item = TrainsetModel.query.get_or_404(id)
+    item.name = request.form.get('name')
+    item.series_id = int(request.form.get('series_id'))
+    item.power_type_id = int(request.form.get('power_type_id'))
+  else:
+    return jsonify({'success': False, 'error': '未知类型'}), 400
+
+  try:
+    db.session.commit()
+    return jsonify({'success': True})
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Error editing {type}: {str(e)}", exc_info=True)
+    return jsonify({'success': False, 'error': str(e)}), 500
+
 # 重新初始化
 @app.route('/options/reinit', methods=['POST'])
 def reinit_database():
