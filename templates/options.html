@@ -88,6 +88,7 @@
       <tr>
         <td>{{ type.name }}</td>
         <td>
+          <a href="{{ url_for('edit_power_type', id=type.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_power_type', id=type.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -116,6 +117,7 @@
       <tr>
         <td>{{ brand.name }}</td>
         <td>
+          <a href="{{ url_for('edit_brand', id=brand.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_brand', id=brand.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -144,6 +146,7 @@
       <tr>
         <td>{{ merchant.name }}</td>
         <td>
+          <a href="{{ url_for('edit_merchant', id=merchant.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_merchant', id=merchant.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -172,6 +175,7 @@
       <tr>
         <td>{{ depot.name }}</td>
         <td>
+          <a href="{{ url_for('edit_depot', id=depot.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_depot', id=depot.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -200,6 +204,7 @@
       <tr>
         <td>{{ interface.name }}</td>
         <td>
+          <a href="{{ url_for('edit_chip_interface', id=interface.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_chip_interface', id=interface.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -228,6 +233,7 @@
       <tr>
         <td>{{ model.name }}</td>
         <td>
+          <a href="{{ url_for('edit_chip_model', id=model.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_chip_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -256,6 +262,7 @@
       <tr>
         <td>{{ series.name }}</td>
         <td>
+          <a href="{{ url_for('edit_locomotive_series', id=series.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_locomotive_series', id=series.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -302,6 +309,7 @@
         <td>{{ model.series.name if model.series else '-' }}</td>
         <td>{{ model.power_type.name if model.power_type else '-' }}</td>
         <td>
+          <a href="{{ url_for('edit_locomotive_model', id=model.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_locomotive_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -330,6 +338,7 @@
       <tr>
         <td>{{ series.name }}</td>
         <td>
+          <a href="{{ url_for('edit_carriage_series', id=series.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_carriage_series', id=series.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -376,6 +385,7 @@
         <td>{{ model.series.name if model.series else '-' }}</td>
         <td>{{ model.type }}</td>
         <td>
+          <a href="{{ url_for('edit_carriage_model', id=model.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_carriage_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -404,6 +414,7 @@
       <tr>
         <td>{{ series.name }}</td>
         <td>
+          <a href="{{ url_for('edit_trainset_series', id=series.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_trainset_series', id=series.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -450,6 +461,7 @@
         <td>{{ model.series.name if model.series else '-' }}</td>
         <td>{{ model.power_type.name if model.power_type else '-' }}</td>
         <td>
+          <a href="{{ url_for('edit_trainset_model', id=model.id) }}" class="btn-edit">编辑</a>
           <form method="POST" action="{{ url_for('delete_trainset_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
