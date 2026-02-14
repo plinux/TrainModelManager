@@ -90,6 +90,54 @@ th {
   color: red;
 }
 
+/* 表单错误气泡样式 */
+.form-group.error label {
+  color: #dc3545;
+}
+
+.form-group.error label .error-bubble {
+  display: inline-block;
+  position: relative;
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: normal;
+  cursor: help;
+}
+
+.form-group.error label .error-bubble::before {
+  content: '?';
+  font-weight: bold;
+}
+
+.form-group.error input,
+.form-group.error select {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.form-group.error input:focus,
+.form-group.error select:focus {
+  outline: 2px solid #dc3545;
+  border-color: #dc3545;
+}
+
+/* 表单提交成功提示 */
+.form-success {
+  padding: 1rem;
+  background-color: #d4edda;
+  color: #155724;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.form-success.success-message {
+  display: none;
+}
+
 /* 通用按钮样式基础 */
 button,
 .btn-edit,

@@ -5,7 +5,7 @@
 {% block content %}
 <h1>车厢模型</h1>
 
-<form id="carriage-form" method="POST">
+<form id="carriage-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/carriage/add');">
   <div class="form-row">
     <div class="form-group">
       <label for="brand_id">品牌 *</label>
@@ -106,14 +106,6 @@
 </script>
 
 <script src="/static/js/app.js"></script>
-
-{% if errors %}
-<div class="error">
-  {% for error in errors %}
-  <p>{{ error }}</p>
-  {% endfor %}
-</div>
-{% endif %}
 
 <table>
   <thead>

@@ -123,6 +123,214 @@ def statistics():
     }
   })
 
+@app.route('/api/locomotive/add', methods=['POST'])
+def api_add_locomotive():
+  """AJAX 添加机车模型"""
+  try:
+    data = request.get_json()
+    scale = data.get('scale')
+    locomotive_number = data.get('locomotive_number')
+    decoder_number = data.get('decoder_number')
+
+    errors = []
+
+    # 格式验证
+    if locomotive_number and not validate_locomotive_number(locomotive_number):
+      errors.append({'field': 'locomotive_number', 'message': '机车号格式错误：应为4-12位数字，允许前导0'})
+    if decoder_number and not validate_decoder_number(decoder_number):
+      errors.append({'field': 'decoder_number', 'message': '编号格式错误：应为1-4位数字，无前导0'})
+
+    # 唯一性验证
+    if locomotive_number and check_duplicate('locomotive', 'locomotive_number', locomotive_number, scale):
+      errors.append({'field': 'locomotive_number', 'message': f'机车号 {locomotive_number} 在 {scale} 比例下已存在'})
+    if decoder_number and check_duplicate('locomotive', 'decoder_number', decoder_number, scale):
+      errors.append({'field': 'decoder_number', 'message': f'编号 {decoder_number} 在 {scale} 比例下已存在'})
+
+    if errors:
+      return jsonify({'success': False, 'errors': errors})
+
+    purchase_date = data.get('purchase_date')
+    purchase_date = purchase_date if purchase_date and purchase_date.strip() else date.today()
+
+    locomotive = Locomotive(
+      model_id=int(data.get('model_id')),
+      series_id=data.get('series_id'),
+      power_type_id=data.get('power_type_id'),
+      brand_id=int(data.get('brand_id')),
+      depot_id=data.get('depot_id'),
+      plaque=data.get('plaque'),
+      color=data.get('color'),
+      scale=scale,
+      locomotive_number=locomotive_number,
+      decoder_number=decoder_number,
+      chip_interface_id=data.get('chip_interface_id'),
+      chip_model_id=data.get('chip_model_id'),
+      price=data.get('price'),
+      total_price=calculate_price(data.get('price')),
+      item_number=data.get('item_number'),
+      purchase_date=purchase_date,
+      merchant_id=data.get('merchant_id')
+    )
+    db.session.add(locomotive)
+    db.session.commit()
+    logger.info(f"Locomotive added: ID={locomotive.id}")
+
+    return jsonify({'success': True, 'message': '机车模型添加成功'})
+  except Exception as e:
+    logger.error(f"Error adding locomotive: {e}")
+    return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/carriage/add', methods=['POST'])
+def api_add_carriage():
+  """AJAX 添加车厢模型"""
+  try:
+    data = request.get_json()
+    errors = []
+
+    # 验证车辆号格式
+    for i in range(10):
+      model_key = f'model_{i}'
+      car_number_key = f'car_number_{i}'
+
+      if data.get(model_key):
+        car_number = data.get(car_number_key)
+        if car_number and not validate_car_number(car_number):
+          errors.append({'field': car_number_key, 'message': f'车辆号 {car_number} 格式错误：应为3-10位数字，无前导0'})
+
+    if errors:
+      return jsonify({'success': False, 'errors': errors})
+
+    purchase_date = data.get('purchase_date')
+    purchase_date = purchase_date if purchase_date and purchase_date.strip() else date.today()
+
+    carriage_set = CarriageSet(
+      brand_id=int(data.get('brand_id')),
+      series_id=data.get('series_id'),
+      scale=data.get('scale'),
+      plaque=data.get('plaque'),
+      total_price=calculate_price(data.get('total_price')),
+      item_number=data.get('item_number'),
+      purchase_date=purchase_date,
+      merchant_id=data.get('merchant_id')
+    )
+    db.session.add(carriage_set)
+    db.session.flush()
+
+    # 添加车厢项
+    for i in range(10):
+      model_key = f'model_{i}'
+      if data.get(model_key):
+        carriage_item = CarriageItem(
+          carriage_set_id=carriage_set.id,
+          model_id=int(data.get(model_key)),
+          car_number=data.get(f'car_number_{i}'),
+          depot_id=data.get(f'depot_{i}'),
+          train_number=data.get(f'train_number_{i}'),
+          plaque=data.get(f'plaque_{i}'),
+          color=data.get(f'color_{i}'),
+          lighting=data.get(f'lighting_{i}')
+        )
+        db.session.add(carriage_item)
+
+    db.session.commit()
+    logger.info(f"Carriage set added: ID={carriage_set.id}")
+
+    return jsonify({'success': True, 'message': '车厢套装添加成功'})
+  except Exception as e:
+    logger.error(f"Error adding carriage: {e}")
+    return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/trainset/add', methods=['POST'])
+def api_add_trainset():
+  """AJAX 添加动车组模型"""
+  try:
+    data = request.get_json()
+    scale = data.get('scale')
+    trainset_number = data.get('trainset_number')
+    decoder_number = data.get('decoder_number')
+
+    errors = []
+
+    # 格式验证
+    if trainset_number and not validate_trainset_number(trainset_number):
+      errors.append({'field': 'trainset_number', 'message': '动车号格式错误：应为3-12位数字，允许前导0'})
+    if decoder_number and not validate_decoder_number(decoder_number):
+      errors.append({'field': 'decoder_number', 'message': '编号格式错误：应为1-4位数字，无前导0'})
+
+    # 唯一性验证
+    if trainset_number and check_duplicate('trainset', 'trainset_number', trainset_number, scale):
+      errors.append({'field': 'trainset_number', 'message': f'动车号 {trainset_number} 在 {scale} 比例下已存在'})
+    if decoder_number and check_duplicate('trainset', 'decoder_number', decoder_number, scale):
+      errors.append({'field': 'decoder_number', 'message': f'编号 {decoder_number} 在 {scale} 比例下已存在'})
+
+    if errors:
+      return jsonify({'success': False, 'errors': errors})
+
+    purchase_date = data.get('purchase_date')
+    purchase_date = purchase_date if purchase_date and purchase_date.strip() else date.today()
+
+    trainset = Trainset(
+      model_id=int(data.get('model_id')),
+      series_id=data.get('series_id'),
+      power_type_id=data.get('power_type_id'),
+      brand_id=int(data.get('brand_id')),
+      depot_id=data.get('depot_id'),
+      plaque=data.get('plaque'),
+      color=data.get('color'),
+      scale=scale,
+      trainset_number=trainset_number,
+      decoder_number=decoder_number,
+      head_light=True if data.get('head_light') == 'true' else False,
+      interior_light=data.get('interior_light'),
+      chip_interface_id=data.get('chip_interface_id'),
+      chip_model_id=data.get('chip_model_id'),
+      price=data.get('price'),
+      total_price=calculate_price(data.get('price')),
+      item_number=data.get('item_number'),
+      purchase_date=purchase_date,
+      merchant_id=data.get('merchant_id')
+    )
+    db.session.add(trainset)
+    db.session.commit()
+    logger.info(f"Trainset added: ID={trainset.id}")
+
+    return jsonify({'success': True, 'message': '动车组模型添加成功'})
+  except Exception as e:
+    logger.error(f"Error adding trainset: {e}")
+    return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/locomotive-head/add', methods=['POST'])
+def api_add_locomotive_head():
+  """AJAX 添加先头车模型"""
+  try:
+    data = request.get_json()
+
+    purchase_date = data.get('purchase_date')
+    purchase_date = purchase_date if purchase_date and purchase_date.strip() else date.today()
+
+    locomotive_head = LocomotiveHead(
+      model_id=int(data.get('model_id')),
+      brand_id=int(data.get('brand_id')),
+      depot_id=data.get('depot_id'),
+      special_color=data.get('special_color'),
+      scale=data.get('scale'),
+      head_light=True if data.get('head_light') == 'true' else False,
+      interior_light=data.get('interior_light'),
+      price=data.get('price'),
+      total_price=calculate_price(data.get('price')),
+      item_number=data.get('item_number'),
+      purchase_date=purchase_date,
+      merchant_id=data.get('merchant_id')
+    )
+    db.session.add(locomotive_head)
+    db.session.commit()
+    logger.info(f"Locomotive head added: ID={locomotive_head.id}")
+
+    return jsonify({'success': True, 'message': '先头车模型添加成功'})
+  except Exception as e:
+    logger.error(f"Error adding locomotive head: {e}")
+    return jsonify({'success': False, 'error': str(e)})
+
 def validate_locomotive_number(number):
   """验证机车号格式：4-12位数字，允许前导0"""
   return bool(re.match(r'^\d{4,12}$', number))

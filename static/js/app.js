@@ -215,3 +215,107 @@ function confirmReinit() {
     }
   }
 }
+
+// AJAX 表单提交和错误处理
+function submitFormAjax(form, apiUrl) {
+  const formData = new FormData(form);
+  const formDataObj = {};
+
+  // 将 FormData 转换为对象
+  formData.forEach((value, key) => {
+    formDataObj[key] = value;
+  });
+
+  // 清除之前的错误
+  clearErrors(form);
+
+  return fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(formDataObj)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      // 显示成功消息并刷新页面
+      showSuccessMessage(form, data.message || '添加成功');
+      setTimeout(() => {
+        location.reload();
+      }, 1000);
+    } else {
+      // 显示错误
+      if (data.errors) {
+        showErrors(form, data.errors);
+      }
+      if (data.error) {
+        alert(data.error);
+      }
+    }
+    return data;
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('提交失败，请重试');
+  });
+}
+
+// 清除表单错误
+function clearErrors(form) {
+  form.querySelectorAll('.form-group.error').forEach(group => {
+    group.classList.remove('error');
+  });
+
+  const errorBubbles = form.querySelectorAll('.error-bubble');
+  errorBubbles.forEach(bubble => bubble.remove());
+
+  const successMessage = form.querySelector('.form-success.success-message');
+  if (successMessage) {
+    successMessage.style.display = 'none';
+  }
+}
+
+// 显示错误
+function showErrors(form, errors) {
+  errors.forEach(error => {
+    if (error.field) {
+      // 字段错误 - 在对应标签上显示气泡
+      const input = form.querySelector(`[name="${error.field}"]`);
+      if (input) {
+        const formGroup = input.closest('.form-group');
+        const label = formGroup.querySelector('label');
+
+        // 添加错误类
+        formGroup.classList.add('error');
+
+        // 移除旧的错误气泡
+        const oldBubble = label.querySelector('.error-bubble');
+        if (oldBubble) {
+          oldBubble.remove();
+        }
+
+        // 添加新的错误气泡
+        const bubble = document.createElement('span');
+        bubble.className = 'error-bubble';
+        bubble.textContent = error.message;
+        label.appendChild(bubble);
+      }
+    } else {
+      // 全局错误 - 显示 alert
+      alert(error.message);
+    }
+  });
+}
+
+// 显示成功消息
+function showSuccessMessage(form, message) {
+  let successDiv = form.querySelector('.form-success.success-message');
+  if (!successDiv) {
+    successDiv = document.createElement('div');
+    successDiv.className = 'form-success success-message';
+    form.insertBefore(successDiv, form.firstChild);
+  }
+  successDiv.textContent = message;
+  successDiv.style.display = 'block';
+}

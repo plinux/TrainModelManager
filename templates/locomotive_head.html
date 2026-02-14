@@ -5,7 +5,7 @@
 {% block content %}
 <h1>先头车模型</h1>
 
-<form id="locomotive-head-form" method="POST">
+<form id="locomotive-head-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/locomotive-head/add');">
   <div class="form-row">
     <div class="form-group">
       <label for="model_id">车型 *</label>
@@ -94,13 +94,7 @@
   <button type="submit">添加</button>
 </form>
 
-{% if errors %}
-<div class="error">
-  {% for error in errors %}
-  <p>{{ error }}</p>
-  {% endfor %}
-</div>
-{% endif %}
+<script src="/static/js/app.js"></script>
 
 <table>
   <thead>
