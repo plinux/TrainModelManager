@@ -106,3 +106,60 @@ th {
 .form-row .form-group {
   flex: 1;
 }
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  nav ul {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  main {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-row .form-group {
+    flex: none;
+  }
+
+  table {
+    font-size: 0.875rem;
+  }
+
+  th, td {
+    padding: 0.5rem;
+  }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    margin: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  button {
+    padding: 0.375rem 0.75rem;
+  }
+
+  input, select {
+    padding: 0.375rem;
+    font-size: 0.875rem;
+  }
+}
