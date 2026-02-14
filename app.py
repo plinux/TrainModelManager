@@ -56,22 +56,57 @@ def statistics():
   trainsets = Trainset.query.all()
   locomotive_heads = LocomotiveHead.query.all()
 
+  # 按比例分组
+  locomotives_by_scale = {l.scale: len([x for x in locomotives if x.scale == l.scale]) for l in locomotives}
+  carriage_sets_by_scale = {c.scale: len([x for x in carriage_sets if x.scale == c.scale]) for c in carriage_sets}
+  trainsets_by_scale = {t.scale: len([x for x in trainsets if x.scale == t.scale]) for t in trainsets}
+  locomotive_heads_by_scale = {l.scale: len([x for x in locomotive_heads if x.scale == l.scale]) for l in locomotive_heads}
+
+  # 按品牌分组
+  locomotives_by_brand = {}
+  for l in locomotives:
+    brand = l.brand.name if l.brand else '未知'
+    locomotives_by_brand[brand] = locomotives_by_brand.get(brand, 0) + 1
+
+  carriage_sets_by_brand = {}
+  for c in carriage_sets:
+    brand = c.brand.name if c.brand else '未知'
+    carriage_sets_by_brand[brand] = carriage_sets_by_brand.get(brand, 0) + 1
+
+  trainsets_by_brand = {}
+  for t in trainsets:
+    brand = t.brand.name if t.brand else '未知'
+    trainsets_by_brand[brand] = trainsets_by_brand.get(brand, 0) + 1
+
+  locomotive_heads_by_brand = {}
+  for h in locomotive_heads:
+    brand = h.brand.name if h.brand else '未知'
+    locomotive_heads_by_brand[brand] = locomotive_heads_by_brand.get(brand, 0) + 1
+
   return jsonify({
     'locomotive': {
       'count': len(locomotives),
-      'total': sum(l.total_price or 0 for l in locomotives)
+      'total': sum(l.total_price or 0 for l in locomotives),
+      'by_scale': locomotives_by_scale,
+      'by_brand': locomotives_by_brand
     },
     'carriage': {
       'count': len(carriage_sets),
-      'total': sum(c.total_price or 0 for c in carriage_sets)
+      'total': sum(c.total_price or 0 for c in carriage_sets),
+      'by_scale': carriage_sets_by_scale,
+      'by_brand': carriage_sets_by_brand
     },
     'trainset': {
       'count': len(trainsets),
-      'total': sum(t.total_price or 0 for t in trainsets)
+      'total': sum(t.total_price or 0 for t in trainsets),
+      'by_scale': trainsets_by_scale,
+      'by_brand': trainsets_by_brand
     },
     'locomotive_head': {
       'count': len(locomotive_heads),
-      'total': sum(l.total_price or 0 for l in locomotive_heads)
+      'total': sum(l.total_price or 0 for l in locomotive_heads),
+      'by_scale': locomotive_heads_by_scale,
+      'by_brand': locomotive_heads_by_brand
     }
   })
 
