@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for
 from config import Config
 from models import db, Locomotive, CarriageSet, Trainset, LocomotiveHead
 from models import LocomotiveModel, LocomotiveSeries, PowerType, Brand, Depot, ChipInterface, ChipModel, Merchant
-from models import CarriageModel, CarriageSeries, TrainsetModel
+from models import CarriageModel, CarriageSeries, TrainsetModel, TrainsetSeries
 from models import CarriageItem
 from datetime import date
 import re
