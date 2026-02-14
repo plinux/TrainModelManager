@@ -61,6 +61,13 @@
   </div>
 </div>
 
+<!-- 危险操作区域 -->
+<div class="danger-zone">
+  <h3>危险操作</h3>
+  <p class="warning-text">以下操作将删除所有数据并重新初始化数据库，此操作不可撤销！</p>
+  <button onclick="confirmReinit()" class="btn-danger-reinit">重新初始化数据库</button>
+</div>
+
 <div class="tabs-container">
 
 <div id="power_types" class="tab-content">
@@ -484,6 +491,43 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+/* 危险操作区域样式 */
+.danger-zone {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  background-color: #fff5f5;
+}
+
+.danger-zone h3 {
+  margin-bottom: 1rem;
+  color: #dc3545;
+  font-size: 1.25rem;
+}
+
+.warning-text {
+  margin-bottom: 1rem;
+  color: #721c24;
+  font-weight: 500;
+}
+
+.btn-danger-reinit {
+  padding: 0.75rem 1.5rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.btn-danger-reinit:hover {
+  background-color: #b02a37;
 }
 
 .tabs-container {

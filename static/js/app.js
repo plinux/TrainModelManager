@@ -102,3 +102,24 @@ function showTab(tabId) {
     event.target.classList.add('active');
   }
 }
+
+// 重新初始化数据库确认
+function confirmReinit() {
+  const confirmed = confirm('警告：此操作将删除所有数据并重新初始化数据库！\n\n此操作不可撤销，请确认是否继续？');
+
+  if (confirmed) {
+    // 二次确认
+    const doubleConfirmed = confirm('再次确认：真的要删除所有数据吗？');
+
+    if (doubleConfirmed) {
+      // 创建隐藏的表单并提交
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/options/reinit';
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    }
+  }
+}

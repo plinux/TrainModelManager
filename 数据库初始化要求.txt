@@ -1,0 +1,31 @@
+在数据库初始化脚本中增加一些预置信息：
+1. 动力类型包含：蒸汽、电力、内燃、双源；
+2. 机车系列包含：内电、内集、东风、韶山、和谐电、和谐内、复兴电、复兴内、Vossloh、Vectron、EMD、TRAXX；
+3. 机车型号包含：DF4、DF4B、DF4C、DF4D、DF5、DF5G、DF7、DF7B、DF7C、DF7D、DF7G、DF8B、DF11、DF11G，这些都是东风系列的内燃机车；SS1、SS3、SS3B、SS4G、SS6、SS6B、SS7、SS7C、SS7D、SS7E、SS8、SS9、SS9G，这些都是韶山系列的店里机车；HXD1、HXD1B、HXD1C、HXD1D、HXD2、HXD3、HXD3B、HXD3C、HXD3D，这些是和谐系列的电力机车；FXN5C、FXN3C是复兴内系列的内燃机车。
+4. 动车组系列包含：ICE、TGV、CRH、CRH380、CR400、CR450、DESIRO、RailJet、新干线、特急、旅游列车；
+5. 动车组车型包含：
+	5.1. ICE系列 ： BR411(ICE-T)、BR402(ICE2)、BR403(ICE3)、BR407(ICE3)、BR412(ICE4)，动力类型都是电力。
+	5.2. TGV系列：TGV-2N2(TGV)，动力类型都是电力。
+	5.3. CRH系列：CRH2A、CRH2C、CRH3C、CRH6F-A，动力类型都是电力。
+	5.4. CR400系列：CR400AF、CR400BF、CR400AF-S、CR400BF-C，动力类型都是电力。
+	5.5. DESIRO系列：DMU，动力类型是内燃。
+	5.6. RailJet系列：BR101、Taurus(金牛座)，动力类型都是电力。
+	5.7. 新干线系列：E1、E2、E3、E4、E5、E6、E7、E8、0系、100系、200系、300系、400系、500系、600系、700系、800系，动力类型都是电力。
+6. 芯片接口包含：NEM651(6pin)、NEM652(8pin)、MTC21、MKL21、NEXT18、PluX16、PluX22、E24。
+6. 芯片型号包含：动芯5323、动芯8004、动芯8003、ESU5.0、MS450P22、XP5.1、Pragon4、Tsunami2。
+7. 车厢系列包含：22、25B、25G、25T、25Z、19T，这些都是 客车。棚车、敞车、平车、罐车，这些都是 货车。守车、吊车，这些都是 工程车。
+8. 车厢型号包含：
+	8.1. 22系列：XL22；
+	8.2. 25B系列：XL25B、YZ25B、YW25B、RW25B、CA25B、KD25B、SYZ25B;
+	8.3. 25G系列：XL25G、YZ25G、YW25G、RW25G、CA25G、KD25G、JY25G；
+	8.4. 25K系列：XL25K、YZ25K、YW25K、RW25K、CA25K、KD25K、RZ125K、RZ225K、RZT25K；
+	8.5. 25Z系列：SRZ125Z、SCA25Z、KD25Z;
+	8.6. 25T系列：XL25T、YZ25T、YW25T、RW25T、CA25T、KD25T;
+	8.7. 19T系列：RW19T；
+	8.8. 棚车系列：PB、P61、JSQ6；
+	8.9. 敞车系列：C80B、C70E、C70；
+	8.10.平车系列：NX17K，X70；
+	8.11.罐车系列：GQ70、G70K；
+9. 品牌包含：1435、ATHEARN、BLI、CMR、PIKO、ROCO、TRIX、百万城、浩瀚、深东、猩猩、长鸣、跨越、Kunter、茂杉、KATO、HCMX、HTMX、KukePig、N27、毫米制造、火车花园、曙光、WALTHERS、Tomix、微景、曙光、ARNOLD、Fleischmann、MicroAce。
+10.商家包含：星期五火车模型、SRE铁路模型店、火车女侠店、长鸣淘宝、长鸣京东、中车文创、Kunter飘局的模型店、南京攀登者模型、铸造模型、天易模型、日本N比例火车模型店、百万城百克曼、魔都铁路模型社、火车模型之家、百万城旗舰店、1435火车模型、浩瀚火车模型、宁东火车模型、百酷火车模型、阿易火车模型、闲鱼。
+11.车辆段机务段：京局京段，京局丰段，上局沪段，上局杭段，既可以继续上局宁东段。

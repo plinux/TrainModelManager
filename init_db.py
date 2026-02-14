@@ -31,7 +31,7 @@ def insert_reference_data():
       db.session.add(LocomotiveSeries(name=name))
 
   # 3. 车厢系列
-  carriage_series = ['22', '25B', '25G', '25K', '25T', '25Z', '19T', '棚车', '敞车', '平车', '罐车']
+  carriage_series = ['22', '25B', '25G', '25K', '25T', '25Z', '19T', '棚车', '敞车', '平车', '罐车', '守车', '吊车']
   for name in carriage_series:
     if not CarriageSeries.query.filter_by(name=name).first():
       db.session.add(CarriageSeries(name=name))
@@ -231,6 +231,20 @@ def insert_reference_data():
   for name in models_guan:
     if not CarriageModel.query.filter_by(name=name).first():
       db.session.add(CarriageModel(name=name, series_id=series_guan.id if series_guan else None, type='货车'))
+
+  # 守车系列
+  series_shou = CarriageSeries.query.filter_by(name='守车').first()
+  models_shou = ['S1', 'S2', 'S5', 'S10', 'S12', 'S13']
+  for name in models_shou:
+    if not CarriageModel.query.filter_by(name=name).first():
+      db.session.add(CarriageModel(name=name, series_id=series_shou.id if series_shou else None, type='工程车'))
+
+  # 吊车系列
+  series_diao = CarriageSeries.query.filter_by(name='吊车').first()
+  models_diao = ['DQ', 'DDQ', 'NS1600', 'NS1602']
+  for name in models_diao:
+    if not CarriageModel.query.filter_by(name=name).first():
+      db.session.add(CarriageModel(name=name, series_id=series_diao.id if series_diao else None, type='工程车'))
 
   db.session.commit()
 

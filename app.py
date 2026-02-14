@@ -9,6 +9,7 @@ import re
 import ast
 import operator
 import logging
+import subprocess
 
 # 配置日志
 logging.basicConfig(
@@ -720,6 +721,36 @@ def auto_fill_trainset(model_id):
     'series_id': model.series_id,
     'power_type_id': model.power_type_id
   })
+
+# 重新初始化
+@app.route('/options/reinit', methods=['POST'])
+def reinit_database():
+  """重新初始化数据库：删除所有数据并重新加载预置数据"""
+  # 删除所有数据（按外键依赖顺序）
+  CarriageItem.query.delete()
+  Locomotive.query.delete()
+  CarriageSet.query.delete()
+  Trainset.query.delete()
+  LocomotiveHead.query.delete()
+  LocomotiveModel.query.delete()
+  TrainsetModel.query.delete()
+  CarriageModel.query.delete()
+  LocomotiveSeries.query.delete()
+  CarriageSeries.query.delete()
+  TrainsetSeries.query.delete()
+  ChipModel.query.delete()
+  ChipInterface.query.delete()
+  Depot.query.delete()
+  Merchant.query.delete()
+  Brand.query.delete()
+  PowerType.query.delete()
+  db.session.commit()
+
+  # 运行初始化脚本
+  subprocess.run(['python', 'init_db.py'], check=True)
+
+  logger.info("Database reinitialized successfully")
+  return redirect(url_for('options'))
 
 # 错误处理器
 @app.errorhandler(404)
