@@ -137,6 +137,7 @@
       <td>{{ set.items|length }}</td>
       <td>{{ set.total_price }}</td>
       <td>
+        <a href="{{ url_for('edit_carriage', id=set.id) }}" class="btn-edit">编辑</a>
         <form method="POST" action="{{ url_for('delete_carriage', id=set.id) }}" onsubmit="return confirm('确定删除？')">
           <button type="submit" class="btn-danger">删除</button>
         </form>
