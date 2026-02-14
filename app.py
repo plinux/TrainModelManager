@@ -809,6 +809,22 @@ def delete_power_type(id):
   db.session.commit()
   return redirect(url_for('options'))
 
+@app.route('/options/power_type/edit/<int:id>', methods=['GET', 'POST'])
+def edit_power_type(id):
+  """编辑动力类型"""
+  power_type = PowerType.query.get_or_404(id)
+
+  if request.method == 'POST':
+    power_type.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=power_type,
+    title='编辑动力类型',
+    action_url=url_for('edit_power_type', id=id)
+  )
+
 @app.route('/options/brand', methods=['POST'])
 def add_brand():
   brand = Brand(name=request.form.get('name'))
@@ -822,6 +838,22 @@ def delete_brand(id):
   db.session.delete(brand)
   db.session.commit()
   return redirect(url_for('options'))
+
+@app.route('/options/brand/edit/<int:id>', methods=['GET', 'POST'])
+def edit_brand(id):
+  """编辑品牌"""
+  brand = Brand.query.get_or_404(id)
+
+  if request.method == 'POST':
+    brand.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=brand,
+    title='编辑品牌',
+    action_url=url_for('edit_brand', id=id)
+  )
 
 @app.route('/options/merchant', methods=['POST'])
 def add_merchant():
@@ -837,6 +869,22 @@ def delete_merchant(id):
   db.session.commit()
   return redirect(url_for('options'))
 
+@app.route('/options/merchant/edit/<int:id>', methods=['GET', 'POST'])
+def edit_merchant(id):
+  """编辑商家"""
+  merchant = Merchant.query.get_or_404(id)
+
+  if request.method == 'POST':
+    merchant.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=merchant,
+    title='编辑商家',
+    action_url=url_for('edit_merchant', id=id)
+  )
+
 @app.route('/options/depot', methods=['POST'])
 def add_depot():
   depot = Depot(name=request.form.get('name'))
@@ -850,6 +898,22 @@ def delete_depot(id):
   db.session.delete(depot)
   db.session.commit()
   return redirect(url_for('options'))
+
+@app.route('/options/depot/edit/<int:id>', methods=['GET', 'POST'])
+def edit_depot(id):
+  """编辑车辆段"""
+  depot = Depot.query.get_or_404(id)
+
+  if request.method == 'POST':
+    depot.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=depot,
+    title='编辑车辆段',
+    action_url=url_for('edit_depot', id=id)
+  )
 
 @app.route('/options/chip_interface', methods=['POST'])
 def add_chip_interface():
@@ -865,6 +929,22 @@ def delete_chip_interface(id):
   db.session.commit()
   return redirect(url_for('options'))
 
+@app.route('/options/chip_interface/edit/<int:id>', methods=['GET', 'POST'])
+def edit_chip_interface(id):
+  """编辑芯片接口"""
+  chip_interface = ChipInterface.query.get_or_404(id)
+
+  if request.method == 'POST':
+    chip_interface.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=chip_interface,
+    title='编辑芯片接口',
+    action_url=url_for('edit_chip_interface', id=id)
+  )
+
 @app.route('/options/chip_model', methods=['POST'])
 def add_chip_model():
   chip_model = ChipModel(name=request.form.get('name'))
@@ -878,6 +958,22 @@ def delete_chip_model(id):
   db.session.delete(chip_model)
   db.session.commit()
   return redirect(url_for('options'))
+
+@app.route('/options/chip_model/edit/<int:id>', methods=['GET', 'POST'])
+def edit_chip_model(id):
+  """编辑芯片型号"""
+  chip_model = ChipModel.query.get_or_404(id)
+
+  if request.method == 'POST':
+    chip_model.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=chip_model,
+    title='编辑芯片型号',
+    action_url=url_for('edit_chip_model', id=id)
+  )
 
 @app.route('/options/locomotive_series', methods=['POST'])
 def add_locomotive_series():
@@ -894,6 +990,22 @@ def delete_locomotive_series(id):
   db.session.delete(series)
   db.session.commit()
   return redirect(url_for('options'))
+
+@app.route('/options/locomotive_series/edit/<int:id>', methods=['GET', 'POST'])
+def edit_locomotive_series(id):
+  """编辑机车系列"""
+  series = LocomotiveSeries.query.get_or_404(id)
+
+  if request.method == 'POST':
+    series.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=series,
+    title='编辑机车系列',
+    action_url=url_for('edit_locomotive_series', id=id)
+  )
 
 @app.route('/options/locomotive_model', methods=['POST'])
 def add_locomotive_model():
@@ -915,6 +1027,26 @@ def delete_locomotive_model(id):
   db.session.commit()
   return redirect(url_for('options'))
 
+@app.route('/options/locomotive_model/edit/<int:id>', methods=['GET', 'POST'])
+def edit_locomotive_model(id):
+  """编辑机车型号"""
+  model = LocomotiveModel.query.get_or_404(id)
+  locomotive_series = LocomotiveSeries.query.all()
+  power_types = PowerType.query.all()
+
+  if request.method == 'POST':
+    model.name = request.form.get('name')
+    model.series_id = int(request.form.get('series_id'))
+    model.power_type_id = int(request.form.get('power_type_id'))
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_locomotive_model.html',
+    model=model,
+    locomotive_series=locomotive_series,
+    power_types=power_types
+  )
+
 @app.route('/options/carriage_series', methods=['POST'])
 def add_carriage_series():
   series = CarriageSeries(name=request.form.get('name'))
@@ -930,6 +1062,22 @@ def delete_carriage_series(id):
   db.session.delete(series)
   db.session.commit()
   return redirect(url_for('options'))
+
+@app.route('/options/carriage_series/edit/<int:id>', methods=['GET', 'POST'])
+def edit_carriage_series(id):
+  """编辑车厢系列"""
+  series = CarriageSeries.query.get_or_404(id)
+
+  if request.method == 'POST':
+    series.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=series,
+    title='编辑车厢系列',
+    action_url=url_for('edit_carriage_series', id=id)
+  )
 
 @app.route('/options/carriage_model', methods=['POST'])
 def add_carriage_model():
@@ -951,6 +1099,24 @@ def delete_carriage_model(id):
   db.session.commit()
   return redirect(url_for('options'))
 
+@app.route('/options/carriage_model/edit/<int:id>', methods=['GET', 'POST'])
+def edit_carriage_model(id):
+  """编辑车厢型号"""
+  model = CarriageModel.query.get_or_404(id)
+  carriage_series = CarriageSeries.query.all()
+
+  if request.method == 'POST':
+    model.name = request.form.get('name')
+    model.series_id = int(request.form.get('series_id'))
+    model.type = request.form.get('type')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_carriage_model.html',
+    model=model,
+    carriage_series=carriage_series
+  )
+
 @app.route('/options/trainset_series', methods=['POST'])
 def add_trainset_series():
   series = TrainsetSeries(name=request.form.get('name'))
@@ -966,6 +1132,22 @@ def delete_trainset_series(id):
   db.session.delete(series)
   db.session.commit()
   return redirect(url_for('options'))
+
+@app.route('/options/trainset_series/edit/<int:id>', methods=['GET', 'POST'])
+def edit_trainset_series(id):
+  """编辑动车组系列"""
+  series = TrainsetSeries.query.get_or_404(id)
+
+  if request.method == 'POST':
+    series.name = request.form.get('name')
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_simple.html',
+    item=series,
+    title='编辑动车组系列',
+    action_url=url_for('edit_trainset_series', id=id)
+  )
 
 @app.route('/options/trainset_model', methods=['POST'])
 def add_trainset_model():
@@ -986,6 +1168,26 @@ def delete_trainset_model(id):
   db.session.delete(model)
   db.session.commit()
   return redirect(url_for('options'))
+
+@app.route('/options/trainset_model/edit/<int:id>', methods=['GET', 'POST'])
+def edit_trainset_model(id):
+  """编辑动车组车型"""
+  model = TrainsetModel.query.get_or_404(id)
+  trainset_series = TrainsetSeries.query.all()
+  power_types = PowerType.query.all()
+
+  if request.method == 'POST':
+    model.name = request.form.get('name')
+    model.series_id = int(request.form.get('series_id'))
+    model.power_type_id = int(request.form.get('power_type_id'))
+    db.session.commit()
+    return redirect(url_for('options'))
+
+  return render_template('option_edit_trainset_model.html',
+    model=model,
+    trainset_series=trainset_series,
+    power_types=power_types
+  )
 
 # Auto-fill API
 @app.route('/api/auto-fill/locomotive/<int:model_id>')
