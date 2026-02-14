@@ -57,6 +57,22 @@ def statistics():
     }
   })
 
+def validate_locomotive_number(number):
+  """验证机车号格式：4-12位数字，允许前导0"""
+  return bool(re.match(r'^\d{4,12}$', number))
+
+def validate_decoder_number(number):
+  """验证编号格式：1-4位数字，无前导0"""
+  return bool(re.match(r'^[1-9]\d{0,3}$', number))
+
+def validate_trainset_number(number):
+  """验证动车号格式：3-12位数字，允许前导0"""
+  return bool(re.match(r'^\d{3,12}$', number))
+
+def validate_car_number(number):
+  """验证车辆号格式：3-10位数字，无前导0"""
+  return bool(re.match(r'^[1-9]\d{2,9}$', number))
+
 def calculate_price(price_expr):
   """安全计算价格表达式"""
   if not price_expr:
@@ -102,6 +118,12 @@ def locomotive():
     scale = request.form.get('scale')
     locomotive_number = request.form.get('locomotive_number')
     decoder_number = request.form.get('decoder_number')
+
+    # 格式验证
+    if locomotive_number and not validate_locomotive_number(locomotive_number):
+      errors.append("机车号格式错误：应为4-12位数字，允许前导0")
+    if decoder_number and not validate_decoder_number(decoder_number):
+      errors.append("编号格式错误：应为1-4位数字，无前导0")
 
     # 唯一性验证
     if locomotive_number and check_duplicate('locomotive', 'locomotive_number', locomotive_number, scale):
@@ -164,42 +186,57 @@ def carriage():
   depots = Depot.query.all()
   merchants = Merchant.query.all()
 
-  if request.method == 'POST':
-    carriage_set = CarriageSet(
-      brand_id=int(request.form.get('brand_id')),
-      series_id=request.form.get('series_id'),
-      depot_id=request.form.get('depot_id'),
-      train_number=request.form.get('train_number'),
-      plaque=request.form.get('plaque'),
-      item_number=request.form.get('item_number'),
-      scale=request.form.get('scale'),
-      total_price=float(request.form.get('total_price') or 0),
-      purchase_date=request.form.get('purchase_date') or date.today(),
-      merchant_id=request.form.get('merchant_id')
-    )
-    db.session.add(carriage_set)
-    db.session.commit()
-    db.session.refresh(carriage_set)
+  errors = []
 
-    # 添加车厢项
+  if request.method == 'POST':
+    # 先验证车辆号格式
     for i in range(10):
       model_key = f'model_{i}'
       car_number_key = f'car_number_{i}'
-      color_key = f'color_{i}'
-      lighting_key = f'lighting_{i}'
 
       if model_key in request.form and request.form.get(model_key):
-        carriage_item = CarriageItem(
-          set_id=carriage_set.id,
-          model_id=int(request.form.get(model_key)),
-          car_number=request.form.get(car_number_key),
-          color=request.form.get(color_key),
-          lighting=request.form.get(lighting_key)
-        )
-        db.session.add(carriage_item)
+        car_number = request.form.get(car_number_key)
+        # 格式验证
+        if car_number and not validate_car_number(car_number):
+          errors.append(f"车辆号 {car_number} 格式错误：应为3-10位数字，无前导0")
 
-    db.session.commit()
-    return redirect(url_for('carriage'))
+    if not errors:
+      # 验证通过后添加数据
+      carriage_set = CarriageSet(
+        brand_id=int(request.form.get('brand_id')),
+        series_id=request.form.get('series_id'),
+        depot_id=request.form.get('depot_id'),
+        train_number=request.form.get('train_number'),
+        plaque=request.form.get('plaque'),
+        item_number=request.form.get('item_number'),
+        scale=request.form.get('scale'),
+        total_price=float(request.form.get('total_price') or 0),
+        purchase_date=request.form.get('purchase_date') or date.today(),
+        merchant_id=request.form.get('merchant_id')
+      )
+      db.session.add(carriage_set)
+      db.session.commit()
+      db.session.refresh(carriage_set)
+
+      # 添加车厢项
+      for i in range(10):
+        model_key = f'model_{i}'
+        car_number_key = f'car_number_{i}'
+        color_key = f'color_{i}'
+        lighting_key = f'lighting_{i}'
+
+        if model_key in request.form and request.form.get(model_key):
+          carriage_item = CarriageItem(
+            set_id=carriage_set.id,
+            model_id=int(request.form.get(model_key)),
+            car_number=request.form.get(car_number_key),
+            color=request.form.get(color_key),
+            lighting=request.form.get(lighting_key)
+          )
+          db.session.add(carriage_item)
+
+      db.session.commit()
+      return redirect(url_for('carriage'))
 
   return render_template('carriage.html',
     carriage_sets=carriage_sets,
@@ -207,7 +244,8 @@ def carriage():
     carriage_series=carriage_series,
     brands=brands,
     depots=depots,
-    merchants=merchants
+    merchants=merchants,
+    errors=errors
   )
 
 @app.route('/carriage/delete/<int:id>', methods=['POST'])
@@ -237,6 +275,12 @@ def trainset():
     scale = request.form.get('scale')
     trainset_number = request.form.get('trainset_number')
     decoder_number = request.form.get('decoder_number')
+
+    # 格式验证
+    if trainset_number and not validate_trainset_number(trainset_number):
+      errors.append("动车号格式错误：应为3-12位数字，允许前导0")
+    if decoder_number and not validate_decoder_number(decoder_number):
+      errors.append("编号格式错误：应为1-4位数字，无前导0")
 
     # 唯一性验证
     if trainset_number and check_duplicate('trainset', 'trainset_number', trainset_number, scale):
