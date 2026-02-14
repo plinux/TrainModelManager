@@ -243,6 +243,9 @@ def locomotive():
       errors.append(f"编号 {decoder_number} 在 {scale} 比例下已存在")
 
     if not errors:
+      purchase_date = request.form.get('purchase_date')
+      purchase_date = purchase_date if purchase_date.strip() else date.today()
+
       locomotive = Locomotive(
         model_id=int(request.form.get('model_id')),
         series_id=request.form.get('series_id'),
@@ -259,7 +262,7 @@ def locomotive():
         price=request.form.get('price'),
         total_price=calculate_price(request.form.get('price')),
         item_number=request.form.get('item_number'),
-        purchase_date=request.form.get('purchase_date') or date.today(),
+        purchase_date=purchase_date,
         merchant_id=request.form.get('merchant_id')
       )
       db.session.add(locomotive)
@@ -314,6 +317,9 @@ def carriage():
           errors.append(f"车辆号 {car_number} 格式错误：应为3-10位数字，无前导0")
 
     if not errors:
+      purchase_date = request.form.get('purchase_date')
+      purchase_date = purchase_date if purchase_date.strip() else date.today()
+
       # 验证通过后添加数据
       carriage_set = CarriageSet(
         brand_id=int(request.form.get('brand_id')),
@@ -324,7 +330,7 @@ def carriage():
         item_number=request.form.get('item_number'),
         scale=request.form.get('scale'),
         total_price=float(request.form.get('total_price') or 0),
-        purchase_date=request.form.get('purchase_date') or date.today(),
+        purchase_date=purchase_date,
         merchant_id=request.form.get('merchant_id')
       )
       db.session.add(carriage_set)
@@ -404,6 +410,9 @@ def trainset():
       errors.append(f"编号 {decoder_number} 在 {scale} 比例下已存在")
 
     if not errors:
+      purchase_date = request.form.get('purchase_date')
+      purchase_date = purchase_date if purchase_date.strip() else date.today()
+
       trainset = Trainset(
         model_id=int(request.form.get('model_id')),
         series_id=request.form.get('series_id'),
@@ -423,7 +432,7 @@ def trainset():
         price=request.form.get('price'),
         total_price=calculate_price(request.form.get('price')),
         item_number=request.form.get('item_number'),
-        purchase_date=request.form.get('purchase_date') or date.today(),
+        purchase_date=purchase_date,
         merchant_id=request.form.get('merchant_id')
       )
       db.session.add(trainset)
@@ -463,6 +472,9 @@ def locomotive_head():
   merchants = Merchant.query.all()
 
   if request.method == 'POST':
+    purchase_date = request.form.get('purchase_date')
+    purchase_date = purchase_date if purchase_date.strip() else date.today()
+
     locomotive_head = LocomotiveHead(
       model_id=int(request.form.get('model_id')),
       brand_id=int(request.form.get('brand_id')),
@@ -474,7 +486,7 @@ def locomotive_head():
       price=request.form.get('price'),
       total_price=calculate_price(request.form.get('price')),
       item_number=request.form.get('item_number'),
-      purchase_date=request.form.get('purchase_date') or date.today(),
+      purchase_date=purchase_date,
       merchant_id=request.form.get('merchant_id')
     )
     db.session.add(locomotive_head)
