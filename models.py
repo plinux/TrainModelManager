@@ -140,3 +140,40 @@ class Locomotive(db.Model):
   chip_interface = relationship('ChipInterface', backref='locomotives')
   chip_model = relationship('ChipModel', backref='locomotives')
   merchant = relationship('Merchant', backref='locomotives')
+
+class CarriageSet(db.Model):
+  """车厢套装主表"""
+  __tablename__ = 'carriage_set'
+
+  id = db.Column(Integer, primary_key=True, comment='主键')
+  brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
+  series_id = db.Column(Integer, ForeignKey('carriage_series.id'), comment='关联车厢系列ID')
+  depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联车辆段ID')
+  train_number = db.Column(String(20), comment='车次')
+  plaque = db.Column(String(50), comment='挂牌')
+  item_number = db.Column(String(50), comment='货号')
+  scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
+  total_price = db.Column(Float, comment='总价')
+  purchase_date = db.Column(Date, default=date.today, comment='购买日期')
+  merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
+
+  # 关系
+  brand = relationship('Brand', backref='carriage_sets')
+  series = relationship('CarriageSeries', backref='carriage_sets')
+  depot = relationship('Depot', backref='carriage_sets')
+  merchant = relationship('Merchant', backref='carriage_sets')
+  items = relationship('CarriageItem', backref='set', cascade='all, delete-orphan')
+
+class CarriageItem(db.Model):
+  """车厢套装子表（每辆车的详细信息）"""
+  __tablename__ = 'carriage_item'
+
+  id = db.Column(Integer, primary_key=True, comment='主键')
+  set_id = db.Column(Integer, ForeignKey('carriage_set.id'), nullable=False, comment='关联套装ID')
+  model_id = db.Column(Integer, ForeignKey('carriage_model.id'), comment='关联车厢型号ID')
+  car_number = db.Column(String(10), comment='车辆号（3-10位数字，无前导0）')
+  color = db.Column(String(50), comment='颜色')
+  lighting = db.Column(String(50), comment='灯光')
+
+  # 关系
+  model = relationship('CarriageModel', backref='items')
