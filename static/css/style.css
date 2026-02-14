@@ -80,6 +80,7 @@ th, td {
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #ddd;
+  vertical-align: middle;
 }
 
 th {
@@ -159,7 +160,7 @@ td button,
 .btn-danger {
   padding: 0.25rem 0.5rem;
   font-size: 0.875rem;
-  line-height: 1.2;
+  line-height: normal;
 }
 
 button:hover,
@@ -196,13 +197,31 @@ button:hover,
   background-color: #5a6268;
 }
 
-/* 表格中按钮样式 */
+/* 表格中按钮样式 - 统一使用 line-height 实现居中 */
+td button,
 td form {
+  vertical-align: middle;
   display: inline-block;
+}
+
+td form {
+  margin: 0;
+  padding: 0;
+  line-height: 1;
 }
 
 td form button {
   margin: 0;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.btn-edit,
+.btn-cancel,
+.btn-danger {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .form-row {
@@ -299,25 +318,38 @@ td form button {
   margin: 0;
 }
 
-/* 重新初始化数据库按钮 - 绝对定位在右上角 */
-.btn-danger-reinit {
+/* 页面头部按钮统一样式 */
+.page-header .btn-danger-reinit,
+.page-header .btn-import {
   position: absolute;
   top: 0;
-  right: 0;
-  padding: 0.5rem 1.25rem !important;
-  background-color: #dc3545;
-  color: white;
-  border: none;
+  color: white !important;
+  border: none !important;
   border-radius: 4px !important;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 500 !important;
   font-size: 1rem !important;
   line-height: 1 !important;
+  padding: 0.5rem 1.25rem !important;
   transition: background-color 0.2s;
 }
 
-.btn-danger-reinit:hover {
+.page-header .btn-danger-reinit {
+  right: 0;
+  background-color: #dc3545;
+}
+
+.page-header .btn-danger-reinit:hover {
   background-color: #b02a37;
+}
+
+.page-header .btn-import {
+  right: 185px;
+  background-color: #0d6efd;
+}
+
+.page-header .btn-import:hover {
+  background-color: #0b5ed7;
 }
 
 /* 模态对话框样式 */

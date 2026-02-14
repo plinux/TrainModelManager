@@ -10,6 +10,8 @@ import ast
 import operator
 import logging
 import subprocess
+import openpyxl
+from werkzeug.utils import secure_filename
 
 # 配置日志
 logging.basicConfig(
@@ -1542,6 +1544,300 @@ def reinit_database():
 
   logger.info("Database reinitialized successfully")
   return redirect(url_for('options'))
+
+@app.route('/api/import/excel', methods=['POST'])
+def import_from_excel():
+  """从 Excel 文件导入数据"""
+  try:
+    if 'file' not in request.files:
+      return jsonify({'success': False, 'error': '未选择文件'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+      return jsonify({'success': False, 'error': '未选择文件'}), 400
+
+    if not (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+      return jsonify({'success': False, 'error': '文件格式错误，请上传Excel文件'}), 400
+
+    # 读取 Excel 文件
+    workbook = openpyxl.load_workbook(file)
+    summary = {}
+    errors = []
+
+    # 处理每个工作表
+    for sheet_name in workbook.sheetnames:
+      sheet = workbook[sheet_name]
+      data = []
+
+      # 读取表头（第一行）
+      headers = None
+      for row_idx, row in enumerate(sheet.iter_rows(values_only=True), 1):
+        if row_idx == 1:
+          headers = [cell for cell in row if cell is not None]
+        else:
+          if any(cell is not None for cell in row):
+            data.append(dict(zip(headers, row)))
+
+      if not data:
+        continue
+
+      # 根据工作表名导入到对应表
+      try:
+        if sheet_name == '机车':
+          count = import_locomotive_data(data)
+          summary['机车模型'] = count
+        elif sheet_name == '车厢':
+          count = import_carriage_data(data)
+          summary['车厢模型'] = count
+        elif sheet_name == '动车组':
+          count = import_trainset_data(data)
+          summary['动车组模型'] = count
+        elif sheet_name == '先头车':
+          count = import_locomotive_head_data(data)
+          summary['先头车模型'] = count
+        else:
+          logger.warning(f"Unknown sheet name: {sheet_name}")
+      except Exception as e:
+        errors.append(f"{sheet_name}: {str(e)}")
+        logger.error(f"Error importing sheet {sheet_name}: {str(e)}", exc_info=True)
+
+    if errors:
+      return jsonify({'success': False, 'error': '部分导入失败: ' + '; '.join(errors)}), 400
+
+    logger.info(f"Excel import completed: {summary}")
+    return jsonify({'success': True, 'summary': summary})
+
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Excel import failed: {str(e)}", exc_info=True)
+    return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def import_locomotive_data(data):
+  """导入机车模型数据"""
+  count = 0
+  for row in data:
+    # 查找关联对象的ID
+    series_id = find_id_by_name(LocomotiveSeries, row.get('系列'))
+    power_type_id = find_id_by_name(PowerType, row.get('动力类型'))
+    model_id = find_id_by_name(LocomotiveModel, row.get('车型'), lambda q: q.filter_by(name=row.get('车型'), series_id=series_id, power_type_id=power_type_id).first())
+    brand_id = find_id_by_name(Brand, row.get('品牌'))
+    depot_id = find_id_by_name(Depot, row.get('机务段'))
+    chip_interface_id = find_id_by_name(ChipInterface, row.get('芯片接口'))
+    chip_model_id = find_id_by_name(ChipModel, row.get('芯片型号'))
+    merchant_id = find_id_by_name(Merchant, row.get('购买商家'))
+
+    # 处理日期
+    purchase_date = parse_date(row.get('购买日期'))
+
+    # 计算总价
+    total_price = calculate_total_price(row.get('价格'))
+
+    locomotive = Locomotive(
+      series_id=series_id,
+      power_type_id=power_type_id,
+      model_id=model_id,
+      brand_id=brand_id,
+      depot_id=depot_id,
+      plaque=row.get('挂牌'),
+      color=row.get('颜色'),
+      scale=row.get('比例'),
+      locomotive_number=row.get('机车号'),
+      decoder_number=row.get('编号'),
+      chip_interface_id=chip_interface_id,
+      chip_model_id=chip_model_id,
+      price=row.get('价格'),
+      total_price=total_price,
+      item_number=row.get('货号'),
+      purchase_date=purchase_date,
+      merchant_id=merchant_id
+    )
+    db.session.add(locomotive)
+    count += 1
+
+  db.session.commit()
+  return count
+
+
+def import_carriage_data(data):
+  """导入车厢模型数据"""
+  count = 0
+  for row in data:
+    brand_id = find_id_by_name(Brand, row.get('品牌'))
+    series_id = find_id_by_name(CarriageSeries, row.get('系列'))
+    depot_id = find_id_by_name(Depot, row.get('车辆段'))
+    merchant_id = find_id_by_name(Merchant, row.get('购买商家'))
+
+    purchase_date = parse_date(row.get('购买日期'))
+    total_price = float(row.get('总价', 0)) if row.get('总价') else 0
+
+    # 创建车厢套装
+    carriage_set = CarriageSet(
+      brand_id=brand_id,
+      series_id=series_id,
+      depot_id=depot_id,
+      train_number=row.get('车次'),
+      plaque=row.get('挂牌'),
+      item_number=row.get('货号'),
+      scale=row.get('比例'),
+      total_price=total_price,
+      purchase_date=purchase_date,
+      merchant_id=merchant_id
+    )
+    db.session.add(carriage_set)
+    db.session.flush()  # 获取ID
+
+    # 处理车厢项（如果Excel中有详细数据）
+    # 简化版：这里假设每行是一个车厢套装
+    # 如需要支持多车厢，需要Excel格式调整
+
+    count += 1
+
+  db.session.commit()
+  return count
+
+
+def import_trainset_data(data):
+  """导入动车组模型数据"""
+  count = 0
+  for row in data:
+    series_id = find_id_by_name(TrainsetSeries, row.get('系列'))
+    power_type_id = find_id_by_name(PowerType, row.get('动力类型'))
+    model_id = find_id_by_name(TrainsetModel, row.get('车型'), lambda q: q.filter_by(name=row.get('车型'), series_id=series_id, power_type_id=power_type_id).first())
+    brand_id = find_id_by_name(Brand, row.get('品牌'))
+    depot_id = find_id_by_name(Depot, row.get('动车段'))
+    chip_interface_id = find_id_by_name(ChipInterface, row.get('芯片接口'))
+    chip_model_id = find_id_by_name(ChipModel, row.get('芯片型号'))
+    merchant_id = find_id_by_name(Merchant, row.get('购买商家'))
+
+    purchase_date = parse_date(row.get('购买日期'))
+    total_price = calculate_total_price(row.get('价格'))
+
+    trainset = Trainset(
+      series_id=series_id,
+      power_type_id=power_type_id,
+      model_id=model_id,
+      brand_id=brand_id,
+      depot_id=depot_id,
+      plaque=row.get('挂牌'),
+      color=row.get('颜色'),
+      scale=row.get('比例'),
+      formation=int(row.get('编组')) if row.get('编组') else None,
+      trainset_number=row.get('动车号'),
+      decoder_number=row.get('编号'),
+      head_light=parse_boolean(row.get('头车灯')),
+      interior_light=row.get('室内灯'),
+      chip_interface_id=chip_interface_id,
+      chip_model_id=chip_model_id,
+      price=row.get('价格'),
+      total_price=total_price,
+      item_number=row.get('货号'),
+      purchase_date=purchase_date,
+      merchant_id=merchant_id
+    )
+    db.session.add(trainset)
+    count += 1
+
+  db.session.commit()
+  return count
+
+
+def import_locomotive_head_data(data):
+  """导入先头车模型数据"""
+  count = 0
+  for row in data:
+    model_id = find_id_by_name(TrainsetModel, row.get('车型'))
+    brand_id = find_id_by_name(Brand, row.get('品牌'))
+    depot_id = find_id_by_name(Depot, row.get('动车段'))
+    merchant_id = find_id_by_name(Merchant, row.get('购买商家'))
+
+    purchase_date = parse_date(row.get('购买日期'))
+    total_price = calculate_total_price(row.get('价格'))
+
+    locomotive_head = LocomotiveHead(
+      model_id=model_id,
+      brand_id=brand_id,
+      depot_id=depot_id,
+      special_color=row.get('特涂'),
+      scale=row.get('比例'),
+      head_light=parse_boolean(row.get('头车灯')),
+      interior_light=row.get('室内灯'),
+      price=row.get('价格'),
+      total_price=total_price,
+      item_number=row.get('货号'),
+      purchase_date=purchase_date,
+      merchant_id=merchant_id
+    )
+    db.session.add(locomotive_head)
+    count += 1
+
+  db.session.commit()
+  return count
+
+
+def find_id_by_name(model, name, custom_query=None):
+  """根据名称查找模型的ID"""
+  if not name:
+    return None
+
+  if custom_query:
+    return custom_query(model.query).id if custom_query(model.query) else None
+
+  obj = model.query.filter_by(name=name).first()
+  return obj.id if obj else None
+
+
+def parse_date(date_str):
+  """解析日期字符串"""
+  if not date_str:
+    return date.today()
+
+  try:
+    if isinstance(date_str, datetime):
+      return date_str.date()
+    return datetime.strptime(str(date_str), '%Y-%m-%d').date()
+  except:
+    return date.today()
+
+
+def parse_boolean(value):
+  """解析布尔值"""
+  if not value:
+    return None
+  if isinstance(value, bool):
+    return value
+  return str(value).lower() in ('true', '1', '是', '有', 'yes')
+
+
+def calculate_total_price(price_str):
+  """计算总价（支持表达式）"""
+  if not price_str:
+    return 0
+
+  try:
+    # 使用现有的 SafeEval 逻辑
+    tree = ast.parse(str(price_str), mode='eval')
+
+    class SafeEval(ast.NodeVisitor):
+      allowed_nodes = (ast.Expression, ast.BinOp, ast.UnaryOp, ast.Constant)
+
+      def visit(self, node):
+        if not isinstance(node, self.allowed_nodes):
+          raise ValueError(f"Invalid node: {type(node).__name__}")
+        return super().visit(node)
+
+      def generic_visit(self, node):
+        if isinstance(node, ast.BinOp):
+          return self.visit(node.left) + self.visit(node.right)
+        elif isinstance(node, ast.UnaryOp):
+          return -self.visit(node.operand)
+        elif isinstance(node, ast.Constant):
+          return node.value
+        return super().generic_visit(node)
+
+    return SafeEval().visit(tree)
+  except:
+    return float(price_str) if str(price_str).replace('.', '').isdigit() else 0
 
 # 错误处理器
 @app.errorhandler(404)

@@ -12,10 +12,10 @@ function editRow(button) {
   button.style.display = 'none';
   const saveBtn = row.querySelector('.btn-save');
   const cancelBtn = row.querySelector('.btn-cancel');
-  const deleteForm = row.querySelector('form');
+  const deleteBtn = row.querySelector('.btn-danger');
   saveBtn.style.display = 'inline-block';
   cancelBtn.style.display = 'inline-block';
-  deleteForm.style.display = 'none';
+  deleteBtn.style.display = 'none';
 
   // 存储原始值
   row.querySelectorAll('[data-field]').forEach(cell => {
@@ -146,12 +146,12 @@ function cancelEdit(button) {
   const editBtn = row.querySelector('.btn-edit');
   const saveBtn = row.querySelector('.btn-save');
   const cancelBtn = row.querySelector('.btn-cancel');
-  const deleteForm = row.querySelector('form');
+  const deleteBtn = row.querySelector('.btn-danger');
 
   editBtn.style.display = 'inline-block';
   saveBtn.style.display = 'none';
   cancelBtn.style.display = 'none';
-  deleteForm.style.display = 'inline-block';
+  deleteBtn.style.display = 'inline-block';
 }
 
 // 标签页切换
@@ -208,4 +208,89 @@ function submitReinit() {
   document.body.appendChild(form);
   form.submit();
   document.body.removeChild(form);
+}
+
+// 删除选项
+function deleteItem(button, type, id, deleteUrl) {
+  if (!confirm('确定要删除此项吗？')) {
+    return;
+  }
+
+  fetch(deleteUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    }
+  })
+  .then(response => {
+    if (response.ok) {
+      // 删除成功，移除行
+      const row = button.closest('tr');
+      row.remove();
+    } else {
+      alert('删除失败，请检查该项目是否正在使用');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('删除失败，请重试');
+  });
+}
+
+// Excel导入对话框
+function openImportDialog() {
+  document.getElementById('import-modal').style.display = 'flex';
+  document.getElementById('import-file').value = '';
+  document.getElementById('import-result').style.display = 'none';
+}
+
+function closeImportDialog() {
+  document.getElementById('import-modal').style.display = 'none';
+}
+
+function importFromExcel() {
+  const fileInput = document.getElementById('import-file');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert('请选择要导入的Excel文件');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const resultDiv = document.getElementById('import-result');
+  const importBtn = document.getElementById('import-btn');
+
+  resultDiv.style.display = 'block';
+  resultDiv.className = 'import-result loading';
+  resultDiv.innerHTML = '<p>正在导入中，请稍候...</p>';
+  importBtn.disabled = true;
+
+  fetch('/api/import/excel', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    importBtn.disabled = false;
+    if (data.success) {
+      resultDiv.className = 'import-result success';
+      resultDiv.innerHTML = `
+        <p>导入成功！</p>
+        ${data.summary ? '<ul>' + Object.entries(data.summary).map(([key, value]) => `<li>${key}: ${value}条</li>`).join('') + '</ul>' : ''}
+      `;
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      resultDiv.className = 'import-result error';
+      resultDiv.innerHTML = `<p>导入失败: ${data.error || '未知错误'}</p>`;
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    importBtn.disabled = false;
+    resultDiv.className = 'import-result error';
+    resultDiv.innerHTML = '<p>导入失败，请重试</p>';
+  });
 }
