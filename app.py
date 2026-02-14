@@ -25,11 +25,27 @@ def options():
   brands = Brand.query.all()
   merchants = Merchant.query.all()
   depots = Depot.query.all()
+  chip_interfaces = ChipInterface.query.all()
+  chip_models = ChipModel.query.all()
+  locomotive_series = LocomotiveSeries.query.all()
+  locomotive_models = LocomotiveModel.query.all()
+  carriage_series = CarriageSeries.query.all()
+  carriage_models = CarriageModel.query.all()
+  trainset_series = TrainsetSeries.query.all()
+  trainset_models = TrainsetModel.query.all()
   return render_template('options.html',
     power_types=power_types,
     brands=brands,
     merchants=merchants,
-    depots=depots
+    depots=depots,
+    chip_interfaces=chip_interfaces,
+    chip_models=chip_models,
+    locomotive_series=locomotive_series,
+    locomotive_models=locomotive_models,
+    carriage_series=carriage_series,
+    carriage_models=carriage_models,
+    trainset_series=trainset_series,
+    trainset_models=trainset_models
   )
 
 @app.route('/api/statistics')
@@ -481,6 +497,130 @@ def add_depot():
 def delete_depot(id):
   depot = Depot.query.get_or_404(id)
   db.session.delete(depot)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/chip_interface', methods=['POST'])
+def add_chip_interface():
+  chip_interface = ChipInterface(name=request.form.get('name'))
+  db.session.add(chip_interface)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/chip_interface/delete/<int:id>', methods=['POST'])
+def delete_chip_interface(id):
+  chip_interface = ChipInterface.query.get_or_404(id)
+  db.session.delete(chip_interface)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/chip_model', methods=['POST'])
+def add_chip_model():
+  chip_model = ChipModel(name=request.form.get('name'))
+  db.session.add(chip_model)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/chip_model/delete/<int:id>', methods=['POST'])
+def delete_chip_model(id):
+  chip_model = ChipModel.query.get_or_404(id)
+  db.session.delete(chip_model)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/locomotive_series', methods=['POST'])
+def add_locomotive_series():
+  series = LocomotiveSeries(name=request.form.get('name'))
+  db.session.add(series)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/locomotive_series/delete/<int:id>', methods=['POST'])
+def delete_locomotive_series(id):
+  series = LocomotiveSeries.query.get_or_404(id)
+  db.session.delete(series)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/locomotive_model', methods=['POST'])
+def add_locomotive_model():
+  model = LocomotiveModel(
+    name=request.form.get('name'),
+    series_id=int(request.form.get('series_id')),
+    power_type_id=int(request.form.get('power_type_id'))
+  )
+  db.session.add(model)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/locomotive_model/delete/<int:id>', methods=['POST'])
+def delete_locomotive_model(id):
+  model = LocomotiveModel.query.get_or_404(id)
+  db.session.delete(model)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/carriage_series', methods=['POST'])
+def add_carriage_series():
+  series = CarriageSeries(name=request.form.get('name'))
+  db.session.add(series)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/carriage_series/delete/<int:id>', methods=['POST'])
+def delete_carriage_series(id):
+  series = CarriageSeries.query.get_or_404(id)
+  db.session.delete(series)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/carriage_model', methods=['POST'])
+def add_carriage_model():
+  model = CarriageModel(
+    name=request.form.get('name'),
+    series_id=int(request.form.get('series_id')),
+    type=request.form.get('type')
+  )
+  db.session.add(model)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/carriage_model/delete/<int:id>', methods=['POST'])
+def delete_carriage_model(id):
+  model = CarriageModel.query.get_or_404(id)
+  db.session.delete(model)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/trainset_series', methods=['POST'])
+def add_trainset_series():
+  series = TrainsetSeries(name=request.form.get('name'))
+  db.session.add(series)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/trainset_series/delete/<int:id>', methods=['POST'])
+def delete_trainset_series(id):
+  series = TrainsetSeries.query.get_or_404(id)
+  db.session.delete(series)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/trainset_model', methods=['POST'])
+def add_trainset_model():
+  model = TrainsetModel(
+    name=request.form.get('name'),
+    series_id=int(request.form.get('series_id')),
+    power_type_id=int(request.form.get('power_type_id'))
+  )
+  db.session.add(model)
+  db.session.commit()
+  return redirect(url_for('options'))
+
+@app.route('/options/trainset_model/delete/<int:id>', methods=['POST'])
+def delete_trainset_model(id):
+  model = TrainsetModel.query.get_or_404(id)
+  db.session.delete(model)
   db.session.commit()
   return redirect(url_for('options'))
 

@@ -10,6 +10,14 @@
   <button onclick="showTab('brands')" class="tab-btn">品牌</button>
   <button onclick="showTab('merchants')" class="tab-btn">商家</button>
   <button onclick="showTab('depots')" class="tab-btn">车辆段/机务段</button>
+  <button onclick="showTab('chip_interfaces')" class="tab-btn">芯片接口</button>
+  <button onclick="showTab('chip_models')" class="tab-btn">芯片型号</button>
+  <button onclick="showTab('locomotive_series')" class="tab-btn">机车系列</button>
+  <button onclick="showTab('locomotive_models')" class="tab-btn">机车型号</button>
+  <button onclick="showTab('carriage_series')" class="tab-btn">车厢系列</button>
+  <button onclick="showTab('carriage_models')" class="tab-btn">车厢型号</button>
+  <button onclick="showTab('trainset_series')" class="tab-btn">动车组系列</button>
+  <button onclick="showTab('trainset_models')" class="tab-btn">动车组车型</button>
 </div>
 
 <div id="power_types" class="tab-content">
@@ -115,6 +123,283 @@
         <td>{{ depot.name }}</td>
         <td>
           <form method="POST" action="{{ url_for('delete_depot', id=depot.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="chip_interfaces" class="tab-content" style="display:none;">
+  <h2>芯片接口</h2>
+  <form method="POST" action="{{ url_for('add_chip_interface') }}">
+    <input type="text" name="name" placeholder="新增芯片接口" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for interface in chip_interfaces %}
+      <tr>
+        <td>{{ interface.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_chip_interface', id=interface.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="chip_models" class="tab-content" style="display:none;">
+  <h2>芯片型号</h2>
+  <form method="POST" action="{{ url_for('add_chip_model') }}">
+    <input type="text" name="name" placeholder="新增芯片型号" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in chip_models %}
+      <tr>
+        <td>{{ model.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_chip_model', id=model.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="locomotive_series" class="tab-content" style="display:none;">
+  <h2>机车系列</h2>
+  <form method="POST" action="{{ url_for('add_locomotive_series') }}">
+    <input type="text" name="name" placeholder="新增机车系列" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for series in locomotive_series %}
+      <tr>
+        <td>{{ series.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_locomotive_series', id=series.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="locomotive_models" class="tab-content" style="display:none;">
+  <h2>机车型号</h2>
+  <form method="POST" action="{{ url_for('add_locomotive_model') }}">
+    <div class="form-row">
+      <input type="text" name="name" placeholder="机车型号" required>
+      <select name="series_id" required>
+        <option value="">选择系列</option>
+        {% for series in locomotive_series %}
+        <option value="{{ series.id }}">{{ series.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="power_type_id" required>
+        <option value="">选择动力类型</option>
+        {% for type in power_types %}
+        <option value="{{ type.id }}">{{ type.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>系列</th>
+        <th>动力类型</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in locomotive_models %}
+      <tr>
+        <td>{{ model.name }}</td>
+        <td>{{ model.series.name if model.series else '-' }}</td>
+        <td>{{ model.power_type.name if model.power_type else '-' }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_locomotive_model', id=model.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="carriage_series" class="tab-content" style="display:none;">
+  <h2>车厢系列</h2>
+  <form method="POST" action="{{ url_for('add_carriage_series') }}">
+    <input type="text" name="name" placeholder="新增车厢系列" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for series in carriage_series %}
+      <tr>
+        <td>{{ series.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_carriage_series', id=series.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="carriage_models" class="tab-content" style="display:none;">
+  <h2>车厢型号</h2>
+  <form method="POST" action="{{ url_for('add_carriage_model') }}">
+    <div class="form-row">
+      <input type="text" name="name" placeholder="车厢型号" required>
+      <select name="series_id" required>
+        <option value="">选择系列</option>
+        {% for series in carriage_series %}
+        <option value="{{ series.id }}">{{ series.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="type" required>
+        <option value="">选择类型</option>
+        <option value="客车">客车</option>
+        <option value="货车">货车</option>
+      </select>
+    </div>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>系列</th>
+        <th>类型</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in carriage_models %}
+      <tr>
+        <td>{{ model.name }}</td>
+        <td>{{ model.series.name if model.series else '-' }}</td>
+        <td>{{ model.type }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_carriage_model', id=model.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="trainset_series" class="tab-content" style="display:none;">
+  <h2>动车组系列</h2>
+  <form method="POST" action="{{ url_for('add_trainset_series') }}">
+    <input type="text" name="name" placeholder="新增动车组系列" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for series in trainset_series %}
+      <tr>
+        <td>{{ series.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_trainset_series', id=series.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="trainset_models" class="tab-content" style="display:none;">
+  <h2>动车组车型</h2>
+  <form method="POST" action="{{ url_for('add_trainset_model') }}">
+    <div class="form-row">
+      <input type="text" name="name" placeholder="动车组车型" required>
+      <select name="series_id" required>
+        <option value="">选择系列</option>
+        {% for series in trainset_series %}
+        <option value="{{ series.id }}">{{ series.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="power_type_id" required>
+        <option value="">选择动力类型</option>
+        {% for type in power_types %}
+        <option value="{{ type.id }}">{{ type.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>系列</th>
+        <th>动力类型</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in trainset_models %}
+      <tr>
+        <td>{{ model.name }}</td>
+        <td>{{ model.series.name if model.series else '-' }}</td>
+        <td>{{ model.power_type.name if model.power_type else '-' }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_trainset_model', id=model.id) }}">
             <button type="submit" class="btn-danger">删除</button>
           </form>
         </td>
