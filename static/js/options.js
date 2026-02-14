@@ -34,35 +34,33 @@ function editRow(button) {
       // 名称字段使用文本输入
       const originalValue = originalValues[field];
       cell.innerHTML = `<input type="text" name="${field}" value="${originalValue}" style="width:100%; padding:0.25rem 0.5rem;">`;
-    } else if (field === 'series' || field === 'power' || field === 'carriage_type') {
-      // 系列和类型字段使用下拉框
-      const selectId = `${field}_${Date.now()}`;
+    } else if (field === 'series_id') {
+      // 系列字段使用下拉框
+      const addFormSelect = row.closest('.tab-content').querySelector('select[name="series_id"]');
       let optionsHtml = '';
-
-      if (field === 'series') {
-        // 从添加表单中获取系列选项
-        const addFormSelect = row.closest('.tab-content').querySelector('select[name="series_id"]');
-        if (addFormSelect) {
-          const originalSeriesId = row.dataset.series || '';
-          optionsHtml = addFormSelect.innerHTML.replace(new RegExp(`value="${originalSeriesId}"`, 'g'), `value="${originalSeriesId}" selected`);
-        }
-      } else if (field === 'power') {
-        // 动力类型
-        const addFormSelect = row.closest('.tab-content').querySelector('select[name="power_type_id"]');
-        if (addFormSelect) {
-          const originalPowerId = row.dataset.power || '';
-          optionsHtml = addFormSelect.innerHTML.replace(new RegExp(`value="${originalPowerId}"`, 'g'), `value="${originalPowerId}" selected`);
-        }
-      } else if (field === 'carriage_type') {
-        // 车厢类型
-        const addFormSelect = row.closest('.tab-content').querySelector('select[name="type"]');
-        if (addFormSelect) {
-          const originalType = row.dataset.carriageType || '';
-          optionsHtml = addFormSelect.innerHTML.replace(new RegExp(`value="${originalType}"`, 'g'), `value="${originalType}" selected`);
-        }
+      if (addFormSelect) {
+        const originalSeriesId = row.dataset.series || '';
+        optionsHtml = addFormSelect.innerHTML.replace(new RegExp(`value="${originalSeriesId}"`, 'g'), `value="${originalSeriesId}" selected`);
       }
-
-      cell.innerHTML = `<select name="${field}" style="width:100%; padding:0.25rem 0.5rem;">${optionsHtml}</select>`;
+      cell.innerHTML = `<select name="series_id" style="width:100%; padding:0.25rem 0.5rem;">${optionsHtml}</select>`;
+    } else if (field === 'power_type_id') {
+      // 动力类型字段使用下拉框
+      const addFormSelect = row.closest('.tab-content').querySelector('select[name="power_type_id"]');
+      let optionsHtml = '';
+      if (addFormSelect) {
+        const originalPowerId = row.dataset.power || '';
+        optionsHtml = addFormSelect.innerHTML.replace(new RegExp(`value="${originalPowerId}"`, 'g'), `value="${originalPowerId}" selected`);
+      }
+      cell.innerHTML = `<select name="power_type_id" style="width:100%; padding:0.25rem 0.5rem;">${optionsHtml}</select>`;
+    } else if (field === 'type') {
+      // 车厢类型字段使用下拉框
+      const addFormSelect = row.closest('.tab-content').querySelector('select[name="type"]');
+      let optionsHtml = '';
+      if (addFormSelect) {
+        const originalType = row.dataset.carriageType || '';
+        optionsHtml = addFormSelect.innerHTML.replace(new RegExp(`value="${originalType}"`, 'g'), `value="${originalType}" selected`);
+      }
+      cell.innerHTML = `<select name="type" style="width:100%; padding:0.25rem 0.5rem;">${optionsHtml}</select>`;
     }
   });
 }

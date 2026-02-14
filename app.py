@@ -1253,18 +1253,30 @@ def edit_option_api(type):
   elif type == 'locomotive_model':
     item = LocomotiveModel.query.get_or_404(id)
     item.name = request.form.get('name')
-    item.series_id = int(request.form.get('series_id'))
-    item.power_type_id = int(request.form.get('power_type_id'))
+    series_id = request.form.get('series_id')
+    power_type_id = request.form.get('power_type_id')
+    if series_id:
+      item.series_id = int(series_id)
+    if power_type_id:
+      item.power_type_id = int(power_type_id)
   elif type == 'carriage_model':
     item = CarriageModel.query.get_or_404(id)
     item.name = request.form.get('name')
-    item.series_id = int(request.form.get('series_id'))
-    item.type = request.form.get('type')
+    series_id = request.form.get('series_id')
+    type_value = request.form.get('type')
+    if series_id:
+      item.series_id = int(series_id)
+    if type_value:
+      item.type = type_value
   elif type == 'trainset_model':
     item = TrainsetModel.query.get_or_404(id)
     item.name = request.form.get('name')
-    item.series_id = int(request.form.get('series_id'))
-    item.power_type_id = int(request.form.get('power_type_id'))
+    series_id = request.form.get('series_id')
+    power_type_id = request.form.get('power_type_id')
+    if series_id:
+      item.series_id = int(series_id)
+    if power_type_id:
+      item.power_type_id = int(power_type_id)
   else:
     return jsonify({'success': False, 'error': '未知类型'}), 400
 
