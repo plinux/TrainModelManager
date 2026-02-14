@@ -156,6 +156,8 @@
   <button type="submit">添加</button>
 </form>
 
+<script src="/static/js/app.js"></script>
+
 {% if errors %}
 <div class="error">
   {% for error in errors %}
@@ -207,7 +209,4 @@ function autoFillTrainset() {
     .then(data => {
       document.getElementById('series_id').value = data.series_id;
       document.getElementById('power_type_id').value = data.power_type_id;
-    });
-}
-</script>
 {% endblock %}

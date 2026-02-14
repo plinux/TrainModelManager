@@ -136,6 +136,8 @@
   <button type="submit">添加</button>
 </form>
 
+<script src="/static/js/app.js"></script>
+
 {% if errors %}
 <div class="error">
   {% for error in errors %}
@@ -177,17 +179,4 @@
   </tbody>
 </table>
 
-<script>
-function autoFillLocomotive() {
-  const modelId = document.getElementById('model_id').value;
-  if (!modelId) return;
-
-  fetch(`/api/auto-fill/locomotive/${modelId}`)
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('series_id').value = data.series_id;
-      document.getElementById('power_type_id').value = data.power_type_id;
-    });
-}
-</script>
 {% endblock %}
