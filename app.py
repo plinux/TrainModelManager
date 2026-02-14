@@ -4,7 +4,7 @@ from models import db, Locomotive, CarriageSet, Trainset, LocomotiveHead
 from models import LocomotiveModel, LocomotiveSeries, PowerType, Brand, Depot, ChipInterface, ChipModel, Merchant
 from models import CarriageModel, CarriageSeries, TrainsetModel, TrainsetSeries
 from models import CarriageItem
-from datetime import date
+from datetime import date, datetime
 import re
 import ast
 import operator
@@ -551,7 +551,10 @@ def edit_locomotive(id):
 
     if not errors:
       purchase_date = request.form.get('purchase_date')
-      purchase_date = purchase_date if purchase_date.strip() else date.today()
+      if purchase_date and purchase_date.strip():
+        purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d').date()
+      else:
+        purchase_date = date.today()
 
       locomotive.model_id = int(request.form.get('model_id'))
       locomotive.series_id = request.form.get('series_id')
@@ -699,7 +702,10 @@ def edit_carriage(id):
 
     if not errors:
       purchase_date = request.form.get('purchase_date')
-      purchase_date = purchase_date if purchase_date.strip() else date.today()
+      if purchase_date and purchase_date.strip():
+        purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d').date()
+      else:
+        purchase_date = date.today()
 
       # 更新车厢套装
       carriage_set.brand_id = int(request.form.get('brand_id'))
@@ -878,7 +884,10 @@ def edit_trainset(id):
 
     if not errors:
       purchase_date = request.form.get('purchase_date')
-      purchase_date = purchase_date if purchase_date.strip() else date.today()
+      if purchase_date and purchase_date.strip():
+        purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d').date()
+      else:
+        purchase_date = date.today()
 
       trainset.model_id = int(request.form.get('model_id'))
       trainset.series_id = request.form.get('series_id')
@@ -978,7 +987,10 @@ def edit_locomotive_head(id):
 
   if request.method == 'POST':
     purchase_date = request.form.get('purchase_date')
-    purchase_date = purchase_date if purchase_date.strip() else date.today()
+    if purchase_date and purchase_date.strip():
+      purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d').date()
+    else:
+      purchase_date = date.today()
 
     locomotive_head.model_id = int(request.form.get('model_id'))
     locomotive_head.brand_id = int(request.form.get('brand_id'))
