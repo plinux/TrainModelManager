@@ -85,8 +85,20 @@ function removeCarriageRow(button) {
 
 // 标签页切换
 function showTab(tabId) {
+  // 隐藏所有内容区
   document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+
+  // 移除所有标签的激活状态
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById(tabId).style.display = 'block';
-  event.target.classList.add('active');
+
+  // 显示目标内容区
+  const content = document.getElementById(tabId);
+  if (content) {
+    content.style.display = 'block';
+  }
+
+  // 添加当前点击标签的激活状态
+  if (event && event.target) {
+    event.target.classList.add('active');
+  }
 }
