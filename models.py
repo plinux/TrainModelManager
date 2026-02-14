@@ -177,3 +177,63 @@ class CarriageItem(db.Model):
 
   # 关系
   model = relationship('CarriageModel', backref='items')
+
+class Trainset(db.Model):
+  """动车组模型"""
+  __tablename__ = 'trainset'
+
+  id = db.Column(Integer, primary_key=True, comment='主键')
+  series_id = db.Column(Integer, ForeignKey('trainset_series.id'), comment='关联动车组系列ID')
+  power_type_id = db.Column(Integer, ForeignKey('power_type.id'), comment='关联动力类型ID')
+  model_id = db.Column(Integer, ForeignKey('trainset_model.id'), comment='关联动车组车型ID')
+  brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
+  depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联动车段ID')
+  plaque = db.Column(String(50), comment='挂牌')
+  color = db.Column(String(50), comment='颜色')
+  scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
+  formation = db.Column(Integer, comment='编组数')
+  trainset_number = db.Column(String(12), comment='动车号（3-12位数字，前导0）')
+  decoder_number = db.Column(String(4), comment='编号（1-4位数字，无前导0）')
+  head_light = db.Column(Boolean, comment='头车灯（有/无）')
+  interior_light = db.Column(String(50), comment='室内灯')
+  chip_interface_id = db.Column(Integer, ForeignKey('chip_interface.id'), comment='关联芯片接口ID')
+  chip_model_id = db.Column(Integer, ForeignKey('chip_model.id'), comment='关联芯片型号ID')
+  price = db.Column(String(50), comment='价格表达式（如288+538）')
+  total_price = db.Column(Float, comment='总价（自动计算）')
+  item_number = db.Column(String(50), comment='货号')
+  purchase_date = db.Column(Date, default=date.today, comment='购买日期')
+  merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
+
+  # 关系
+  series = relationship('TrainsetSeries', backref='trainsets')
+  power_type = relationship('PowerType', backref='trainsets')
+  model = relationship('TrainsetModel', backref='trainsets')
+  brand = relationship('Brand', backref='trainsets')
+  depot = relationship('Depot', backref='trainsets')
+  chip_interface = relationship('ChipInterface', backref='trainsets')
+  chip_model = relationship('ChipModel', backref='trainsets')
+  merchant = relationship('Merchant', backref='trainsets')
+
+class LocomotiveHead(db.Model):
+  """先头车模型"""
+  __tablename__ = 'locomotive_head'
+
+  id = db.Column(Integer, primary_key=True, comment='主键')
+  model_id = db.Column(Integer, ForeignKey('trainset_model.id'), comment='关联动车组车型ID')
+  brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
+  depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联动车段ID')
+  special_color = db.Column(String(32), comment='特涂')
+  scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
+  head_light = db.Column(Boolean, comment='头车灯（有/无）')
+  interior_light = db.Column(String(50), comment='室内灯')
+  price = db.Column(String(50), comment='价格表达式（如288+538）')
+  total_price = db.Column(Float, comment='总价（自动计算）')
+  item_number = db.Column(String(50), comment='货号')
+  purchase_date = db.Column(Date, default=date.today, comment='购买日期')
+  merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
+
+  # 关系
+  model = relationship('TrainsetModel', backref='locomotive_heads')
+  brand = relationship('Brand', backref='locomotive_heads')
+  depot = relationship('Depot', backref='locomotive_heads')
+  merchant = relationship('Merchant', backref='locomotive_heads')
