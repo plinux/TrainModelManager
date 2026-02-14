@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}先头车模型 - 火车模型管理系统{% endblock %}
+{% block title %}编辑先头车模型 - 火车模型管理系统{% endblock %}
 
 {% block content %}
-<h1>先头车模型</h1>
+<h1>编辑先头车模型</h1>
 
 <form id="locomotive-head-form" method="POST">
   <div class="form-row">
@@ -12,7 +12,7 @@
       <select id="model_id" name="model_id" required>
         <option value="">请选择</option>
         {% for model in trainset_models %}
-        <option value="{{ model.id }}">{{ model.name }}</option>
+        <option value="{{ model.id }}" {{ 'selected' if model.id == locomotive_head.model_id else '' }}>{{ model.name }}</option>
         {% endfor %}
       </select>
     </div>
@@ -21,15 +21,15 @@
       <select id="brand_id" name="brand_id" required>
         <option value="">请选择</option>
         {% for brand in brands %}
-        <option value="{{ brand.id }}">{{ brand.name }}</option>
+        <option value="{{ brand.id }}" {{ 'selected' if brand.id == locomotive_head.brand_id else '' }}>{{ brand.name }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="form-group">
       <label for="scale">比例 *</label>
       <select id="scale" name="scale" required>
-        <option value="HO">HO</option>
-        <option value="N">N</option>
+        <option value="HO" {{ 'selected' if locomotive_head.scale == 'HO' else '' }}>HO</option>
+        <option value="N" {{ 'selected' if locomotive_head.scale == 'N' else '' }}>N</option>
       </select>
     </div>
   </div>
@@ -40,13 +40,13 @@
       <select id="depot_id" name="depot_id">
         <option value="">请选择</option>
         {% for depot in depots %}
-        <option value="{{ depot.id }}">{{ depot.name }}</option>
+        <option value="{{ depot.id }}" {{ 'selected' if depot.id == locomotive_head.depot_id else '' }}>{{ depot.name }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="form-group">
       <label for="special_color">特涂</label>
-      <input type="text" id="special_color" name="special_color" maxlength="32">
+      <input type="text" id="special_color" name="special_color" maxlength="32" value="{{ locomotive_head.special_color }}">
     </div>
   </div>
 
@@ -55,30 +55,30 @@
       <label>头车灯</label>
       <select name="head_light">
         <option value="">请选择</option>
-        <option value="true">有</option>
-        <option value="false">无</option>
+        <option value="true" {{ 'selected' if locomotive_head.head_light == True else '' }}>有</option>
+        <option value="false" {{ 'selected' if locomotive_head.head_light == False else '' }}>无</option>
       </select>
     </div>
     <div class="form-group">
       <label for="interior_light">室内灯</label>
-      <input type="text" id="interior_light" name="interior_light">
+      <input type="text" id="interior_light" name="interior_light" value="{{ locomotive_head.interior_light }}">
     </div>
   </div>
 
   <div class="form-row">
     <div class="form-group">
       <label for="price">价格（表达式，如288+538）</label>
-      <input type="text" id="price" name="price">
+      <input type="text" id="price" name="price" value="{{ locomotive_head.price }}">
     </div>
     <div class="form-group">
       <label for="item_number">货号</label>
-      <input type="text" id="item_number" name="item_number">
+      <input type="text" id="item_number" name="item_number" value="{{ locomotive_head.item_number }}">
     </div>
   </div>
 
   <div class="form-group">
     <label for="purchase_date">购买日期</label>
-    <input type="date" id="purchase_date" name="purchase_date">
+    <input type="date" id="purchase_date" name="purchase_date" value="{{ locomotive_head.purchase_date }}">
   </div>
 
   <div class="form-group">
@@ -86,12 +86,13 @@
     <select id="merchant_id" name="merchant_id">
       <option value="">请选择</option>
       {% for merchant in merchants %}
-      <option value="{{ merchant.id }}">{{ merchant.name }}</option>
+      <option value="{{ merchant.id }}" {{ 'selected' if merchant.id == locomotive_head.merchant_id else '' }}>{{ merchant.name }}</option>
       {% endfor %}
     </select>
   </div>
 
-  <button type="submit">添加</button>
+  <button type="submit">保存</button>
+  <a href="{{ url_for('locomotive_head') }}" class="btn-cancel">取消</a>
 </form>
 
 {% if errors %}
@@ -102,33 +103,4 @@
 </div>
 {% endif %}
 
-<table>
-  <thead>
-    <tr>
-      <th>车型</th>
-      <th>品牌</th>
-      <th>比例</th>
-      <th>特涂</th>
-      <th>总价</th>
-      <th>操作</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for head in locomotive_heads %}
-    <tr>
-      <td>{{ head.model.name }}</td>
-      <td>{{ head.brand.name }}</td>
-      <td>{{ head.scale }}</td>
-      <td>{{ head.special_color }}</td>
-      <td>{{ head.total_price }}</td>
-      <td>
-        <a href="{{ url_for('edit_locomotive_head', id=head.id) }}" class="btn-edit">编辑</a>
-        <form method="POST" action="{{ url_for('delete_locomotive_head', id=head.id) }}" onsubmit="return confirm('确定删除？')">
-          <button type="submit" class="btn-danger">删除</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
 {% endblock %}

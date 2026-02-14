@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}编辑车厢套装 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<h1>编辑车厢套装</h1>
+
+<form id="carriage-form" method="POST">
+  <div class="form-row">
+    <div class="form-group">
+      <label for="brand_id">品牌 *</label>
+      <select id="brand_id" name="brand_id" required>
+        <option value="">请选择</option>
+        {% for brand in brands %}
+        <option value="{{ brand.id }}" {{ 'selected' if brand.id == carriage_set.brand_id else '' }}>{{ brand.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="series_id">系列</label>
+      <select id="series_id" name="series_id">
+        <option value="">请选择</option>
+        {% for series in carriage_series %}
+        <option value="{{ series.id }}" {{ 'selected' if series.id == carriage_set.series_id else '' }}>{{ series.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="scale">比例 *</label>
+      <select id="scale" name="scale" required>
+        <option value="HO" {{ 'selected' if carriage_set.scale == 'HO' else '' }}>HO</option>
+        <option value="N" {{ 'selected' if carriage_set.scale == 'N' else '' }}>N</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="depot_id">车辆段</label>
+      <select id="depot_id" name="depot_id">
+        <option value="">请选择</option>
+        {% for depot in depots %}
+        <option value="{{ depot.id }}" {{ 'selected' if depot.id == carriage_set.depot_id else '' }}>{{ depot.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="train_number">车次</label>
+      <input type="text" id="train_number" name="train_number" value="{{ carriage_set.train_number }}">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="plaque">挂牌</label>
+      <input type="text" id="plaque" name="plaque" value="{{ carriage_set.plaque }}">
+    </div>
+    <div class="form-group">
+      <label for="item_number">货号</label>
+      <input type="text" id="item_number" name="item_number" value="{{ carriage_set.item_number }}">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="total_price">总价</label>
+    <input type="number" id="total_price" name="total_price" step="0.01" value="{{ carriage_set.total_price }}">
+  </div>
+
+  <div class="form-group">
+    <label for="purchase_date">购买日期</label>
+    <input type="date" id="purchase_date" name="purchase_date" value="{{ carriage_set.purchase_date }}">
+  </div>
+
+  <div class="form-group">
+    <label for="merchant_id">购买商家</label>
+    <select id="merchant_id" name="merchant_id">
+      <option value="">请选择</option>
+      {% for merchant in merchants %}
+      <option value="{{ merchant.id }}" {{ 'selected' if merchant.id == carriage_set.merchant_id else '' }}>{{ merchant.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <h3>车厢列表</h3>
+  <div id="carriage-items">
+    {% for item in carriage_set.items %}
+    <div class="carriage-item form-row">
+      <div class="form-group">
+        <label>系列</label>
+        <select name="series_{{ item.id }}" onchange="handleSeriesChange(this)">
+          {% for series in carriage_series %}
+          <option value="{{ series.id }}" {{ 'selected' if series.id == item.model.series_id else '' }}>{{ series.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>车型</label>
+        <select name="model_{{ item.id }}">
+          {% for model in carriage_models %}
+          <option value="{{ model.id }}" {{ 'selected' if model.id == item.model_id else '' }}>{{ model.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>车辆号</label>
+        <input type="text" name="car_number_{{ item.id }}" value="{{ item.car_number }}">
+      </div>
+      <div class="form-group">
+        <label>颜色</label>
+        <input type="text" name="color_{{ item.id }}" value="{{ item.color }}">
+      </div>
+      <div class="form-group">
+        <label>灯光</label>
+        <input type="text" name="lighting_{{ item.id }}" value="{{ item.lighting }}">
+      </div>
+      <button type="button" onclick="removeCarriageRow(this)">删除</button>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button type="button" onclick="addCarriageRow()">添加车厢</button>
+  <button type="submit">保存</button>
+  <a href="{{ url_for('carriage') }}" class="btn-cancel">取消</a>
+</form>
+
+<script>
+  // 将车厢系列和车型数据传递给前端
+  window.carriageSeriesData = [
+    {% for series in carriage_series %}
+    { id: {{ series.id }}, name: '{{ series.name }}' },
+    {% endfor %}
+  ];
+  window.carriageModelData = [
+    {% for model in carriage_models %}
+    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id }} },
+    {% endfor %}
+  ];
+</script>
+
+<script src="/static/js/app.js"></script>
+
+{% if errors %}
+<div class="error">
+  {% for error in errors %}
+  <p>{{ error }}</p>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

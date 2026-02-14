@@ -90,6 +90,26 @@ th {
   color: red;
 }
 
+/* 通用按钮样式基础 */
+button,
+.btn-edit,
+.btn-cancel {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: inherit;
+  line-height: inherit;
+  text-decoration: none;
+  display: inline-block;
+}
+
+button:hover,
+.btn-edit:hover,
+.btn-cancel:hover {
+  opacity: 0.9;
+}
+
 .btn-danger {
   background-color: #dc3545;
 }
@@ -101,10 +121,6 @@ th {
 .btn-edit {
   background-color: #28a745;
   color: white;
-  padding: 0.5rem 1rem;
-  text-decoration: none;
-  border-radius: 4px;
-  display: inline-block;
   margin-right: 0.5rem;
 }
 
@@ -115,10 +131,6 @@ th {
 .btn-cancel {
   background-color: #6c757d;
   color: white;
-  padding: 0.5rem 1rem;
-  text-decoration: none;
-  border-radius: 4px;
-  display: inline-block;
   margin-left: 0.5rem;
 }
 
@@ -127,8 +139,12 @@ th {
 }
 
 /* 表格中按钮样式 */
-td a, td form {
+td form {
   display: inline-block;
+}
+
+td form button {
+  margin: 0;
 }
 
 .form-row {
