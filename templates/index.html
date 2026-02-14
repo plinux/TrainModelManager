@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}汇总统计 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<h1>汇总统计</h1>
+
+<div id="statistics">
+  <h2>各类型统计</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <h3>机车模型</h3>
+      <p>数量: <span id="locomotive-count">0</span></p>
+      <p>总价: ¥<span id="locomotive-total">0</span></p>
+    </div>
+    <div class="stat-card">
+      <h3>车厢模型</h3>
+      <p>数量: <span id="carriage-count">0</span></p>
+      <p>总价: ¥<span id="carriage-total">0</span></p>
+    </div>
+    <div class="stat-card">
+      <h3>动车组模型</h3>
+      <p>数量: <span id="trainset-count">0</span></p>
+      <p>总价: ¥<span id="trainset-total">0</span></p>
+    </div>
+    <div class="stat-card">
+      <h3>先头车模型</h3>
+      <p>数量: <span id="locomotive-head-count">0</span></p>
+      <p>总价: ¥<span id="locomotive-head-total">0</span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// 页面加载时获取统计数据
+document.addEventListener('DOMContentLoaded', function() {
+  fetch('/api/statistics')
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('locomotive-count').textContent = data.locomotive.count;
+      document.getElementById('locomotive-total').textContent = data.locomotive.total;
+      document.getElementById('carriage-count').textContent = data.carriage.count;
+      document.getElementById('carriage-total').textContent = data.carriage.total;
+      document.getElementById('trainset-count').textContent = data.trainset.count;
+      document.getElementById('trainset-total').textContent = data.trainset.total;
+      document.getElementById('locomotive-head-count').textContent = data.locomotive_head.count;
+      document.getElementById('locomotive-head-total').textContent = data.locomotive_head.total;
+    });
+});
+</script>
+
+<style>
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.stat-card {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.stat-card h3 {
+  margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

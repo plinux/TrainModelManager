@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 from config import Config
-from models import db
+from models import db, Locomotive, CarriageSet, Trainset, LocomotiveHead
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -15,6 +15,33 @@ def index():
 def options():
   """选项维护页面"""
   return render_template('options.html')
+
+@app.route('/api/statistics')
+def statistics():
+  """获取汇总统计数据"""
+  locomotives = Locomotive.query.all()
+  carriage_sets = CarriageSet.query.all()
+  trainsets = Trainset.query.all()
+  locomotive_heads = LocomotiveHead.query.all()
+
+  return jsonify({
+    'locomotive': {
+      'count': len(locomotives),
+      'total': sum(l.total_price or 0 for l in locomotives)
+    },
+    'carriage': {
+      'count': len(carriage_sets),
+      'total': sum(c.total_price or 0 for c in carriage_sets)
+    },
+    'trainset': {
+      'count': len(trainsets),
+      'total': sum(t.total_price or 0 for t in trainsets)
+    },
+    'locomotive_head': {
+      'count': len(locomotive_heads),
+      'total': sum(l.total_price or 0 for l in locomotive_heads)
+    }
+  })
 
 if __name__ == '__main__':
   app.run(debug=True)
