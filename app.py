@@ -538,6 +538,8 @@ def add_locomotive_series():
 @app.route('/options/locomotive_series/delete/<int:id>', methods=['POST'])
 def delete_locomotive_series(id):
   series = LocomotiveSeries.query.get_or_404(id)
+  if series.locomotives or series.models:
+    return f"该机车系列正在被使用，无法删除！<script>setTimeout(()=>location.href='/options', 2000);</script>"
   db.session.delete(series)
   db.session.commit()
   return redirect(url_for('options'))
@@ -556,6 +558,8 @@ def add_locomotive_model():
 @app.route('/options/locomotive_model/delete/<int:id>', methods=['POST'])
 def delete_locomotive_model(id):
   model = LocomotiveModel.query.get_or_404(id)
+  if model.locomotives:
+    return f"该机车型号正在被使用，无法删除！<script>setTimeout(()=>location.href='/options', 2000);</script>"
   db.session.delete(model)
   db.session.commit()
   return redirect(url_for('options'))
@@ -570,6 +574,8 @@ def add_carriage_series():
 @app.route('/options/carriage_series/delete/<int:id>', methods=['POST'])
 def delete_carriage_series(id):
   series = CarriageSeries.query.get_or_404(id)
+  if series.carriages or series.models:
+    return f"该车厢系列正在被使用，无法删除！<script>setTimeout(()=>location.href='/options', 2000);</script>"
   db.session.delete(series)
   db.session.commit()
   return redirect(url_for('options'))
@@ -588,6 +594,8 @@ def add_carriage_model():
 @app.route('/options/carriage_model/delete/<int:id>', methods=['POST'])
 def delete_carriage_model(id):
   model = CarriageModel.query.get_or_404(id)
+  if model.items:
+    return f"该车厢型号正在被使用，无法删除！<script>setTimeout(()=>location.href='/options', 2000);</script>"
   db.session.delete(model)
   db.session.commit()
   return redirect(url_for('options'))
@@ -602,6 +610,8 @@ def add_trainset_series():
 @app.route('/options/trainset_series/delete/<int:id>', methods=['POST'])
 def delete_trainset_series(id):
   series = TrainsetSeries.query.get_or_404(id)
+  if series.trainsets or series.models:
+    return f"该动车组系列正在被使用，无法删除！<script>setTimeout(()=>location.href='/options', 2000);</script>"
   db.session.delete(series)
   db.session.commit()
   return redirect(url_for('options'))
@@ -620,6 +630,8 @@ def add_trainset_model():
 @app.route('/options/trainset_model/delete/<int:id>', methods=['POST'])
 def delete_trainset_model(id):
   model = TrainsetModel.query.get_or_404(id)
+  if model.trainsets or model.locomotive_heads:
+    return f"该动车组车型正在被使用，无法删除！<script>setTimeout(()=>location.href='/options', 2000);</script>"
   db.session.delete(model)
   db.session.commit()
   return redirect(url_for('options'))
