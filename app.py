@@ -292,6 +292,89 @@ def delete_locomotive(id):
   logger.info(f"Locomotive deleted: ID={id}")
   return redirect(url_for('locomotive'))
 
+@app.route('/locomotive/edit/<int:id>', methods=['GET', 'POST'])
+def edit_locomotive(id):
+  """编辑机车模型"""
+  locomotive = Locomotive.query.get_or_404(id)
+  locomotive_models = LocomotiveModel.query.all()
+  locomotive_series = LocomotiveSeries.query.all()
+  power_types = PowerType.query.all()
+  brands = Brand.query.all()
+  depots = Depot.query.all()
+  chip_interfaces = ChipInterface.query.all()
+  chip_models = ChipModel.query.all()
+  merchants = Merchant.query.all()
+
+  errors = []
+
+  if request.method == 'POST':
+    scale = request.form.get('scale')
+    locomotive_number = request.form.get('locomotive_number')
+    decoder_number = request.form.get('decoder_number')
+
+    # 格式验证
+    if locomotive_number and not validate_locomotive_number(locomotive_number):
+      errors.append("机车号格式错误：应为4-12位数字，允许前导0")
+    if decoder_number and not validate_decoder_number(decoder_number):
+      errors.append("编号格式错误：应为1-4位数字，无前导0")
+
+    # 唯一性验证（排除当前记录）
+    if locomotive_number:
+      duplicate = Locomotive.query.filter(
+        Locomotive.locomotive_number == locomotive_number,
+        Locomotive.scale == scale,
+        Locomotive.id != id
+      ).first()
+      if duplicate:
+        errors.append(f"机车号 {locomotive_number} 在 {scale} 比例下已存在")
+    if decoder_number:
+      duplicate = Locomotive.query.filter(
+        Locomotive.decoder_number == decoder_number,
+        Locomotive.scale == scale,
+        Locomotive.id != id
+      ).first()
+      if duplicate:
+        errors.append(f"编号 {decoder_number} 在 {scale} 比例下已存在")
+
+    if not errors:
+      purchase_date = request.form.get('purchase_date')
+      purchase_date = purchase_date if purchase_date.strip() else date.today()
+
+      locomotive.model_id = int(request.form.get('model_id'))
+      locomotive.series_id = request.form.get('series_id')
+      locomotive.power_type_id = request.form.get('power_type_id')
+      locomotive.brand_id = int(request.form.get('brand_id'))
+      locomotive.depot_id = request.form.get('depot_id')
+      locomotive.plaque = request.form.get('plaque')
+      locomotive.color = request.form.get('color')
+      locomotive.scale = scale
+      locomotive.locomotive_number = locomotive_number
+      locomotive.decoder_number = decoder_number
+      locomotive.chip_interface_id = request.form.get('chip_interface_id')
+      locomotive.chip_model_id = request.form.get('chip_model_id')
+      locomotive.price = request.form.get('price')
+      locomotive.total_price = calculate_price(request.form.get('price'))
+      locomotive.item_number = request.form.get('item_number')
+      locomotive.purchase_date = purchase_date
+      locomotive.merchant_id = request.form.get('merchant_id')
+
+      db.session.commit()
+      logger.info(f"Locomotive updated: ID={id}")
+      return redirect(url_for('locomotive'))
+
+  return render_template('locomotive_edit.html',
+    locomotive=locomotive,
+    locomotive_models=locomotive_models,
+    locomotive_series=locomotive_series,
+    power_types=power_types,
+    brands=brands,
+    depots=depots,
+    chip_interfaces=chip_interfaces,
+    chip_models=chip_models,
+    merchants=merchants,
+    errors=errors
+  )
+
 @app.route('/carriage', methods=['GET', 'POST'])
 def carriage():
   """车厢模型列表和添加"""
@@ -376,6 +459,80 @@ def delete_carriage(id):
   db.session.commit()
   logger.info(f"Carriage set deleted: ID={id}")
   return redirect(url_for('carriage'))
+
+@app.route('/carriage/edit/<int:id>', methods=['GET', 'POST'])
+def edit_carriage(id):
+  """编辑车厢套装"""
+  carriage_set = CarriageSet.query.get_or_404(id)
+  carriage_models = CarriageModel.query.all()
+  carriage_series = CarriageSeries.query.all()
+  brands = Brand.query.all()
+  depots = Depot.query.all()
+  merchants = Merchant.query.all()
+
+  errors = []
+
+  if request.method == 'POST':
+    # 先验证车辆号格式
+    for i in range(10):
+      model_key = f'model_{i}'
+      car_number_key = f'car_number_{i}'
+
+      if model_key in request.form and request.form.get(model_key):
+        car_number = request.form.get(car_number_key)
+        # 格式验证
+        if car_number and not validate_car_number(car_number):
+          errors.append(f"车辆号 {car_number} 格式错误：应为3-10位数字，无前导0")
+
+    if not errors:
+      purchase_date = request.form.get('purchase_date')
+      purchase_date = purchase_date if purchase_date.strip() else date.today()
+
+      # 更新车厢套装
+      carriage_set.brand_id = int(request.form.get('brand_id'))
+      carriage_set.series_id = request.form.get('series_id')
+      carriage_set.depot_id = request.form.get('depot_id')
+      carriage_set.train_number = request.form.get('train_number')
+      carriage_set.plaque = request.form.get('plaque')
+      carriage_set.item_number = request.form.get('item_number')
+      carriage_set.scale = request.form.get('scale')
+      carriage_set.total_price = float(request.form.get('total_price') or 0)
+      carriage_set.purchase_date = purchase_date
+      carriage_set.merchant_id = request.form.get('merchant_id')
+
+      # 删除旧的车厢项
+      CarriageItem.query.filter_by(set_id=id).delete()
+
+      # 添加新的车厢项
+      for i in range(10):
+        model_key = f'model_{i}'
+        car_number_key = f'car_number_{i}'
+        color_key = f'color_{i}'
+        lighting_key = f'lighting_{i}'
+
+        if model_key in request.form and request.form.get(model_key):
+          carriage_item = CarriageItem(
+            set_id=carriage_set.id,
+            model_id=int(request.form.get(model_key)),
+            car_number=request.form.get(car_number_key),
+            color=request.form.get(color_key),
+            lighting=request.form.get(lighting_key)
+          )
+          db.session.add(carriage_item)
+
+      db.session.commit()
+      logger.info(f"Carriage set updated: ID={id}")
+      return redirect(url_for('carriage'))
+
+  return render_template('carriage_edit.html',
+    carriage_set=carriage_set,
+    carriage_models=carriage_models,
+    carriage_series=carriage_series,
+    brands=brands,
+    depots=depots,
+    merchants=merchants,
+    errors=errors
+  )
 
 @app.route('/trainset', methods=['GET', 'POST'])
 def trainset():
@@ -462,6 +619,92 @@ def delete_trainset(id):
   logger.info(f"Trainset deleted: ID={id}")
   return redirect(url_for('trainset'))
 
+@app.route('/trainset/edit/<int:id>', methods=['GET', 'POST'])
+def edit_trainset(id):
+  """编辑动车组模型"""
+  trainset = Trainset.query.get_or_404(id)
+  trainset_models = TrainsetModel.query.all()
+  trainset_series = TrainsetSeries.query.all()
+  power_types = PowerType.query.all()
+  brands = Brand.query.all()
+  depots = Depot.query.all()
+  chip_interfaces = ChipInterface.query.all()
+  chip_models = ChipModel.query.all()
+  merchants = Merchant.query.all()
+
+  errors = []
+
+  if request.method == 'POST':
+    scale = request.form.get('scale')
+    trainset_number = request.form.get('trainset_number')
+    decoder_number = request.form.get('decoder_number')
+
+    # 格式验证
+    if trainset_number and not validate_trainset_number(trainset_number):
+      errors.append("动车号格式错误：应为3-12位数字，允许前导0")
+    if decoder_number and not validate_decoder_number(decoder_number):
+      errors.append("编号格式错误：应为1-4位数字，无前导0")
+
+    # 唯一性验证（排除当前记录）
+    if trainset_number:
+      duplicate = Trainset.query.filter(
+        Trainset.trainset_number == trainset_number,
+        Trainset.scale == scale,
+        Trainset.id != id
+      ).first()
+      if duplicate:
+        errors.append(f"动车号 {trainset_number} 在 {scale} 比例下已存在")
+    if decoder_number:
+      duplicate = Trainset.query.filter(
+        Trainset.decoder_number == decoder_number,
+        Trainset.scale == scale,
+        Trainset.id != id
+      ).first()
+      if duplicate:
+        errors.append(f"编号 {decoder_number} 在 {scale} 比例下已存在")
+
+    if not errors:
+      purchase_date = request.form.get('purchase_date')
+      purchase_date = purchase_date if purchase_date.strip() else date.today()
+
+      trainset.model_id = int(request.form.get('model_id'))
+      trainset.series_id = request.form.get('series_id')
+      trainset.power_type_id = request.form.get('power_type_id')
+      trainset.brand_id = int(request.form.get('brand_id'))
+      trainset.depot_id = request.form.get('depot_id')
+      trainset.plaque = request.form.get('plaque')
+      trainset.color = request.form.get('color')
+      trainset.scale = scale
+      trainset.formation = int(request.form.get('formation')) if request.form.get('formation') else None
+      trainset.trainset_number = trainset_number
+      trainset.decoder_number = decoder_number
+      trainset.head_light = True if request.form.get('head_light') == 'true' else False
+      trainset.interior_light = request.form.get('interior_light')
+      trainset.chip_interface_id = request.form.get('chip_interface_id')
+      trainset.chip_model_id = request.form.get('chip_model_id')
+      trainset.price = request.form.get('price')
+      trainset.total_price = calculate_price(request.form.get('price'))
+      trainset.item_number = request.form.get('item_number')
+      trainset.purchase_date = purchase_date
+      trainset.merchant_id = request.form.get('merchant_id')
+
+      db.session.commit()
+      logger.info(f"Trainset updated: ID={id}")
+      return redirect(url_for('trainset'))
+
+  return render_template('trainset_edit.html',
+    trainset=trainset,
+    trainset_models=trainset_models,
+    trainset_series=trainset_series,
+    power_types=power_types,
+    brands=brands,
+    depots=depots,
+    chip_interfaces=chip_interfaces,
+    chip_models=chip_models,
+    merchants=merchants,
+    errors=errors
+  )
+
 @app.route('/locomotive-head', methods=['GET', 'POST'])
 def locomotive_head():
   """先头车模型列表和添加"""
@@ -510,6 +753,44 @@ def delete_locomotive_head(id):
   db.session.commit()
   logger.info(f"Locomotive head deleted: ID={id}")
   return redirect(url_for('locomotive_head'))
+
+@app.route('/locomotive-head/edit/<int:id>', methods=['GET', 'POST'])
+def edit_locomotive_head(id):
+  """编辑先头车模型"""
+  locomotive_head = LocomotiveHead.query.get_or_404(id)
+  trainset_models = TrainsetModel.query.all()
+  brands = Brand.query.all()
+  depots = Depot.query.all()
+  merchants = Merchant.query.all()
+
+  if request.method == 'POST':
+    purchase_date = request.form.get('purchase_date')
+    purchase_date = purchase_date if purchase_date.strip() else date.today()
+
+    locomotive_head.model_id = int(request.form.get('model_id'))
+    locomotive_head.brand_id = int(request.form.get('brand_id'))
+    locomotive_head.depot_id = request.form.get('depot_id')
+    locomotive_head.special_color = request.form.get('special_color')
+    locomotive_head.scale = request.form.get('scale')
+    locomotive_head.head_light = True if request.form.get('head_light') == 'true' else False
+    locomotive_head.interior_light = request.form.get('interior_light')
+    locomotive_head.price = request.form.get('price')
+    locomotive_head.total_price = calculate_price(request.form.get('price'))
+    locomotive_head.item_number = request.form.get('item_number')
+    locomotive_head.purchase_date = purchase_date
+    locomotive_head.merchant_id = request.form.get('merchant_id')
+
+    db.session.commit()
+    logger.info(f"Locomotive head updated: ID={id}")
+    return redirect(url_for('locomotive_head'))
+
+  return render_template('locomotive_head_edit.html',
+    locomotive_head=locomotive_head,
+    trainset_models=trainset_models,
+    brands=brands,
+    depots=depots,
+    merchants=merchants
+  )
 
 # 选项维护路由
 @app.route('/options/power_type', methods=['POST'])
