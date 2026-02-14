@@ -321,8 +321,8 @@
       <tr data-id="{{ model.id }}" data-type="locomotive_model" data-fields="name,series_id,power_type_id"
           data-series="{{ model.series_id or '' }}" data-power="{{ model.power_type_id or '' }}">
         <td data-field="name">{{ model.name }}</td>
-        <td data-field="series">{{ model.series.name if model.series else '-' }}</td>
-        <td data-field="power">{{ model.power_type.name if model.power_type else '-' }}</td>
+        <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="power_type_id">{{ model.power_type.name if model.power_type else '-' }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'locomotive_model')" style="display:none;">保存</button>
@@ -402,8 +402,8 @@
       <tr data-id="{{ model.id }}" data-type="carriage_model" data-fields="name,series_id,type"
           data-series="{{ model.series_id or '' }}" data-carriage-type="{{ model.type }}">
         <td data-field="name">{{ model.name }}</td>
-        <td data-field="series">{{ model.series.name if model.series else '-' }}</td>
-        <td data-field="carriage_type">{{ model.type }}</td>
+        <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="type">{{ model.type }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'carriage_model')" style="display:none;">保存</button>
@@ -483,8 +483,8 @@
       <tr data-id="{{ model.id }}" data-type="trainset_model" data-fields="name,series_id,power_type_id"
           data-series="{{ model.series_id or '' }}" data-power="{{ model.power_type_id or '' }}">
         <td data-field="name">{{ model.name }}</td>
-        <td data-field="series">{{ model.series.name if model.series else '-' }}</td>
-        <td data-field="power">{{ model.power_type.name if model.power_type else '-' }}</td>
+        <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="power_type_id">{{ model.power_type.name if model.power_type else '-' }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'trainset_model')" style="display:none;">保存</button>
