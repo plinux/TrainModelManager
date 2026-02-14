@@ -3,7 +3,10 @@
 {% block title %}选项维护 - 火车模型管理系统{% endblock %}
 
 {% block content %}
-<h1>选项维护</h1>
+<div class="page-header">
+  <h1>选项维护</h1>
+  <button onclick="openReinitDialog()" class="btn-danger-reinit">重新初始化数据库</button>
+</div>
 
 <div class="option-groups">
   <!-- 购买信息 -->
@@ -60,9 +63,6 @@
     </div>
   </div>
 </div>
-
-<!-- 重新初始化数据库按钮 - 固定在右上角 -->
-<button onclick="openReinitDialog()" class="btn-danger-reinit">重新初始化数据库</button>
 
 <!-- 重新初始化数据库确认对话框 -->
 <div id="reinit-modal" class="modal" style="display:none;">

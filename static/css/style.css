@@ -261,12 +261,21 @@ td form button {
   }
 }
 
-/* 重新初始化数据库按钮 - 固定在右上角 */
+/* 页面头部 - 包含标题和重新初始化按钮 */
+.page-header {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+/* 重新初始化数据库按钮 - 绝对定位在右上角 */
 .btn-danger-reinit {
-  position: fixed;
-  top: 6.5rem;
-  right: 3.5rem;
-  z-index: 100;
+  position: absolute;
+  top: 0;
+  right: 0;
   padding: 0.5rem 1.25rem !important;
   background-color: #dc3545;
   color: white;
