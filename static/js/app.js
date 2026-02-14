@@ -44,18 +44,46 @@ function autoFillTrainset() {
 // 车厢项管理
 let carriageItemCount = 0;
 
+// 根据系列ID过滤车型
+function filterModelsBySeries(seriesId, modelSelect) {
+  modelSelect.innerHTML = '<option value="">请选择</option>';
+
+  if (!seriesId || !window.carriageModelData) return;
+
+  const filteredModels = window.carriageModelData.filter(model => model.series_id === parseInt(seriesId));
+  filteredModels.forEach(model => {
+    const option = document.createElement('option');
+    option.value = model.id;
+    option.textContent = model.name;
+    modelSelect.appendChild(option);
+  });
+}
+
+// 为系列选择框生成选项
+function generateSeriesOptions() {
+  if (!window.carriageSeriesData) return '<option value="">请选择</option>';
+
+  return window.carriageSeriesData.map(series =>
+    `<option value="${series.id}">${series.name}</option>`
+  ).join('');
+}
+
 function addCarriageRow() {
   const container = document.getElementById('carriage-items');
-  const firstModelSelect = container.querySelector('select[name^="model_"]');
-  const modelOptions = firstModelSelect ? firstModelSelect.innerHTML : '<option value="">请选择</option>';
 
   const newItem = document.createElement('div');
   newItem.className = 'carriage-item form-row';
   newItem.innerHTML = `
     <div class="form-group">
+      <label>系列</label>
+      <select name="series_${carriageItemCount}" onchange="handleSeriesChange(this)">
+        ${generateSeriesOptions()}
+      </select>
+    </div>
+    <div class="form-group">
       <label>车型</label>
       <select name="model_${carriageItemCount}">
-        ${modelOptions}
+        <option value="">请选择</option>
       </select>
     </div>
     <div class="form-group">
@@ -74,6 +102,13 @@ function addCarriageRow() {
   `;
   container.appendChild(newItem);
   carriageItemCount++;
+}
+
+// 处理系列选择变化
+function handleSeriesChange(seriesSelect) {
+  const row = seriesSelect.closest('.carriage-item');
+  const modelSelect = row.querySelector('select[name^="model_"]');
+  filterModelsBySeries(seriesSelect.value, modelSelect);
 }
 
 function removeCarriageRow(button) {

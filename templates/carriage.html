@@ -91,6 +91,20 @@
   <button type="submit">添加套装</button>
 </form>
 
+<script>
+  // 将车厢系列和车型数据传递给前端
+  window.carriageSeriesData = [
+    {% for series in carriage_series %}
+    { id: {{ series.id }}, name: '{{ series.name }}' },
+    {% endfor %}
+  ];
+  window.carriageModelData = [
+    {% for model in carriage_models %}
+    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id }} },
+    {% endfor %}
+  ];
+</script>
+
 <script src="/static/js/app.js"></script>
 
 {% if errors %}
