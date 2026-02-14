@@ -8,6 +8,18 @@ from datetime import date
 import re
 import ast
 import operator
+import logging
+
+# 配置日志
+logging.basicConfig(
+  level=logging.INFO,
+  format='%(asctime)s %(name)s %(levelname)s %(message)s',
+  handlers=[
+    logging.FileHandler('app.log'),
+    logging.StreamHandler()
+  ]
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -270,8 +282,10 @@ def locomotive():
 def delete_locomotive(id):
   """删除机车模型"""
   locomotive = Locomotive.query.get_or_404(id)
+  logger.info(f"Deleting locomotive: {locomotive}")
   db.session.delete(locomotive)
   db.session.commit()
+  logger.info(f"Locomotive deleted: ID={id}")
   return redirect(url_for('locomotive'))
 
 @app.route('/carriage', methods=['GET', 'POST'])
@@ -350,8 +364,10 @@ def carriage():
 def delete_carriage(id):
   """删除车厢套装"""
   carriage_set = CarriageSet.query.get_or_404(id)
+  logger.info(f"Deleting carriage set: {carriage_set}")
   db.session.delete(carriage_set)
   db.session.commit()
+  logger.info(f"Carriage set deleted: ID={id}")
   return redirect(url_for('carriage'))
 
 @app.route('/trainset', methods=['GET', 'POST'])
@@ -430,8 +446,10 @@ def trainset():
 def delete_trainset(id):
   """删除动车组模型"""
   trainset = Trainset.query.get_or_404(id)
+  logger.info(f"Deleting trainset: {trainset}")
   db.session.delete(trainset)
   db.session.commit()
+  logger.info(f"Trainset deleted: ID={id}")
   return redirect(url_for('trainset'))
 
 @app.route('/locomotive-head', methods=['GET', 'POST'])
@@ -474,16 +492,20 @@ def locomotive_head():
 def delete_locomotive_head(id):
   """删除先头车模型"""
   locomotive_head = LocomotiveHead.query.get_or_404(id)
+  logger.info(f"Deleting locomotive head: {locomotive_head}")
   db.session.delete(locomotive_head)
   db.session.commit()
+  logger.info(f"Locomotive head deleted: ID={id}")
   return redirect(url_for('locomotive_head'))
 
 # 选项维护路由
 @app.route('/options/power_type', methods=['POST'])
 def add_power_type():
   power_type = PowerType(name=request.form.get('name'))
+  logger.info(f"Adding power type: {power_type.name}")
   db.session.add(power_type)
   db.session.commit()
+  logger.info(f"Power type added: ID={power_type.id}")
   return redirect(url_for('options'))
 
 @app.route('/options/power_type/delete/<int:id>', methods=['POST'])
@@ -714,6 +736,7 @@ def internal_error(error):
 def handle_exception(error):
   """全局异常处理"""
   db.session.rollback()
+  logger.error(f"Unhandled exception: {str(error)}", exc_info=True)
   return f"服务器错误: {str(error)}<script>setTimeout(()=>location.href='/', 3000);</script>", 500
 
 if __name__ == '__main__':
