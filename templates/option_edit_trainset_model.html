@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}编辑动车组车型 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<h1>编辑动车组车型</h1>
+
+<form method="POST">
+  <div class="form-row">
+    <div class="form-group">
+      <label for="name">动车组车型 *</label>
+      <input type="text" id="name" name="name" required value="{{ model.name }}">
+    </div>
+    <div class="form-group">
+      <label for="series_id">动车组系列 *</label>
+      <select id="series_id" name="series_id" required>
+        {% for series in trainset_series %}
+        <option value="{{ series.id }}" {{ 'selected' if series.id == model.series_id else '' }}>{{ series.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="power_type_id">动力类型 *</label>
+      <select id="power_type_id" name="power_type_id" required>
+        {% for type in power_types %}
+        <option value="{{ type.id }}" {{ 'selected' if type.id == model.power_type_id else '' }}>{{ type.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <button type="submit">保存</button>
+  <a href="{{ url_for('options') }}" class="btn-cancel">取消</a>
+</form>
+
+{% endblock %}

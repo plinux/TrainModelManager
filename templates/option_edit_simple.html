@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<form method="POST" action="{{ action_url }}">
+  <div class="form-group">
+    <label for="name">名称 *</label>
+    <input type="text" id="name" name="name" required value="{{ item.name }}">
+  </div>
+
+  <button type="submit">保存</button>
+  <a href="{{ url_for('options') }}" class="btn-cancel">取消</a>
+</form>
+
+{% endblock %}
