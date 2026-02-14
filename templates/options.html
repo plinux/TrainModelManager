@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}选项维护 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<h1>选项维护</h1>
+
+<div class="tabs">
+  <button onclick="showTab('power_types')" class="tab-btn active">动力类型</button>
+  <button onclick="showTab('brands')" class="tab-btn">品牌</button>
+  <button onclick="showTab('merchants')" class="tab-btn">商家</button>
+  <button onclick="showTab('depots')" class="tab-btn">车辆段/机务段</button>
+</div>
+
+<div id="power_types" class="tab-content">
+  <h2>动力类型</h2>
+  <form method="POST">
+    <input type="text" name="name" placeholder="新增动力类型" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for type in power_types %}
+      <tr>
+        <td>{{ type.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_power_type', id=type.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="brands" class="tab-content" style="display:none;">
+  <h2>品牌</h2>
+  <form method="POST">
+    <input type="text" name="name" placeholder="新增品牌" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for brand in brands %}
+      <tr>
+        <td>{{ brand.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_brand', id=brand.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="merchants" class="tab-content" style="display:none;">
+  <h2>商家</h2>
+  <form method="POST">
+    <input type="text" name="name" placeholder="新增商家" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for merchant in merchants %}
+      <tr>
+        <td>{{ merchant.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_merchant', id=merchant.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="depots" class="tab-content" style="display:none;">
+  <h2>车辆段/机务段</h2>
+  <form method="POST">
+    <input type="text" name="name" placeholder="新增车辆段" required>
+    <button type="submit">添加</button>
+  </form>
+  <table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for depot in depots %}
+      <tr>
+        <td>{{ depot.name }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_depot', id=depot.id) }}">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).style.display = 'block';
+  event.target.classList.add('active');
+}
+</script>
+
+<style>
+.tabs {
+  margin-bottom: 1rem;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+  border: 1px solid #ddd;
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.tab-content {
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.tab-content table {
+  margin-top: 1rem;
+}
+</style>
+{% endblock %}
