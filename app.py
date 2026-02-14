@@ -152,6 +152,10 @@ def api_add_locomotive():
     purchase_date = data.get('purchase_date')
     purchase_date = purchase_date if purchase_date and purchase_date.strip() else date.today()
 
+    # 调试价格数据
+    price_value = data.get('price')
+    logger.info(f"Received price field: '{price_value}', type: {type(price_value)}")
+
     locomotive = Locomotive(
       model_id=int(data.get('model_id')),
       series_id=data.get('series_id'),
@@ -221,12 +225,9 @@ def api_add_carriage():
       model_key = f'model_{i}'
       if data.get(model_key):
         carriage_item = CarriageItem(
-          carriage_set_id=carriage_set.id,
+          set_id=carriage_set.id,
           model_id=int(data.get(model_key)),
           car_number=data.get(f'car_number_{i}'),
-          depot_id=data.get(f'depot_{i}'),
-          train_number=data.get(f'train_number_{i}'),
-          plaque=data.get(f'plaque_{i}'),
           color=data.get(f'color_{i}'),
           lighting=data.get(f'lighting_{i}')
         )
@@ -360,13 +361,13 @@ class SafeEval(ast.NodeVisitor):
     }
 
   def visit(self, node):
-    if not isinstance(node, self._allowed_nodes):
+    if not self._allowed_nodes(node):
       raise ValueError(f"不安全的表达式节点: {type(node).__name__}")
     return super().visit(node)
 
   def _allowed_nodes(self, node):
     return isinstance(node, (
-      ast.Expression, ast.BinOp, ast.UnaryOp, ast.Num, ast.Constant
+      ast.Expression, ast.BinOp, ast.UnaryOp, ast.Constant
     ))
 
   def generic_visit(self, node):
@@ -377,8 +378,6 @@ class SafeEval(ast.NodeVisitor):
     elif isinstance(node, ast.UnaryOp):
       operand = self.visit(node.operand)
       return self._operators[type(node.op)](operand)
-    elif isinstance(node, ast.Num):
-      return node.n
     elif isinstance(node, ast.Constant):
       if isinstance(node.value, (int, float)):
         return node.value
@@ -387,21 +386,27 @@ class SafeEval(ast.NodeVisitor):
 
 def calculate_price(price_expr):
   """安全计算价格表达式"""
-  if not price_expr or not price_expr.strip():
+  logger.info(f"calculate_price called with: '{price_expr}', type: {type(price_expr)}")
+  if not price_expr or not str(price_expr).strip():
+    logger.info("Price expression is empty, returning 0")
     return 0
-  # 只允许数字、+、-、*、/、()
-  if not re.match(r'^[\d+\-*/().\s]+$', price_expr):
+  price_str = str(price_expr)
+  # 只允许数字、+、-、*、/、()、小数点
+  if not re.match(r'^[\d+\-*/().\s]+$', price_str):
+    logger.info(f"Price expression '{price_str}' does not match pattern")
     return 0
   try:
     # 使用 AST 解析表达式
-    expr = ast.parse(price_expr, mode='eval')
+    expr = ast.parse(price_str, mode='eval')
     evaluator = SafeEval()
     result = evaluator.visit(expr.body)
+    logger.info(f"Calculated price: {result}, type: {type(result)}")
     # 确保结果是数字
     if isinstance(result, (int, float)):
       return result
     return 0
-  except (ValueError, SyntaxError, TypeError, ZeroDivisionError):
+  except (ValueError, SyntaxError, TypeError, ZeroDivisionError) as e:
+    logger.info(f"Error calculating price: {e}")
     return 0
 
 def check_duplicate(table, field, value, scale=None):
