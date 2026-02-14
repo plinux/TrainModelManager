@@ -1,6 +1,52 @@
 // Train Model Manager - Main JavaScript file
 
-// 自动填充功能
+// 机车系列过滤车型
+function filterLocomotiveModelsBySeries(seriesId) {
+  const modelSelect = document.getElementById('model_id');
+  modelSelect.innerHTML = '<option value="">请选择</option>';
+
+  if (!seriesId || !window.locomotiveModelData) return;
+
+  const filteredModels = window.locomotiveModelData.filter(model => model.series_id === parseInt(seriesId));
+  filteredModels.forEach(model => {
+    const option = document.createElement('option');
+    option.value = model.id;
+    option.textContent = model.name;
+    modelSelect.appendChild(option);
+  });
+}
+
+// 机车系列选择变化
+function handleLocomotiveSeriesChange() {
+  const seriesId = document.getElementById('series_id').value;
+  filterLocomotiveModelsBySeries(seriesId);
+  document.getElementById('power_type_id').value = '';
+}
+
+// 动车组系列过滤车型
+function filterTrainsetModelsBySeries(seriesId) {
+  const modelSelect = document.getElementById('model_id');
+  modelSelect.innerHTML = '<option value="">请选择</option>';
+
+  if (!seriesId || !window.trainsetModelData) return;
+
+  const filteredModels = window.trainsetModelData.filter(model => model.series_id === parseInt(seriesId));
+  filteredModels.forEach(model => {
+    const option = document.createElement('option');
+    option.value = model.id;
+    option.textContent = model.name;
+    modelSelect.appendChild(option);
+  });
+}
+
+// 动车组系列选择变化
+function handleTrainsetSeriesChange() {
+  const seriesId = document.getElementById('series_id').value;
+  filterTrainsetModelsBySeries(seriesId);
+  document.getElementById('power_type_id').value = '';
+}
+
+// 自动填充功能（保留原功能，用于选择车型后填充系列和动力类型）
 function autoFillLocomotive() {
   const modelId = document.getElementById('model_id').value;
   if (!modelId) return;
@@ -70,6 +116,8 @@ function generateSeriesOptions() {
 
 function addCarriageRow() {
   const container = document.getElementById('carriage-items');
+  // 获取主表单中选择的系列ID
+  const mainSeriesId = document.getElementById('series_id').value;
 
   const newItem = document.createElement('div');
   newItem.className = 'carriage-item form-row';
@@ -101,6 +149,15 @@ function addCarriageRow() {
     <button type="button" onclick="removeCarriageRow(this)">删除</button>
   `;
   container.appendChild(newItem);
+
+  // 如果主表单已选择系列，设置新车厢项的系列并填充车型
+  if (mainSeriesId) {
+    const seriesSelect = newItem.querySelector(`select[name="series_${carriageItemCount}"]`);
+    seriesSelect.value = mainSeriesId;
+    const modelSelect = newItem.querySelector(`select[name="model_${carriageItemCount}"]`);
+    filterModelsBySeries(mainSeriesId, modelSelect);
+  }
+
   carriageItemCount++;
 }
 
