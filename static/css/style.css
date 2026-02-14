@@ -312,17 +312,22 @@ td form button {
 .page-header {
   position: relative;
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .page-header h1 {
   margin: 0;
+  margin-right: auto;
 }
 
 /* 页面头部按钮统一样式 */
 .page-header .btn-danger-reinit,
-.page-header .btn-import {
-  position: absolute;
-  top: 0;
+.page-header .btn-import,
+.page-header .btn-export {
   color: white !important;
   border: none !important;
   border-radius: 4px !important;
@@ -332,10 +337,10 @@ td form button {
   line-height: 1 !important;
   padding: 0.5rem 1.25rem !important;
   transition: background-color 0.2s;
+  white-space: nowrap;
 }
 
 .page-header .btn-danger-reinit {
-  right: 0;
   background-color: #dc3545;
 }
 
@@ -343,8 +348,15 @@ td form button {
   background-color: #b02a37;
 }
 
+.page-header .btn-export {
+  background-color: #28a745;
+}
+
+.page-header .btn-export:hover {
+  background-color: #218838;
+}
+
 .page-header .btn-import {
-  right: 185px;
   background-color: #0d6efd;
 }
 

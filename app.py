@@ -1839,6 +1839,193 @@ def calculate_total_price(price_str):
   except:
     return float(price_str) if str(price_str).replace('.', '').isdigit() else 0
 
+
+@app.route('/api/export/excel')
+def export_to_excel():
+  """导出数据到Excel"""
+  try:
+    from flask import send_file
+    from io import BytesIO
+    from datetime import datetime
+
+    # 检查是否有任何数据
+    has_data = (
+      Locomotive.query.count() > 0 or
+      CarriageSet.query.count() > 0 or
+      Trainset.query.count() > 0 or
+      LocomotiveHead.query.count() > 0
+    )
+
+    if not has_data:
+      return jsonify({'success': False, 'error': '当前没有可导出的数据，请先添加模型后再导出'}), 400
+
+    # 创建工作簿
+    workbook = openpyxl.Workbook()
+
+    # 移除默认的工作表
+    if 'Sheet' in workbook.sheetnames:
+      workbook.remove(workbook['Sheet'])
+
+    # 导出机车模型
+    if Locomotive.query.count() > 0:
+      sheet = workbook.create_sheet('机车')
+      headers = ['系列', '动力类型', '车型', '品牌', '机务段', '挂牌', '颜色', '比例', '机车号', '编号',
+                 '芯片接口', '芯片型号', '价格', '总价', '货号', '购买日期', '购买商家']
+      sheet.append(headers)
+
+      for locomotive in Locomotive.query.all():
+        row = [
+          locomotive.series.name if locomotive.series else '',
+          locomotive.power_type.name if locomotive.power_type else '',
+          locomotive.model.name if locomotive.model else '',
+          locomotive.brand.name if locomotive.brand else '',
+          locomotive.depot.name if locomotive.depot else '',
+          locomotive.plaque or '',
+          locomotive.color or '',
+          locomotive.scale or '',
+          locomotive.locomotive_number or '',
+          locomotive.decoder_number or '',
+          locomotive.chip_interface.name if locomotive.chip_interface else '',
+          locomotive.chip_model.name if locomotive.chip_model else '',
+          locomotive.price or '',
+          locomotive.total_price or '',
+          locomotive.item_number or '',
+          locomotive.purchase_date.strftime('%Y-%m-%d') if locomotive.purchase_date else '',
+          locomotive.merchant.name if locomotive.merchant else ''
+        ]
+        sheet.append(row)
+
+    # 导出车厢模型（按每节车厢一行）
+    if CarriageSet.query.count() > 0:
+      sheet = workbook.create_sheet('车厢')
+      headers = ['品牌', '系列', '车辆段', '车次', '挂牌', '货号', '比例', '车型', '车辆号', '颜色', '灯光', '总价', '购买日期', '购买商家']
+      sheet.append(headers)
+
+      row_offset = 2  # 从第2行开始（第1行是表头）
+      for carriage_set in CarriageSet.query.all():
+        items = carriage_set.items
+        if not items:
+          # 没有车厢项，添加一行套装信息
+          row = [
+            carriage_set.brand.name if carriage_set.brand else '',
+            carriage_set.series.name if carriage_set.series else '',
+            carriage_set.depot.name if carriage_set.depot else '',
+            carriage_set.train_number or '',
+            carriage_set.plaque or '',
+            carriage_set.item_number or '',
+            carriage_set.scale or '',
+            '', '', '', '',  # 车型、车辆号、颜色、灯光为空
+            carriage_set.total_price or '',
+            carriage_set.purchase_date.strftime('%Y-%m-%d') if carriage_set.purchase_date else '',
+            carriage_set.merchant.name if carriage_set.merchant else ''
+          ]
+          sheet.append(row)
+        else:
+          # 有车厢项，为每节车厢添加一行，合并套装字段
+          set_row_start = row_offset
+          for item in items:
+            row = [
+              carriage_set.brand.name if carriage_set.brand else '',
+              carriage_set.series.name if carriage_set.series else '',
+              carriage_set.depot.name if carriage_set.depot else '',
+              carriage_set.train_number or '',
+              carriage_set.plaque or '',
+              carriage_set.item_number or '',
+              carriage_set.scale or '',
+              item.model.name if item.model else '',
+              item.car_number or '',
+              item.color or '',
+              item.lighting or '',
+              carriage_set.total_price or '',
+              carriage_set.purchase_date.strftime('%Y-%m-%d') if carriage_set.purchase_date else '',
+              carriage_set.merchant.name if carriage_set.merchant else ''
+            ]
+            sheet.append(row)
+            row_offset += 1
+
+          # 合并套装公共字段单元格（品牌、系列、车辆段、车次、挂牌、货号、比例、总价、购买日期、购买商家）
+          set_row_end = row_offset - 1
+          merge_columns = [1, 2, 3, 4, 5, 6, 7, 12, 13, 14]  # 1-based column indices
+          for col in merge_columns:
+            if set_row_start != set_row_end:
+              sheet.merge_cells(start_row=set_row_start, start_column=col,
+                           end_row=set_row_end, end_column=col)
+
+    # 导出动车组模型
+    if Trainset.query.count() > 0:
+      sheet = workbook.create_sheet('动车组')
+      headers = ['系列', '动力类型', '车型', '品牌', '动车段', '挂牌', '颜色', '比例', '编组', '动车号', '编号',
+                 '头车灯', '室内灯', '芯片接口', '芯片型号', '价格', '总价', '货号', '购买日期', '购买商家']
+      sheet.append(headers)
+
+      for trainset in Trainset.query.all():
+        row = [
+          trainset.series.name if trainset.series else '',
+          trainset.power_type.name if trainset.power_type else '',
+          trainset.model.name if trainset.model else '',
+          trainset.brand.name if trainset.brand else '',
+          trainset.depot.name if trainset.depot else '',
+          trainset.plaque or '',
+          trainset.color or '',
+          trainset.scale or '',
+          trainset.formation or '',
+          trainset.trainset_number or '',
+          trainset.decoder_number or '',
+          '是' if trainset.head_light else '否',
+          trainset.interior_light or '',
+          trainset.chip_interface.name if trainset.chip_interface else '',
+          trainset.chip_model.name if trainset.chip_model else '',
+          trainset.price or '',
+          trainset.total_price or '',
+          trainset.item_number or '',
+          trainset.purchase_date.strftime('%Y-%m-%d') if trainset.purchase_date else '',
+          trainset.merchant.name if trainset.merchant else ''
+        ]
+        sheet.append(row)
+
+    # 导出先头车模型
+    if LocomotiveHead.query.count() > 0:
+      sheet = workbook.create_sheet('先头车')
+      headers = ['车型', '品牌', '动车段', '特涂', '比例', '头车灯', '室内灯', '价格', '总价', '货号', '购买日期', '购买商家']
+      sheet.append(headers)
+
+      for head in LocomotiveHead.query.all():
+        row = [
+          head.model.name if head.model else '',
+          head.brand.name if head.brand else '',
+          head.depot.name if head.depot else '',
+          head.special_color or '',
+          head.scale or '',
+          '是' if head.head_light else '否',
+          head.interior_light or '',
+          head.price or '',
+          head.total_price or '',
+          head.item_number or '',
+          head.purchase_date.strftime('%Y-%m-%d') if head.purchase_date else '',
+          head.merchant.name if head.merchant else ''
+        ]
+        sheet.append(row)
+
+    # 生成文件
+    output = BytesIO()
+    workbook.save(output)
+    output.seek(0)
+
+    # 生成文件名
+    filename = f'火车模型数据导出_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+
+    logger.info("Excel export completed successfully")
+    return send_file(
+      output,
+      as_attachment=True,
+      download_name=filename,
+      mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+  except Exception as e:
+    logger.error(f"Excel export failed: {str(e)}", exc_info=True)
+    return f"导出失败: {str(e)}", 500
+
 # 错误处理器
 @app.errorhandler(404)
 def not_found(error):

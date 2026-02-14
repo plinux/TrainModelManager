@@ -294,3 +294,39 @@ function importFromExcel() {
     resultDiv.innerHTML = '<p>导入失败，请重试</p>';
   });
 }
+
+// 导出数据到Excel
+function exportToExcel() {
+  fetch('/api/export/excel')
+  .then(response => {
+    if (response.ok) {
+      // 检查响应类型，如果是文件下载则直接跳转
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/vnd.openxmlformats-officedocument')) {
+        // 使用 blob 方式下载文件
+        return response.blob().then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = response.headers.get('content-disposition')?.match(/filename=(.+)/)?.[1] || '火车模型数据导出.xlsx';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        });
+      }
+      return response.json();
+    } else {
+      return response.json();
+    }
+  })
+  .then(data => {
+    if (data && data.success === false) {
+      alert(data.error || '导出失败');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('导出失败，请重试');
+  });
+}

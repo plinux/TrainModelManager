@@ -6,6 +6,7 @@
 <div class="page-header">
   <h1>选项维护</h1>
   <button onclick="openImportDialog()" class="btn-import">从Excel导入数据</button>
+  <button onclick="exportToExcel()" class="btn-export">导出数据到Excel</button>
   <button onclick="openReinitDialog()" class="btn-danger-reinit">重新初始化数据库</button>
 </div>
 
@@ -61,6 +62,34 @@
     <div class="tab-group">
       <button onclick="showTab('trainset_series')" class="tab-btn">动车组系列</button>
       <button onclick="showTab('trainset_models')" class="tab-btn">动车组型号</button>
+    </div>
+  </div>
+</div>
+
+<!-- Excel导入对话框 -->
+<div id="import-modal" class="modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📊 从Excel导入数据</h3>
+    </div>
+    <div class="modal-body">
+      <p>请上传Excel文件，将根据工作表名自动导入到对应的数据表：</p>
+      <ul class="import-info">
+        <li><strong>机车</strong> → 机车模型表</li>
+        <li><strong>车厢</strong> → 车厢模型表</li>
+        <li><strong>动车组</strong> → 动车组模型表</li>
+        <li><strong>先头车</strong> → 先头车模型表</li>
+      </ul>
+      <p>Excel列名必须与系统中的字段名对应。</p>
+
+      <div class="import-step">
+        <input type="file" id="import-file" accept=".xlsx,.xls" />
+        <div class="modal-buttons">
+          <button onclick="closeImportDialog()" class="btn-cancel">取消</button>
+          <button onclick="importFromExcel()" class="btn-primary" id="import-btn">导入</button>
+        </div>
+      </div>
+      <div id="import-result" class="import-result" style="display:none;"></div>
     </div>
   </div>
 </div>
