@@ -156,22 +156,6 @@
   <button type="submit">添加</button>
 </form>
 
-<script>
-  // 将动车组系列和车型数据传递给前端
-  window.trainsetSeriesData = [
-    {% for series in trainset_series %}
-    { id: {{ series.id }}, name: '{{ series.name }}' },
-    {% endfor %}
-  ];
-  window.trainsetModelData = [
-    {% for model in trainset_models %}
-    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id }}, power_type_id: {{ model.power_type_id }} },
-    {% endfor %}
-  ];
-</script>
-
-<script src="/static/js/app.js"></script>
-
 <table>
   <thead>
     <tr>
@@ -196,8 +180,8 @@
       <td>{{ trainset.decoder_number }}</td>
       <td>{{ trainset.total_price }}</td>
       <td>
-        <a href="{{ url_for('edit_trainset', id=trainset.id) }}" class="btn-edit">编辑</a>
-        <form method="POST" action="{{ url_for('delete_trainset', id=trainset.id) }}" onsubmit="return confirm('确定删除？')">
+        <a href="{{ url_for('trainset.edit_trainset', id=trainset.id) }}" class="btn-edit">编辑</a>
+        <form method="POST" action="{{ url_for('trainset.delete_trainset', id=trainset.id) }}" onsubmit="return confirm('确定删除？')">
           <button type="submit" class="btn-danger">删除</button>
         </form>
       </td>
@@ -205,15 +189,20 @@
     {% endfor %}
   </tbody>
 </table>
+{% endblock %}
 
+{% block scripts %}
 <script>
-function autoFillTrainset() {
-  const modelId = document.getElementById('model_id').value;
-  if (!modelId) return;
-
-  fetch(`/api/auto-fill/trainset/${modelId}`)
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById('series_id').value = data.series_id;
-      document.getElementById('power_type_id').value = data.power_type_id;
+  // 将动车组系列和车型数据传递给前端
+  window.trainsetSeriesData = [
+    {% for series in trainset_series %}
+    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  window.trainsetModelData = [
+    {% for model in trainset_models %}
+    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }}, power_type_id: {{ model.power_type_id or 'null' }} }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+</script>
 {% endblock %}

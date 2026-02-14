@@ -1,0 +1,70 @@
+{#
+常用字段组合宏
+包含重复使用的字段组合
+#}
+{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select, boolean_select, number_field %}
+
+
+{# 品牌+段+商家 字段组合 #}
+{% macro common_fields(brand_id=null, depot_id=null, merchant_id=null, brands=[], depots=[], merchants=[]) %}
+<div class="form-row">
+  {{ select_field('brand_id', '品牌', brands, required=true, value=brand_id) }}
+  {{ select_field('depot_id', '段', depots, required=false, value=depot_id) }}
+  {{ select_field('merchant_id', '购买商家', merchants, required=false, value=merchant_id) }}
+</div>
+{% endmacro %}
+
+
+{# 货号+购买日期 字段组合 #}
+{% macro purchase_info(item_number=null, purchase_date=null) %}
+<div class="form-row">
+  {{ text_field('item_number', '货号', value=item_number) }}
+  {{ date_field('purchase_date', '购买日期', value=purchase_date) }}
+</div>
+{% endmacro %}
+
+
+{# 价格+货号 字段组合 #}
+{% macro price_and_item(price=null, item_number=null) %}
+<div class="form-row">
+  {{ price_field('price', '价格（表达式，如288+538）', value=price) }}
+  {{ text_field('item_number', '货号', value=item_number) }}
+</div>
+{% endmacro %}
+
+
+{# 芯片接口+芯片型号 字段组合 #}
+{% macro chip_fields(chip_interface_id=null, chip_model_id=null, chip_interfaces=[], chip_models=[]) %}
+<div class="form-row">
+  {{ select_field('chip_interface_id', '芯片接口', chip_interfaces, required=false, value=chip_interface_id) }}
+  {{ select_field('chip_model_id', '芯片型号', chip_models, required=false, value=chip_model_id) }}
+</div>
+{% endmacro %}
+
+
+{# 系列+车型+动力类型 字段组合（用于机车和动车组） #}
+{% macro series_model_power(model_id=null, series_id=null, power_type_id=null, models=[], series_list=[], power_types=[], model_onchange=null, series_onchange=null) %}
+<div class="form-row">
+  {{ select_field('model_id', '车型', models, required=true, value=model_id, onchange=model_onchange) }}
+  {{ select_field('series_id', '系列', series_list, required=false, value=series_id, onchange=series_onchange) }}
+  {{ select_field('power_type_id', '动力类型', power_types, required=false, value=power_type_id) }}
+</div>
+{% endmacro %}
+
+
+{# 挂牌+颜色 字段组合 #}
+{% macro plaque_color(plaque=null, color=null) %}
+<div class="form-row">
+  {{ text_field('plaque', '挂牌', value=plaque) }}
+  {{ text_field('color', '颜色', value=color) }}
+</div>
+{% endmacro %}
+
+
+{# 头车灯+室内灯 字段组合 #}
+{% macro light_fields(head_light=null, interior_light=null) %}
+<div class="form-row">
+  {{ boolean_select('head_light', '头车灯', value=head_light) }}
+  {{ text_field('interior_light', '室内灯', value=interior_light) }}
+</div>
+{% endmacro %}

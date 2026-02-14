@@ -116,8 +116,8 @@
       <td>{{ head.special_color }}</td>
       <td>{{ head.total_price }}</td>
       <td>
-        <a href="{{ url_for('edit_locomotive_head', id=head.id) }}" class="btn-edit">编辑</a>
-        <form method="POST" action="{{ url_for('delete_locomotive_head', id=head.id) }}" onsubmit="return confirm('确定删除？')">
+        <a href="{{ url_for('locomotive_head.edit_locomotive_head', id=head.id) }}" class="btn-edit">编辑</a>
+        <form method="POST" action="{{ url_for('locomotive_head.delete_locomotive_head', id=head.id) }}" onsubmit="return confirm('确定删除？')">
           <button type="submit" class="btn-danger">删除</button>
         </form>
       </td>

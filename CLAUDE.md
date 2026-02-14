@@ -6,11 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 火车模型管理系统 - 用于管理火车模型藏品、统计和展示的 Web 应用。支持四种模型类型：机车模型、车厢模型、动车组模型、先头车模型。
 
 ## 当前状态
-项目处于早期开发阶段，核心功能已完成并持续优化。数据库初始化已完成，包含预置数据。
+项目已完成核心功能开发和代码优化重构，采用 Blueprint 模块化架构。
 
 ## 技术栈
 - Python 3.10+
-- Flask
+- Flask + Blueprints（模块化架构）
 - SQLAlchemy
 - SQLite（开发环境）/ MySQL（生产环境）
 - Jinja2（Flask 内置模板引擎）
@@ -18,7 +18,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - AST（Abstract Syntax Tree）用于安全的价格表达式计算
 
 ## 架构设计
-单体 Flask 应用架构，所有路由集中在 `app.py` 中管理。如后期代码增多，可平滑过渡到模块化结构（Blueprints）。
+采用 Flask Blueprint 模块化架构，路由按功能模块拆分：
+- `routes/main.py` - 首页和统计 API
+- `routes/locomotive.py` - 机车模型路由
+- `routes/carriage.py` - 车厢模型路由
+- `routes/trainset.py` - 动车组模型路由
+- `routes/locomotive_head.py` - 先头车模型路由
+- `routes/options.py` - 选项维护（使用工厂函数）
+- `routes/api.py` - 自动填充 API 和 Excel 导入导出
 
 ## 虚拟环境
 ```bash
@@ -233,20 +240,35 @@ class SafeEval(ast.NodeVisitor):
 ## 文件结构
 ```
 TrainModelManager/
-├── app.py              # Flask 主应用
+├── app.py              # Flask 主应用（应用工厂模式）
 ├── models.py           # SQLAlchemy 数据模型定义
 ├── config.py           # 配置文件
-├── init_db.py         # 数据库初始化脚本
+├── init_db.py          # 数据库初始化脚本
 ├── requirements.txt    # Python 依赖
+├── routes/             # Blueprint 路由模块
+│   ├── __init__.py     # Blueprint 注册
+│   ├── main.py         # 首页和统计
+│   ├── locomotive.py   # 机车模型路由
+│   ├── carriage.py     # 车厢模型路由
+│   ├── trainset.py     # 动车组模型路由
+│   ├── locomotive_head.py  # 先头车模型路由
+│   ├── options.py      # 选项维护路由（工厂函数）
+│   └── api.py          # 自动填充 API 和 Excel 导入导出
+├── utils/              # 公共辅助函数模块
+│   ├── __init__.py     # 模块导出
+│   ├── helpers.py      # 通用辅助函数（日期处理、类型转换等）
+│   ├── validators.py   # 验证函数（格式验证、唯一性检查）
+│   └── price_calculator.py  # 价格计算（SafeEval）
 ├── static/
 │   ├── css/
-│   │   └── style.css
+│   │   └── style.css   # 主样式文件（含 CSS 变量）
 │   └── js/
-│       ├── app.js
-│       └── options.js
-├── templates/         # Jinja2 模板
-│   ├── base.html      # 基础模板
-│   ├── index.html     # 汇总页面
+│       ├── utils.js    # 公共 JavaScript 模块（工具函数、表单处理）
+│       ├── app.js      # 主 JavaScript 文件
+│       └── options.js  # 选项维护页面 JS
+├── templates/          # Jinja2 模板
+│   ├── base.html       # 基础模板
+│   ├── index.html      # 汇总页面
 │   ├── locomotive.html
 │   ├── locomotive_edit.html
 │   ├── carriage.html
@@ -255,9 +277,51 @@ TrainModelManager/
 │   ├── trainset_edit.html
 │   ├── locomotive_head.html
 │   ├── locomotive_head_edit.html
-│   └── options.html   # 选项维护（含标签页）
-└── docs/             # 文档目录
+│   ├── options.html    # 选项维护（含标签页）
+│   ├── macros/         # Jinja2 宏
+│   │   ├── form.html   # 表单字段宏
+│   │   ├── table.html  # 表格宏
+│   │   ├── common.html # 常用字段组合宏
+│   │   └── data.html   # 数据注入宏
+│   ├── 404.html        # 404 错误页面
+│   └── 500.html        # 500 错误页面
+└── docs/               # 文档目录
 ```
+
+## 代码优化记录
+
+### 2024 年优化内容
+
+1. **Blueprint 模块化重构**
+   - 将 app.py（2000+ 行）拆分为 7 个 Blueprint 模块
+   - 使用 Flask 应用工厂模式
+
+2. **公共辅助函数提取**
+   - `utils/helpers.py` - 日期处理、类型转换、唯一性验证、分组统计
+   - `utils/validators.py` - 格式验证函数
+   - `utils/price_calculator.py` - 安全表达式求值
+
+3. **选项维护工厂函数**
+   - 使用配置字典和工厂函数简化 12 个选项类型的 CRUD
+   - 减少约 300 行重复代码
+
+4. **数据库事务回滚**
+   - 所有数据库操作添加 try-except 和 rollback
+
+5. **JavaScript 模块化**
+   - `utils.js` - 通用工具函数、表单处理、API 封装
+   - 合并重复的过滤和自动填充函数
+
+6. **Jinja2 宏提取**
+   - `macros/form.html` - 表单字段宏
+   - `macros/table.html` - 表格和操作列宏
+   - `macros/common.html` - 常用字段组合宏
+   - `macros/data.html` - 数据注入宏
+
+7. **CSS 样式优化**
+   - 添加 CSS 变量统一颜色和尺寸
+   - 添加缺失的样式（导入结果、标签页等）
+   - 添加工具类（文本、间距等）
 
 ## 参考文档
 - 项目根目录包含以下需求文档：

@@ -1,0 +1,78 @@
+{#
+数据注入宏
+用于将后端数据注入到前端 JavaScript
+#}
+
+
+{# 注入 JSON 数据到 window 对象 #}
+{% macro inject_json(var_name, data) %}
+<script>
+  window.{{ var_name }} = {{ data | tojson }};
+</script>
+{% endmacro %}
+
+
+{# 注入系列数据 #}
+{% macro inject_series_data(var_name, series_list) %}
+<script>
+  window.{{ var_name }} = [
+    {% for series in series_list %}
+    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+</script>
+{% endmacro %}
+
+
+{# 注入车型数据（包含关联字段） #}
+{% macro inject_model_data(var_name, models, extra_fields=[]) %}
+<script>
+  window.{{ var_name }} = [
+    {% for model in models %}
+    {
+      id: {{ model.id }},
+      name: '{{ model.name }}',
+      {% if 'series_id' in extra_fields %}series_id: {{ model.series_id }},{% endif %}
+      {% if 'power_type_id' in extra_fields %}power_type_id: {{ model.power_type_id }},{% endif %}
+      {% if 'type' in extra_fields %}type: '{{ model.type }}',{% endif %}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+</script>
+{% endmacro %}
+
+
+{# 注入机车车型数据 #}
+{% macro inject_locomotive_model_data(models) %}
+{{ inject_model_data('locomotiveModelData', models, ['series_id', 'power_type_id']) }}
+{% endmacro %}
+
+
+{# 注入动车组车型数据 #}
+{% macro inject_trainset_model_data(models) %}
+{{ inject_model_data('trainsetModelData', models, ['series_id', 'power_type_id']) }}
+{% endmacro %}
+
+
+{# 注入车厢车型数据 #}
+{% macro inject_carriage_model_data(models) %}
+{{ inject_model_data('carriageModelData', models, ['series_id']) }}
+{% endmacro %}
+
+
+{# 注入车厢系列数据 #}
+{% macro inject_carriage_series_data(series_list) %}
+{{ inject_series_data('carriageSeriesData', series_list) }}
+{% endmacro %}
+
+
+{# 注入机车系列数据 #}
+{% macro inject_locomotive_series_data(series_list) %}
+{{ inject_series_data('locomotiveSeriesData', series_list) }}
+{% endmacro %}
+
+
+{# 注入动车组系列数据 #}
+{% macro inject_trainset_series_data(series_list) %}
+{{ inject_series_data('trainsetSeriesData', series_list) }}
+{% endmacro %}

@@ -167,7 +167,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'power_type')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'power_type', {{ type.id }}, '{{ url_for('delete_power_type', id=type.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'power_type', {{ type.id }}, '{{ url_for('options.delete_power_type', id=type.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -196,7 +196,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'brand')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'brand', {{ brand.id }}, '{{ url_for('delete_brand', id=brand.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'brand', {{ brand.id }}, '{{ url_for('options.delete_brand', id=brand.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -225,7 +225,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'merchant')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'merchant', {{ merchant.id }}, '{{ url_for('delete_merchant', id=merchant.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'merchant', {{ merchant.id }}, '{{ url_for('options.delete_merchant', id=merchant.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -254,7 +254,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'depot')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'depot', {{ depot.id }}, '{{ url_for('delete_depot', id=depot.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'depot', {{ depot.id }}, '{{ url_for('options.delete_depot', id=depot.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -264,7 +264,7 @@
 
 <div id="chip_interfaces" class="tab-content" style="display:none;">
   <h2>芯片接口</h2>
-  <form method="POST" action="{{ url_for('add_chip_interface') }}" class="inline-form">
+  <form method="POST" action="{{ url_for('options.add_chip_interface') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增芯片接口" required>
     <button type="submit">添加</button>
   </form>
@@ -283,7 +283,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'chip_interface')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'chip_interface', {{ interface.id }}, '{{ url_for('delete_chip_interface', id=interface.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'chip_interface', {{ interface.id }}, '{{ url_for('options.delete_chip_interface', id=interface.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -293,7 +293,7 @@
 
 <div id="chip_models" class="tab-content" style="display:none;">
   <h2>芯片型号</h2>
-  <form method="POST" action="{{ url_for('add_chip_model') }}" class="inline-form">
+  <form method="POST" action="{{ url_for('options.add_chip_model') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增芯片型号" required>
     <button type="submit">添加</button>
   </form>
@@ -312,7 +312,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'chip_model')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'chip_model', {{ model.id }}, '{{ url_for('delete_chip_model', id=model.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'chip_model', {{ model.id }}, '{{ url_for('options.delete_chip_model', id=model.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -322,7 +322,7 @@
 
 <div id="locomotive_series" class="tab-content" style="display:none;">
   <h2>机车系列</h2>
-  <form method="POST" action="{{ url_for('add_locomotive_series') }}" class="inline-form">
+  <form method="POST" action="{{ url_for('options.add_locomotive_series') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增机车系列" required>
     <button type="submit">添加</button>
   </form>
@@ -341,7 +341,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'locomotive_series')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'locomotive_series', {{ series.id }}, '{{ url_for('delete_locomotive_series', id=series.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'locomotive_series', {{ series.id }}, '{{ url_for('options.delete_locomotive_series', id=series.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -351,7 +351,7 @@
 
 <div id="locomotive_models" class="tab-content" style="display:none;">
   <h2>机车型号</h2>
-  <form method="POST" action="{{ url_for('add_locomotive_model') }}">
+  <form method="POST" action="{{ url_for('options.add_locomotive_model') }}">
     <div class="form-row">
       <input type="text" name="name" placeholder="机车型号" required>
       <select name="series_id" required>
@@ -389,7 +389,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'locomotive_model')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'locomotive_model', {{ model.id }}, '{{ url_for('delete_locomotive_model', id=model.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'locomotive_model', {{ model.id }}, '{{ url_for('options.delete_locomotive_model', id=model.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -399,7 +399,7 @@
 
 <div id="carriage_series" class="tab-content" style="display:none;">
   <h2>车厢系列</h2>
-  <form method="POST" action="{{ url_for('add_carriage_series') }}" class="inline-form">
+  <form method="POST" action="{{ url_for('options.add_carriage_series') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增车厢系列" required>
     <button type="submit">添加</button>
   </form>
@@ -418,7 +418,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'carriage_series')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'carriage_series', {{ series.id }}, '{{ url_for('delete_carriage_series', id=series.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'carriage_series', {{ series.id }}, '{{ url_for('options.delete_carriage_series', id=series.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -428,7 +428,7 @@
 
 <div id="carriage_models" class="tab-content" style="display:none;">
   <h2>车厢型号</h2>
-  <form method="POST" action="{{ url_for('add_carriage_model') }}">
+  <form method="POST" action="{{ url_for('options.add_carriage_model') }}">
     <div class="form-row">
       <input type="text" name="name" placeholder="车厢型号" required>
       <select name="series_id" required>
@@ -466,7 +466,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'carriage_model')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'carriage_model', {{ model.id }}, '{{ url_for('delete_carriage_model', id=model.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'carriage_model', {{ model.id }}, '{{ url_for('options.delete_carriage_model', id=model.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -476,7 +476,7 @@
 
 <div id="trainset_series" class="tab-content" style="display:none;">
   <h2>动车组系列</h2>
-  <form method="POST" action="{{ url_for('add_trainset_series') }}" class="inline-form">
+  <form method="POST" action="{{ url_for('options.add_trainset_series') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增动车组系列" required>
     <button type="submit">添加</button>
   </form>
@@ -495,7 +495,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'trainset_series')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'trainset_series', {{ series.id }}, '{{ url_for('delete_trainset_series', id=series.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'trainset_series', {{ series.id }}, '{{ url_for('options.delete_trainset_series', id=series.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
@@ -505,7 +505,7 @@
 
 <div id="trainset_models" class="tab-content" style="display:none;">
   <h2>动车组型号</h2>
-  <form method="POST" action="{{ url_for('add_trainset_model') }}">
+  <form method="POST" action="{{ url_for('options.add_trainset_model') }}">
     <div class="form-row">
       <input type="text" name="name" placeholder="动车组型号" required>
       <select name="series_id" required>
@@ -543,7 +543,7 @@
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'trainset_model')" style="display:none;">保存</button>
           <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
-          <button type="button" class="btn-danger" onclick="deleteItem(this, 'trainset_model', {{ model.id }}, '{{ url_for('delete_trainset_model', id=model.id) }}')">删除</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'trainset_model', {{ model.id }}, '{{ url_for('options.delete_trainset_model', id=model.id) }}')">删除</button>
         </td>
       </tr>
       {% endfor %}
