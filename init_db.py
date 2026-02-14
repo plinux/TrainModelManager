@@ -9,6 +9,11 @@ def init_db():
     db.create_all()
     insert_reference_data()
     print("数据库初始化完成！")
+    # 验证数据
+    power_types = PowerType.query.all()
+    locomotive_models = LocomotiveModel.query.all()
+    print(f"动力类型数量: {len(power_types)}")
+    print(f"机车型号数量: {len(locomotive_models)}")
 
 def insert_reference_data():
   """插入参考数据"""
@@ -72,10 +77,11 @@ def insert_reference_data():
   # 10. 机车型号
   # 东风系列 - 内燃
   dongfeng_series = LocomotiveSeries.query.filter_by(name='东风').first()
+  power_neiran = PowerType.query.filter_by(name='内燃').first()
   dongfeng_models = ['DF4', 'DF4B', 'DF4C', 'DF4D', 'DF5', 'DF5G', 'DF7', 'DF7B', 'DF7C', 'DF7D', 'DF7G', 'DF8B', 'DF11', 'DF11G']
   for name in dongfeng_models:
     if not LocomotiveModel.query.filter_by(name=name).first():
-      db.session.add(LocomotiveModel(name=name, series_id=dongfeng_series.id if dongfeng_series else None))
+      db.session.add(LocomotiveModel(name=name, series_id=dongfeng_series.id if dongfeng_series else None, power_type_id=power_neiran.id if power_neiran else None))
 
   # 韶山系列 - 电力
   shaoshan_series = LocomotiveSeries.query.filter_by(name='韶山').first()
