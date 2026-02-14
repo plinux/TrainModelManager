@@ -6,6 +6,8 @@ from models import CarriageModel, CarriageSeries, TrainsetModel
 from models import CarriageItem
 from datetime import date
 import re
+import ast
+import operator
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -73,16 +75,61 @@ def validate_car_number(number):
   """验证车辆号格式：3-10位数字，无前导0"""
   return bool(re.match(r'^[1-9]\d{2,9}$', number))
 
+class SafeEval(ast.NodeVisitor):
+  """安全的表达式求值器，只允许数字和基本运算"""
+
+  def __init__(self):
+    self._operators = {
+      ast.Add: operator.add,
+      ast.Sub: operator.sub,
+      ast.Mult: operator.mul,
+      ast.Div: operator.truediv,
+      ast.USub: operator.neg
+    }
+
+  def visit(self, node):
+    if not isinstance(node, self._allowed_nodes):
+      raise ValueError(f"不安全的表达式节点: {type(node).__name__}")
+    return super().visit(node)
+
+  def _allowed_nodes(self, node):
+    return isinstance(node, (
+      ast.Expression, ast.BinOp, ast.UnaryOp, ast.Num, ast.Constant
+    ))
+
+  def generic_visit(self, node):
+    if isinstance(node, ast.BinOp):
+      left = self.visit(node.left)
+      right = self.visit(node.right)
+      return self._operators[type(node.op)](left, right)
+    elif isinstance(node, ast.UnaryOp):
+      operand = self.visit(node.operand)
+      return self._operators[type(node.op)](operand)
+    elif isinstance(node, ast.Num):
+      return node.n
+    elif isinstance(node, ast.Constant):
+      if isinstance(node.value, (int, float)):
+        return node.value
+      raise ValueError(f"不支持的常量类型: {type(node.value).__name__}")
+    return super().generic_visit(node)
+
 def calculate_price(price_expr):
   """安全计算价格表达式"""
-  if not price_expr:
+  if not price_expr or not price_expr.strip():
     return 0
   # 只允许数字、+、-、*、/、()
   if not re.match(r'^[\d+\-*/().\s]+$', price_expr):
     return 0
   try:
-    return eval(price_expr)
-  except:
+    # 使用 AST 解析表达式
+    expr = ast.parse(price_expr, mode='eval')
+    evaluator = SafeEval()
+    result = evaluator.visit(expr.body)
+    # 确保结果是数字
+    if isinstance(result, (int, float)):
+      return result
+    return 0
+  except (ValueError, SyntaxError, TypeError, ZeroDivisionError):
     return 0
 
 def check_duplicate(table, field, value, scale=None):
