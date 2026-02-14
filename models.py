@@ -106,3 +106,37 @@ class TrainsetModel(db.Model):
 
   series = relationship('TrainsetSeries', backref='models')
   power_type = relationship('PowerType', backref='trainset_models')
+
+# 核心数据表
+class Locomotive(db.Model):
+  """机车模型"""
+  __tablename__ = 'locomotive'
+
+  id = db.Column(Integer, primary_key=True, comment='主键')
+  series_id = db.Column(Integer, ForeignKey('locomotive_series.id'), comment='关联机车系列ID')
+  power_type_id = db.Column(Integer, ForeignKey('power_type.id'), comment='关联动力类型ID')
+  model_id = db.Column(Integer, ForeignKey('locomotive_model.id'), comment='关联机车型号ID')
+  brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
+  depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联机务段ID')
+  plaque = db.Column(String(50), comment='挂牌')
+  color = db.Column(String(50), comment='颜色')
+  scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
+  locomotive_number = db.Column(String(12), comment='机车号（4-12位数字，前导0）')
+  decoder_number = db.Column(String(4), comment='编号（1-4位数字，无前导0）')
+  chip_interface_id = db.Column(Integer, ForeignKey('chip_interface.id'), comment='关联芯片接口ID')
+  chip_model_id = db.Column(Integer, ForeignKey('chip_model.id'), comment='关联芯片型号ID')
+  price = db.Column(String(50), comment='价格表达式（如288+538）')
+  total_price = db.Column(Float, comment='总价（自动计算）')
+  item_number = db.Column(String(50), comment='货号')
+  purchase_date = db.Column(Date, default=date.today, comment='购买日期')
+  merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
+
+  # 关系
+  series = relationship('LocomotiveSeries', backref='locomotives')
+  power_type = relationship('PowerType', backref='locomotives')
+  model = relationship('LocomotiveModel', backref='locomotives')
+  brand = relationship('Brand', backref='locomotives')
+  depot = relationship('Depot', backref='locomotives')
+  chip_interface = relationship('ChipInterface', backref='locomotives')
+  chip_model = relationship('ChipModel', backref='locomotives')
+  merchant = relationship('Merchant', backref='locomotives')
