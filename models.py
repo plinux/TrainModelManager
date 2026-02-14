@@ -13,12 +13,18 @@ class PowerType(db.Model):
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(50), nullable=False, unique=True, comment='动力类型名称')
 
+  def __repr__(self):
+    return f'<PowerType {self.id}: {self.name}>'
+
 class Brand(db.Model):
   """品牌（所有模型共享）"""
   __tablename__ = 'brand'
 
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(100), nullable=False, unique=True, comment='品牌名称')
+
+  def __repr__(self):
+    return f'<Brand {self.id}: {self.name}>'
 
 class ChipInterface(db.Model):
   """芯片接口（机车和动车组共享）"""
@@ -27,12 +33,18 @@ class ChipInterface(db.Model):
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(50), nullable=False, unique=True, comment='芯片接口名称')
 
+  def __repr__(self):
+    return f'<ChipInterface {self.id}: {self.name}>'
+
 class ChipModel(db.Model):
   """芯片型号（机车和动车组共享）"""
   __tablename__ = 'chip_model'
 
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(100), nullable=False, unique=True, comment='芯片型号名称')
+
+  def __repr__(self):
+    return f'<ChipModel {self.id}: {self.name}>'
 
 class Merchant(db.Model):
   """购买商家（所有模型共享）"""
@@ -41,12 +53,18 @@ class Merchant(db.Model):
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(100), nullable=False, unique=True, comment='商家名称')
 
+  def __repr__(self):
+    return f'<Merchant {self.id}: {self.name}>'
+
 class Depot(db.Model):
   """车辆段/机务段（机车、车厢、动车组共享）"""
   __tablename__ = 'depot'
 
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(50), nullable=False, unique=True, comment='车辆段/机务段名称')
+
+  def __repr__(self):
+    return f'<Depot {self.id}: {self.name}>'
 
 # 机车专用表
 class LocomotiveSeries(db.Model):
@@ -55,6 +73,9 @@ class LocomotiveSeries(db.Model):
 
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(50), nullable=False, unique=True, comment='机车系列名称')
+
+  def __repr__(self):
+    return f'<LocomotiveSeries {self.id}: {self.name}>'
 
 class LocomotiveModel(db.Model):
   """机车型号（关联系列和类型）"""
@@ -68,6 +89,9 @@ class LocomotiveModel(db.Model):
   series = relationship('LocomotiveSeries', backref='models')
   power_type = relationship('PowerType', backref='locomotive_models')
 
+  def __repr__(self):
+    return f'<LocomotiveModel {self.id}: {self.name}>'
+
 # 车厢专用表
 class CarriageSeries(db.Model):
   """车厢系列"""
@@ -75,6 +99,9 @@ class CarriageSeries(db.Model):
 
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(50), nullable=False, unique=True, comment='车厢系列名称')
+
+  def __repr__(self):
+    return f'<CarriageSeries {self.id}: {self.name}>'
 
 class CarriageModel(db.Model):
   """车厢型号（关联系列和类型）"""
@@ -87,6 +114,9 @@ class CarriageModel(db.Model):
 
   series = relationship('CarriageSeries', backref='models')
 
+  def __repr__(self):
+    return f'<CarriageModel {self.id}: {self.name}>'
+
 # 动车组专用表（与先头车共享）
 class TrainsetSeries(db.Model):
   """动车组系列"""
@@ -94,6 +124,9 @@ class TrainsetSeries(db.Model):
 
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(50), nullable=False, unique=True, comment='动车组系列名称')
+
+  def __repr__(self):
+    return f'<TrainsetSeries {self.id}: {self.name}>'
 
 class TrainsetModel(db.Model):
   """动车组车型（关联系列和类型）"""
@@ -106,6 +139,9 @@ class TrainsetModel(db.Model):
 
   series = relationship('TrainsetSeries', backref='models')
   power_type = relationship('PowerType', backref='trainset_models')
+
+  def __repr__(self):
+    return f'<TrainsetModel {self.id}: {self.name}>'
 
 # 核心数据表
 class Locomotive(db.Model):
@@ -141,6 +177,9 @@ class Locomotive(db.Model):
   chip_model = relationship('ChipModel', backref='locomotives')
   merchant = relationship('Merchant', backref='locomotives')
 
+  def __repr__(self):
+    return f'<Locomotive {self.id}: {self.model.name} {self.scale}>'
+
 class CarriageSet(db.Model):
   """车厢套装主表"""
   __tablename__ = 'carriage_set'
@@ -164,6 +203,9 @@ class CarriageSet(db.Model):
   merchant = relationship('Merchant', backref='carriage_sets')
   items = relationship('CarriageItem', backref='set', cascade='all, delete-orphan')
 
+  def __repr__(self):
+    return f'<CarriageSet {self.id}: {self.train_number} {self.scale}>'
+
 class CarriageItem(db.Model):
   """车厢套装子表（每辆车的详细信息）"""
   __tablename__ = 'carriage_item'
@@ -177,6 +219,9 @@ class CarriageItem(db.Model):
 
   # 关系
   model = relationship('CarriageModel', backref='items')
+
+  def __repr__(self):
+    return f'<CarriageItem {self.id}: {self.model.name} {self.car_number}>'
 
 class Trainset(db.Model):
   """动车组模型"""
@@ -214,6 +259,9 @@ class Trainset(db.Model):
   chip_model = relationship('ChipModel', backref='trainsets')
   merchant = relationship('Merchant', backref='trainsets')
 
+  def __repr__(self):
+    return f'<Trainset {self.id}: {self.model.name} {self.scale}>'
+
 class LocomotiveHead(db.Model):
   """先头车模型"""
   __tablename__ = 'locomotive_head'
@@ -237,3 +285,6 @@ class LocomotiveHead(db.Model):
   brand = relationship('Brand', backref='locomotive_heads')
   depot = relationship('Depot', backref='locomotive_heads')
   merchant = relationship('Merchant', backref='locomotive_heads')
+
+  def __repr__(self):
+    return f'<LocomotiveHead {self.id}: {self.model.name} {self.scale}>'
