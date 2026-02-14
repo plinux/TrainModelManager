@@ -664,5 +664,22 @@ def auto_fill_trainset(model_id):
     'power_type_id': model.power_type_id
   })
 
+# 错误处理器
+@app.errorhandler(404)
+def not_found(error):
+  """404 错误处理"""
+  return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+  """500 错误处理"""
+  return render_template('500.html'), 500
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+  """全局异常处理"""
+  db.session.rollback()
+  return f"服务器错误: {str(error)}<script>setTimeout(()=>location.href='/', 3000);</script>", 500
+
 if __name__ == '__main__':
   app.run(debug=True)
