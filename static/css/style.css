@@ -204,6 +204,21 @@ td form button {
   flex: 1;
 }
 
+/* 内联表单 - 输入框和按钮在同一行 */
+.inline-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.inline-form input {
+  flex: 1;
+}
+
+.inline-form button {
+  flex-shrink: 0;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   nav ul {

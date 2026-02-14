@@ -90,7 +90,7 @@
 
 <div id="power_types" class="tab-content">
   <h2>动力类型</h2>
-  <form method="POST">
+  <form method="POST" class="inline-form">
     <input type="text" name="name" placeholder="新增动力类型" required>
     <button type="submit">添加</button>
   </form>
@@ -121,7 +121,7 @@
 
 <div id="brands" class="tab-content" style="display:none;">
   <h2>品牌</h2>
-  <form method="POST">
+  <form method="POST" class="inline-form">
     <input type="text" name="name" placeholder="新增品牌" required>
     <button type="submit">添加</button>
   </form>
@@ -152,7 +152,7 @@
 
 <div id="merchants" class="tab-content" style="display:none;">
   <h2>商家</h2>
-  <form method="POST">
+  <form method="POST" class="inline-form">
     <input type="text" name="name" placeholder="新增商家" required>
     <button type="submit">添加</button>
   </form>
@@ -183,7 +183,7 @@
 
 <div id="depots" class="tab-content" style="display:none;">
   <h2>车辆段/机务段</h2>
-  <form method="POST">
+  <form method="POST" class="inline-form">
     <input type="text" name="name" placeholder="新增车辆段" required>
     <button type="submit">添加</button>
   </form>
@@ -214,7 +214,7 @@
 
 <div id="chip_interfaces" class="tab-content" style="display:none;">
   <h2>芯片接口</h2>
-  <form method="POST" action="{{ url_for('add_chip_interface') }}">
+  <form method="POST" action="{{ url_for('add_chip_interface') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增芯片接口" required>
     <button type="submit">添加</button>
   </form>
@@ -245,7 +245,7 @@
 
 <div id="chip_models" class="tab-content" style="display:none;">
   <h2>芯片型号</h2>
-  <form method="POST" action="{{ url_for('add_chip_model') }}">
+  <form method="POST" action="{{ url_for('add_chip_model') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增芯片型号" required>
     <button type="submit">添加</button>
   </form>
@@ -276,7 +276,7 @@
 
 <div id="locomotive_series" class="tab-content" style="display:none;">
   <h2>机车系列</h2>
-  <form method="POST" action="{{ url_for('add_locomotive_series') }}">
+  <form method="POST" action="{{ url_for('add_locomotive_series') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增机车系列" required>
     <button type="submit">添加</button>
   </form>
@@ -322,8 +322,8 @@
         <option value="{{ type.id }}">{{ type.name }}</option>
         {% endfor %}
       </select>
+      <button type="submit">添加</button>
     </div>
-    <button type="submit">添加</button>
   </form>
   <table>
     <thead>
@@ -357,7 +357,7 @@
 
 <div id="carriage_series" class="tab-content" style="display:none;">
   <h2>车厢系列</h2>
-  <form method="POST" action="{{ url_for('add_carriage_series') }}">
+  <form method="POST" action="{{ url_for('add_carriage_series') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增车厢系列" required>
     <button type="submit">添加</button>
   </form>
@@ -403,8 +403,8 @@
         <option value="货车">货车</option>
         <option value="工程车">工程车</option>
       </select>
+      <button type="submit">添加</button>
     </div>
-    <button type="submit">添加</button>
   </form>
   <table>
     <thead>
@@ -438,7 +438,7 @@
 
 <div id="trainset_series" class="tab-content" style="display:none;">
   <h2>动车组系列</h2>
-  <form method="POST" action="{{ url_for('add_trainset_series') }}">
+  <form method="POST" action="{{ url_for('add_trainset_series') }}" class="inline-form">
     <input type="text" name="name" placeholder="新增动车组系列" required>
     <button type="submit">添加</button>
   </form>
@@ -484,8 +484,8 @@
         <option value="{{ type.id }}">{{ type.name }}</option>
         {% endfor %}
       </select>
+      <button type="submit">添加</button>
     </div>
-    <button type="submit">添加</button>
   </form>
   <table>
     <thead>
