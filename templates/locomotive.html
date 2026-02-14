@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}机车模型 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<h1>机车模型</h1>
+
+<form id="locomotive-form" method="POST">
+  <div class="form-row">
+    <div class="form-group">
+      <label for="model_id">车型 *</label>
+      <select id="model_id" name="model_id" required onchange="autoFillLocomotive()">
+        <option value="">请选择</option>
+        {% for model in locomotive_models %}
+        <option value="{{ model.id }}">{{ model.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="series_id">系列</label>
+      <select id="series_id" name="series_id">
+        <option value="">请选择</option>
+        {% for series in locomotive_series %}
+        <option value="{{ series.id }}">{{ series.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="power_type_id">动力类型</label>
+      <select id="power_type_id" name="power_type_id">
+        <option value="">请选择</option>
+        {% for type in power_types %}
+        <option value="{{ type.id }}">{{ type.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="brand_id">品牌 *</label>
+      <select id="brand_id" name="brand_id" required>
+        <option value="">请选择</option>
+        {% for brand in brands %}
+        <option value="{{ brand.id }}">{{ brand.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="depot_id">机务段</label>
+      <select id="depot_id" name="depot_id">
+        <option value="">请选择</option>
+        {% for depot in depots %}
+        <option value="{{ depot.id }}">{{ depot.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="scale">比例 *</label>
+      <select id="scale" name="scale" required>
+        <option value="HO">HO</option>
+        <option value="N">N</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="locomotive_number">机车号 *</label>
+      <input type="text" id="locomotive_number" name="locomotive_number" required>
+    </div>
+    <div class="form-group">
+      <label for="decoder_number">编号</label>
+      <input type="text" id="decoder_number" name="decoder_number">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="plaque">挂牌</label>
+      <input type="text" id="plaque" name="plaque">
+    </div>
+    <div class="form-group">
+      <label for="color">颜色</label>
+      <input type="text" id="color" name="color">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="chip_interface_id">芯片接口</label>
+      <select id="chip_interface_id" name="chip_interface_id">
+        <option value="">请选择</option>
+        {% for interface in chip_interfaces %}
+        <option value="{{ interface.id }}">{{ interface.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="chip_model_id">芯片型号</label>
+      <select id="chip_model_id" name="chip_model_id">
+        <option value="">请选择</option>
+        {% for model in chip_models %}
+        <option value="{{ model.id }}">{{ model.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="price">价格（表达式，如288+538）</label>
+      <input type="text" id="price" name="price">
+    </div>
+    <div class="form-group">
+      <label for="item_number">货号</label>
+      <input type="text" id="item_number" name="item_number">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="purchase_date">购买日期</label>
+    <input type="date" id="purchase_date" name="purchase_date">
+  </div>
+
+  <div class="form-group">
+    <label for="merchant_id">购买商家</label>
+    <select id="merchant_id" name="merchant_id">
+      <option value="">请选择</option>
+      {% for merchant in merchants %}
+      <option value="{{ merchant.id }}">{{ merchant.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <button type="submit">添加</button>
+</form>
+
+{% if errors %}
+<div class="error">
+  {% for error in errors %}
+  <p>{{ error }}</p>
+  {% endfor %}
+</div>
+{% endif %}
+
+<table>
+  <thead>
+    <tr>
+      <th>车型</th>
+      <th>系列</th>
+      <th>品牌</th>
+      <th>比例</th>
+      <th>机车号</th>
+      <th>编号</th>
+      <th>总价</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for locomotive in locomotives %}
+    <tr>
+      <td>{{ locomotive.model.name }}</td>
+      <td>{{ locomotive.series.name if locomotive.series else '-' }}</td>
+      <td>{{ locomotive.brand.name }}</td>
+      <td>{{ locomotive.scale }}</td>
+      <td>{{ locomotive.locomotive_number }}</td>
+      <td>{{ locomotive.decoder_number }}</td>
+      <td>{{ locomotive.total_price }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('delete_locomotive', id=locomotive.id) }}" onsubmit="return confirm('确定删除？')">
+          <button type="submit" class="btn-danger">删除</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function autoFillLocomotive() {
+  const modelId = document.getElementById('model_id').value;
+  if (!modelId) return;
+
+  fetch(`/api/auto-fill/locomotive/${modelId}`)
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('series_id').value = data.series_id;
+      document.getElementById('power_type_id').value = data.power_type_id;
+    });
+}
+</script>
+{% endblock %}
