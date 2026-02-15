@@ -3,10 +3,15 @@ from models import db, PowerType, Brand, ChipInterface, ChipModel, Merchant, Dep
 from models import LocomotiveSeries, LocomotiveModel, CarriageSeries, CarriageModel
 from models import TrainsetSeries, TrainsetModel
 
+
 def init_db():
   """初始化数据库并插入预置数据"""
   with app.app_context():
+    # 删除所有表并重新创建
+    db.drop_all()
     db.create_all()
+    print("数据库表结构已重建")
+
     insert_reference_data()
     print("数据库初始化完成！")
     # 验证数据

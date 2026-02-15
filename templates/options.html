@@ -179,19 +179,22 @@
   <h2>品牌</h2>
   <form method="POST" class="inline-form">
     <input type="text" name="name" placeholder="新增品牌" required>
+    <input type="text" name="website" placeholder="官网地址（可选）">
     <button type="submit">添加</button>
   </form>
   <table>
     <thead>
       <tr>
         <th>名称</th>
+        <th>官网</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for brand in brands %}
-      <tr data-id="{{ brand.id }}" data-type="brand" data-fields="name">
+      <tr data-id="{{ brand.id }}" data-type="brand" data-fields="name,website">
         <td data-field="name">{{ brand.name }}</td>
+        <td data-field="website">{{ brand.website or '' }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'brand')" style="display:none;">保存</button>

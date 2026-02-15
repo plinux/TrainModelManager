@@ -28,7 +28,7 @@ OPTION_CONFIG = {
   'brand': {
     'model': Brand,
     'cascade_check': None,
-    'fields': ['name']
+    'fields': ['name', 'website']
   },
   'merchant': {
     'model': Merchant,
