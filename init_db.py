@@ -67,44 +67,105 @@ def insert_reference_data():
       db.session.add(Merchant(name=name))
 
   # 9. 车辆段/机务段
-  depots = ['京局京段', '京局丰段', '上局沪段', '上局杭段']
+  depots = [
+    # 中国铁路局段
+    '铁总', '国铁',
+    '上局', '上局沪段', '上局杭段', '上局翔段', '上局宁东段', '上局合段',
+    '京局', '京局京段', '京局京西段', '京局丰段', '京局邯段', '京局怀段', '京局津段',
+    '哈局哈段', '哈局齐段', '哈局三段', '哈局昂段', '齐局昂段',
+    '青局格段',
+    '沈局沈段', '沈局苏段', '沈局锦段',
+    '广铁广段', '广铁长段', '广铁株段', '广铁肇段', '广铁汕段', '广铁沙段', '广铁深段',
+    '西局西段', '西局新段',
+    '南局南段', '南局福段', '南局昌段',
+    '兰局兰段', '兰局兰西段', '兰局迎段',
+    '郑局乡段', '郑局洛段',
+    '武局江段', '武局',
+    '成局贵段', '成局渝段', '成局',
+    '宁局柳段', '宁局南宁段',
+    '太局湖段',
+    '乌局',
+    '金温温段', '金温铁路',
+    '福州分局',
+    # 其他中国机构
+    '石厂', '晋厂', '广北', '西兰', '京丰', '上海梅铁', '中粮生化', '西安地铁',
+    # 日本铁路
+    'JR东日本', 'JR东海道', 'JR西日本', 'JR九州', 'JR四国', '南海电铁', '东武铁道',
+    # 境外铁路
+    'UP', 'SP', 'DB', 'DR', 'SNCF', 'SNCB', 'SBB', 'OBB', 'PKP', 'CFL', 'JR',
+    'PIKO', 'ROCO', 'ME', 'EGP', 'KPK',
+    'Länderbahn', 'RailAdventure', 'RAIL Gondola', 'NL-VRR', 'RAOX',
+    'ATSF', 'GrandUnion', 'CONRAIL', 'PBR',
+    'OUIGO', 'Lokaltog', 'M&H',
+    # 其他
+    '国家能源', '神华集团'
+  ]
   for name in depots:
     if not Depot.query.filter_by(name=name).first():
       db.session.add(Depot(name=name))
 
   db.session.commit()
 
+  # 获取动力类型引用
+  power_electric = PowerType.query.filter_by(name='电力').first()
+  power_diesel = PowerType.query.filter_by(name='内燃').first()
+
   # 10. 机车型号
   # 东风系列 - 内燃
   dongfeng_series = LocomotiveSeries.query.filter_by(name='东风').first()
-  power_neiran = PowerType.query.filter_by(name='内燃').first()
   dongfeng_models = ['DF4', 'DF4B', 'DF4C', 'DF4D', 'DF5', 'DF5G', 'DF7', 'DF7B', 'DF7C', 'DF7D', 'DF7G', 'DF8B', 'DF11', 'DF11G']
   for name in dongfeng_models:
     if not LocomotiveModel.query.filter_by(name=name).first():
-      db.session.add(LocomotiveModel(name=name, series_id=dongfeng_series.id if dongfeng_series else None, power_type_id=power_neiran.id if power_neiran else None))
+      db.session.add(LocomotiveModel(name=name, series_id=dongfeng_series.id if dongfeng_series else None, power_type_id=power_diesel.id if power_diesel else None))
 
   # 韶山系列 - 电力
   shaoshan_series = LocomotiveSeries.query.filter_by(name='韶山').first()
-  power_electric = PowerType.query.filter_by(name='电力').first()
   shaoshan_models = ['SS1', 'SS3', 'SS3B', 'SS4G', 'SS6', 'SS6B', 'SS7', 'SS7C', 'SS7D', 'SS7E', 'SS8', 'SS9', 'SS9G']
   for name in shaoshan_models:
     if not LocomotiveModel.query.filter_by(name=name).first():
       db.session.add(LocomotiveModel(name=name, series_id=shaoshan_series.id if shaoshan_series else None, power_type_id=power_electric.id if power_electric else None))
 
   # 和谐电系列 - 电力
-  hexie_series = LocomotiveSeries.query.filter_by(name='和谐电').first()
-  hexie_models = ['HXD1', 'HXD1B', 'HXD1C', 'HXD1D', 'HXD2', 'HXD3', 'HXD3B', 'HXD3C', 'HXD3D']
-  for name in hexie_models:
+  hexie_dian_series = LocomotiveSeries.query.filter_by(name='和谐电').first()
+  hexie_dian_models = ['HXD1', 'HXD1B', 'HXD1C', 'HXD1D', 'HXD2', 'HXD3', 'HXD3B', 'HXD3C', 'HXD3D']
+  for name in hexie_dian_models:
     if not LocomotiveModel.query.filter_by(name=name).first():
-      db.session.add(LocomotiveModel(name=name, series_id=hexie_series.id if hexie_series else None, power_type_id=power_electric.id if power_electric else None))
+      db.session.add(LocomotiveModel(name=name, series_id=hexie_dian_series.id if hexie_dian_series else None, power_type_id=power_electric.id if power_electric else None))
+
+  # 和谐内系列 - 内燃
+  hexie_nei_series = LocomotiveSeries.query.filter_by(name='和谐内').first()
+  hexie_nei_models = ['HXN5', 'HXN3', 'HXN5B']
+  for name in hexie_nei_models:
+    if not LocomotiveModel.query.filter_by(name=name).first():
+      db.session.add(LocomotiveModel(name=name, series_id=hexie_nei_series.id if hexie_nei_series else None, power_type_id=power_diesel.id if power_diesel else None))
+
+  # 复兴电系列 - 电力
+  fuxing_dian_series = LocomotiveSeries.query.filter_by(name='复兴电').first()
+  fuxing_dian_models = ['FXD1C', 'FXD3C']
+  for name in fuxing_dian_models:
+    if not LocomotiveModel.query.filter_by(name=name).first():
+      db.session.add(LocomotiveModel(name=name, series_id=fuxing_dian_series.id if fuxing_dian_series else None, power_type_id=power_electric.id if power_electric else None))
 
   # 复兴内系列 - 内燃
-  fuxing_series = LocomotiveSeries.query.filter_by(name='复兴内').first()
-  power_neiran = PowerType.query.filter_by(name='内燃').first()
-  fuxing_models = ['FXN5C', 'FXN3C']
-  for name in fuxing_models:
+  fuxing_nei_series = LocomotiveSeries.query.filter_by(name='复兴内').first()
+  fuxing_nei_models = ['FXN5C', 'FXN3C']
+  for name in fuxing_nei_models:
     if not LocomotiveModel.query.filter_by(name=name).first():
-      db.session.add(LocomotiveModel(name=name, series_id=fuxing_series.id if fuxing_series else None, power_type_id=power_neiran.id if power_neiran else None))
+      db.session.add(LocomotiveModel(name=name, series_id=fuxing_nei_series.id if fuxing_nei_series else None, power_type_id=power_diesel.id if power_diesel else None))
+
+  # 内集系列 - 内燃
+  neiji_series = LocomotiveSeries.query.filter_by(name='内集').first()
+  neiji_models = ['NJ1', 'NJ2']
+  for name in neiji_models:
+    if not LocomotiveModel.query.filter_by(name=name).first():
+      db.session.add(LocomotiveModel(name=name, series_id=neiji_series.id if neiji_series else None, power_type_id=power_diesel.id if power_diesel else None))
+
+  # 内电系列 - 内燃
+  neidian_series = LocomotiveSeries.query.filter_by(name='内电').first()
+  neidian_models = ['ND1', 'ND2', 'ND3', 'ND5']
+  for name in neidian_models:
+    if not LocomotiveModel.query.filter_by(name=name).first():
+      db.session.add(LocomotiveModel(name=name, series_id=neidian_series.id if neidian_series else None, power_type_id=power_diesel.id if power_diesel else None))
 
   db.session.commit()
 
@@ -130,6 +191,13 @@ def insert_reference_data():
     if not TrainsetModel.query.filter_by(name=name).first():
       db.session.add(TrainsetModel(name=name, series_id=crh_series.id if crh_series else None, power_type_id=power_electric.id if power_electric else None))
 
+  # CRH380系列 - 电力
+  crh380_series = TrainsetSeries.query.filter_by(name='CRH380').first()
+  crh380_models = ['CRH380A', 'CRH380B', 'CRH380C']
+  for name in crh380_models:
+    if not TrainsetModel.query.filter_by(name=name).first():
+      db.session.add(TrainsetModel(name=name, series_id=crh380_series.id if crh380_series else None, power_type_id=power_electric.id if power_electric else None))
+
   # CR400系列 - 电力
   cr400_series = TrainsetSeries.query.filter_by(name='CR400').first()
   cr400_models = ['CR400AF', 'CR400BF', 'CR400AF-S', 'CR400BF-C']
@@ -140,7 +208,7 @@ def insert_reference_data():
   # DESIRO系列 - 内燃
   desiro_series = TrainsetSeries.query.filter_by(name='DESIRO').first()
   if not TrainsetModel.query.filter_by(name='DMU').first():
-    db.session.add(TrainsetModel(name='DMU', series_id=desiro_series.id if desiro_series else None, power_type_id=power_neiran.id if power_neiran else None))
+    db.session.add(TrainsetModel(name='DMU', series_id=desiro_series.id if desiro_series else None, power_type_id=power_diesel.id if power_diesel else None))
 
   # RailJet系列 - 电力
   railjet_series = TrainsetSeries.query.filter_by(name='RailJet').first()
@@ -155,6 +223,19 @@ def insert_reference_data():
   for name in shinkansen_models:
     if not TrainsetModel.query.filter_by(name=name).first():
       db.session.add(TrainsetModel(name=name, series_id=shinkansen_series.id if shinkansen_series else None, power_type_id=power_electric.id if power_electric else None))
+
+  # 旅游列车系列 - 内燃
+  lvyou_series = TrainsetSeries.query.filter_by(name='旅游列车').first()
+  lvyou_diesel_models = ['Kiha70/71', '87系', '787系', '77系']
+  for name in lvyou_diesel_models:
+    if not TrainsetModel.query.filter_by(name=name).first():
+      db.session.add(TrainsetModel(name=name, series_id=lvyou_series.id if lvyou_series else None, power_type_id=power_diesel.id if power_diesel else None))
+
+  # 旅游列车系列 - 电力
+  lvyou_electric_models = ['E001型', '冰河急特', '485型']
+  for name in lvyou_electric_models:
+    if not TrainsetModel.query.filter_by(name=name).first():
+      db.session.add(TrainsetModel(name=name, series_id=lvyou_series.id if lvyou_series else None, power_type_id=power_electric.id if power_electric else None))
 
   db.session.commit()
 
@@ -234,14 +315,14 @@ def insert_reference_data():
 
   # 守车系列
   series_shou = CarriageSeries.query.filter_by(name='守车').first()
-  models_shou = ['S1', 'S2', 'S5', 'S10', 'S12', 'S13']
+  models_shou = ['S12', 'CA']
   for name in models_shou:
     if not CarriageModel.query.filter_by(name=name).first():
       db.session.add(CarriageModel(name=name, series_id=series_shou.id if series_shou else None, type='工程车'))
 
   # 吊车系列
   series_diao = CarriageSeries.query.filter_by(name='吊车').first()
-  models_diao = ['DQ', 'DDQ', 'NS1600', 'NS1602']
+  models_diao = ['EDK-570', 'So80']
   for name in models_diao:
     if not CarriageModel.query.filter_by(name=name).first():
       db.session.add(CarriageModel(name=name, series_id=series_diao.id if series_diao else None, type='工程车'))
