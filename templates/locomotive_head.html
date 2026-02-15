@@ -94,22 +94,20 @@
   <button type="submit">添加</button>
 </form>
 
-<script src="/static/js/app.js"></script>
-
-<table>
+<table id="locomotive-head-table" class="sortable-filterable">
   <thead>
     <tr>
-      <th>车型</th>
-      <th>品牌</th>
-      <th>比例</th>
-      <th>特涂</th>
-      <th>总价</th>
+      <th data-sort="model" data-filter="model">车型</th>
+      <th data-sort="brand" data-filter="brand">品牌</th>
+      <th data-sort="scale" data-filter="scale">比例</th>
+      <th data-sort="special_color" data-filter="special_color">特涂</th>
+      <th data-sort="price">总价</th>
       <th>操作</th>
     </tr>
   </thead>
   <tbody>
     {% for head in locomotive_heads %}
-    <tr>
+    <tr data-model="{{ head.model.name }}" data-brand="{{ head.brand.name }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-price="{{ head.total_price or 0 }}">
       <td>{{ head.model.name }}</td>
       <td>{{ head.brand.name }}</td>
       <td>{{ head.scale }}</td>
@@ -125,4 +123,11 @@
     {% endfor %}
   </tbody>
 </table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 初始化表格排序筛选
+  initTableSortFilter('locomotive-head-table');
+</script>
 {% endblock %}

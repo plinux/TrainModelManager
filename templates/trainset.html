@@ -156,22 +156,22 @@
   <button type="submit">添加</button>
 </form>
 
-<table>
+<table id="trainset-table" class="sortable-filterable">
   <thead>
     <tr>
-      <th>车型</th>
-      <th>系列</th>
-      <th>品牌</th>
-      <th>比例</th>
-      <th>动车号</th>
-      <th>编号</th>
-      <th>总价</th>
+      <th data-sort="model" data-filter="model">车型</th>
+      <th data-sort="series" data-filter="series">系列</th>
+      <th data-sort="brand" data-filter="brand">品牌</th>
+      <th data-sort="scale" data-filter="scale">比例</th>
+      <th data-sort="number" data-filter="number">动车号</th>
+      <th data-sort="decoder" data-filter="decoder">编号</th>
+      <th data-sort="price">总价</th>
       <th>操作</th>
     </tr>
   </thead>
   <tbody>
     {% for trainset in trainsets %}
-    <tr>
+    <tr data-model="{{ trainset.model.name }}" data-series="{{ trainset.series.name if trainset.series else '' }}" data-brand="{{ trainset.brand.name }}" data-scale="{{ trainset.scale }}" data-number="{{ trainset.trainset_number or '' }}" data-decoder="{{ trainset.decoder_number or '' }}" data-price="{{ trainset.total_price or 0 }}">
       <td>{{ trainset.model.name }}</td>
       <td>{{ trainset.series.name if trainset.series else '-' }}</td>
       <td>{{ trainset.brand.name }}</td>
@@ -204,5 +204,7 @@
     { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }}, power_type_id: {{ model.power_type_id or 'null' }} }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
+  // 初始化表格排序筛选
+  initTableSortFilter('trainset-table');
 </script>
 {% endblock %}

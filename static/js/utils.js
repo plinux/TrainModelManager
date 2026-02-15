@@ -364,6 +364,218 @@ const ModelForm = {
   }
 };
 
+// 表格排序筛选管理器
+const TableManager = {
+  // 当前排序状态
+  sortColumn: null,
+  sortDirection: 'asc',  // 'asc' | 'desc' | null
+
+  // 当前筛选状态
+  filters: {},
+
+  /**
+   * 初始化表格
+   * @param {string} tableId - 表格 ID
+   */
+  init(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    this.table = table;
+    this.tbody = table.querySelector('tbody');
+    this.originalRows = Array.from(this.tbody.querySelectorAll('tr'));
+
+    this.setupSortHeaders();
+    this.setupFilterHeaders();
+  },
+
+  /**
+   * 设置排序表头
+   */
+  setupSortHeaders() {
+    const headers = this.table.querySelectorAll('th[data-sort]');
+    headers.forEach(th => {
+      th.style.cursor = 'pointer';
+      th.addEventListener('click', () => this.handleSort(th));
+
+      // 添加排序指示器
+      if (!th.querySelector('.sort-indicator')) {
+        const indicator = document.createElement('span');
+        indicator.className = 'sort-indicator';
+        indicator.textContent = '⇅';
+        th.appendChild(indicator);
+      }
+    });
+  },
+
+  /**
+   * 设置筛选表头
+   */
+  setupFilterHeaders() {
+    const headers = this.table.querySelectorAll('th[data-filter]');
+    headers.forEach(th => {
+      const filterKey = th.dataset.filter;
+      const uniqueValues = this.getUniqueValues(filterKey);
+
+      // 创建筛选下拉框
+      const select = document.createElement('select');
+      select.className = 'column-filter';
+
+      // 添加"全部"选项
+      const allOption = document.createElement('option');
+      allOption.value = '';
+      allOption.textContent = '全部';
+      select.appendChild(allOption);
+
+      // 添加唯一值选项
+      uniqueValues.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v;
+        option.textContent = v;
+        select.appendChild(option);
+      });
+
+      select.addEventListener('change', (e) => this.handleFilter(filterKey, e.target.value));
+
+      // 包装表头内容
+      const wrapper = document.createElement('div');
+      wrapper.className = 'th-wrapper';
+      while (th.firstChild) {
+        wrapper.appendChild(th.firstChild);
+      }
+      th.appendChild(wrapper);
+      th.appendChild(select);
+    });
+  },
+
+  /**
+   * 获取列的唯一值
+   * @param {string} key - 列标识
+   * @returns {string[]}
+   */
+  getUniqueValues(key) {
+    const values = new Set();
+    this.originalRows.forEach(row => {
+      const value = row.dataset[key];
+      if (value !== undefined && value !== '') {
+        values.add(value);
+      }
+    });
+    return Array.from(values).sort();
+  },
+
+  /**
+   * 处理排序
+   * @param {HTMLElement} th - 被点击的表头
+   */
+  handleSort(th) {
+    const column = th.dataset.sort;
+
+    // 切换排序方向
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+
+    // 更新排序指示器
+    this.updateSortIndicators();
+
+    // 执行排序
+    this.applySortAndFilter();
+  },
+
+  /**
+   * 更新排序指示器
+   */
+  updateSortIndicators() {
+    const headers = this.table.querySelectorAll('th[data-sort]');
+    headers.forEach(th => {
+      const indicator = th.querySelector('.sort-indicator');
+      if (th.dataset.sort === this.sortColumn) {
+        indicator.textContent = this.sortDirection === 'asc' ? '▲' : '▼';
+        indicator.className = 'sort-indicator active';
+      } else {
+        indicator.textContent = '⇅';
+        indicator.className = 'sort-indicator';
+      }
+    });
+  },
+
+  /**
+   * 处理筛选
+   * @param {string} key - 列标识
+   * @param {string} value - 筛选值
+   */
+  handleFilter(key, value) {
+    if (value === '') {
+      delete this.filters[key];
+    } else {
+      this.filters[key] = value;
+    }
+    this.applySortAndFilter();
+  },
+
+  /**
+   * 执行排序和筛选
+   */
+  applySortAndFilter() {
+    // 筛选
+    let filteredRows = this.originalRows.filter(row => {
+      return Object.entries(this.filters).every(([key, value]) => {
+        return row.dataset[key] === value;
+      });
+    });
+
+    // 排序
+    if (this.sortColumn) {
+      filteredRows.sort((a, b) => {
+        const aVal = a.dataset[this.sortColumn] || '';
+        const bVal = b.dataset[this.sortColumn] || '';
+
+        // 尝试数字比较
+        const aNum = parseFloat(aVal);
+        const bNum = parseFloat(bVal);
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return this.sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+        }
+
+        // 字符串比较
+        const compareResult = aVal.localeCompare(bVal, 'zh-CN');
+        return this.sortDirection === 'asc' ? compareResult : -compareResult;
+      });
+    }
+
+    // 重新渲染
+    while (this.tbody.firstChild) {
+      this.tbody.removeChild(this.tbody.firstChild);
+    }
+    filteredRows.forEach(row => this.tbody.appendChild(row.cloneNode(true)));
+  },
+
+  /**
+   * 重置表格
+   */
+  reset() {
+    this.sortColumn = null;
+    this.sortDirection = 'asc';
+    this.filters = {};
+    this.updateSortIndicators();
+
+    // 重置筛选下拉框
+    this.table.querySelectorAll('.column-filter').forEach(select => {
+      select.value = '';
+    });
+
+    // 恢复原始顺序
+    while (this.tbody.firstChild) {
+      this.tbody.removeChild(this.tbody.firstChild);
+    }
+    this.originalRows.forEach(row => this.tbody.appendChild(row.cloneNode(true)));
+  }
+};
+
 // 全局函数兼容（保持与旧代码的兼容性）
 function filterLocomotiveModelsBySeries(seriesId) {
   Utils.filterModelsBySeries(seriesId, 'model_id', window.locomotiveModelData);
@@ -415,4 +627,12 @@ function filterModelsBySeries(seriesId, modelSelect) {
 
 function generateSeriesOptions() {
   return CarriageManager.generateSeriesOptions();
+}
+
+function initTableSortFilter(tableId) {
+  TableManager.init(tableId);
+}
+
+function resetTable(tableId) {
+  TableManager.reset();
 }

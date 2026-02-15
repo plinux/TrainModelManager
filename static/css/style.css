@@ -738,3 +738,65 @@ td form button {
 .mb-1 { margin-bottom: var(--spacing-sm); }
 .mb-2 { margin-bottom: var(--spacing-md); }
 .mb-3 { margin-bottom: var(--spacing-lg); }
+
+/* ========== 表格排序筛选样式 ========== */
+
+/* 可排序的表头 */
+.sortable-filterable th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sortable-filterable th[data-sort]:hover {
+  background-color: #e9ecef;
+}
+
+/* 排序指示器 */
+.sort-indicator {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.sort-indicator.active {
+  color: var(--color-primary);
+}
+
+/* 表头包装器 */
+.th-wrapper {
+  margin-bottom: 0.25rem;
+}
+
+/* 列筛选下拉框 */
+.column-filter {
+  display: block;
+  width: 100%;
+  max-width: 120px;
+  margin-top: 0.25rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  background-color: white;
+  cursor: pointer;
+}
+
+.column-filter:hover {
+  border-color: var(--color-primary);
+}
+
+.column-filter:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* 表格操作列不参与排序筛选 */
+.sortable-filterable th:last-child {
+  cursor: default;
+}
+
+.sortable-filterable th:last-child:hover {
+  background-color: var(--bg-table-header);
+}

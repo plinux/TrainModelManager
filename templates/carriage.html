@@ -91,21 +91,21 @@
   <button type="submit">添加套装</button>
 </form>
 
-<table>
+<table id="carriage-table" class="sortable-filterable">
   <thead>
     <tr>
-      <th>品牌</th>
-      <th>系列</th>
-      <th>车次</th>
-      <th>比例</th>
-      <th>车厢数</th>
-      <th>总价</th>
+      <th data-sort="brand" data-filter="brand">品牌</th>
+      <th data-sort="series" data-filter="series">系列</th>
+      <th data-sort="train_number" data-filter="train_number">车次</th>
+      <th data-sort="scale" data-filter="scale">比例</th>
+      <th data-sort="count">车厢数</th>
+      <th data-sort="price">总价</th>
       <th>操作</th>
     </tr>
   </thead>
   <tbody>
     {% for set in carriage_sets %}
-    <tr>
+    <tr data-brand="{{ set.brand.name }}" data-series="{{ set.series.name if set.series else '' }}" data-train_number="{{ set.train_number or '' }}" data-scale="{{ set.scale }}" data-count="{{ set.items|length }}" data-price="{{ set.total_price or 0 }}">
       <td>{{ set.brand.name }}</td>
       <td>{{ set.series.name if set.series else '-' }}</td>
       <td>{{ set.train_number }}</td>
@@ -137,5 +137,7 @@
     { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }} }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
+  // 初始化表格排序筛选
+  initTableSortFilter('carriage-table');
 </script>
 {% endblock %}
