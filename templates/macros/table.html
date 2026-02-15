@@ -7,7 +7,9 @@
 {# 表格操作列（编辑+删除） #}
 {% macro action_buttons(edit_url, delete_url, confirm_message='确定删除？') %}
 <td>
-  <a href="{{ edit_url }}" class="btn-edit">编辑</a>
+  <form method="GET" action="{{ edit_url }}" style="display: inline;">
+    <button type="submit" class="btn-edit">编辑</button>
+  </form>
   <form method="POST" action="{{ delete_url }}" onsubmit="return confirm('{{ confirm_message }}')" style="display: inline;">
     <button type="submit" class="btn-danger">删除</button>
   </form>
