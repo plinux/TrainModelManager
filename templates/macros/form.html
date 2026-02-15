@@ -150,12 +150,12 @@
 
 
 {# 价格输入框（带提示）#}
-{% macro price_field(name='price', label='价格', value=null, id=null, field_class=null) %}
+{% macro price_field(name='price', label='价格', value=null, id=null, field_class=null, placeholder='支持表达式计算') %}
 <div class="form-group{% if field_class %} {{ field_class }}{% endif %}">
   <label for="{{ id or name }}">{{ label }}</label>
   <input type="text" id="{{ id or name }}" name="{{ name }}"
       {% if value %}value="{{ value }}"{% endif %}
-      placeholder="支持加减乘除，如 288+538">
+      placeholder="{{ placeholder }}">
 </div>
 {% endmacro %}
 

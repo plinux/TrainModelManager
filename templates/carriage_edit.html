@@ -21,7 +21,7 @@
     {{ text_field('item_number', '货号', value=carriage_set.item_number) }}
     <div class="form-group">
       <label for="total_price">总价</label>
-      <input type="number" id="total_price" name="total_price" step="0.01" value="{{ carriage_set.total_price }}">
+      <input type="number" id="total_price" name="total_price" step="0.01" value="{{ carriage_set.total_price }}" placeholder="不支持表达式计算">
     </div>
     {{ autocomplete_field('merchant_id', '购买商家', merchants, value=carriage_set.merchant_id, text_value=carriage_set.merchant.name if carriage_set.merchant else None) }}
     {{ date_field('purchase_date', '购买日期', value=carriage_set.purchase_date) }}
