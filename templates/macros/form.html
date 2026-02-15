@@ -55,13 +55,13 @@
 
 
 {# 布尔选择框（有/无）#}
-{% macro boolean_select(name, label, required=false, value=null, id=null) %}
+{% macro boolean_select(name, label, required=false, value=null, id=null, default=null) %}
 <div class="form-group">
   <label for="{{ id or name }}">{{ label }}</label>
   <select id="{{ id or name }}" name="{{ name }}" {% if required %}required{% endif %}>
     <option value="">请选择</option>
-    <option value="true" {% if value == true %}selected{% endif %}>有</option>
-    <option value="false" {% if value == false %}selected{% endif %}>无</option>
+    <option value="true" {% if (value == true) or (value == null and default == true) %}selected{% endif %}>有</option>
+    <option value="false" {% if (value == false) or (value == null and default == false) %}selected{% endif %}>无</option>
   </select>
 </div>
 {% endmacro %}
@@ -104,7 +104,7 @@
 
 
 {# 价格输入框（带提示）#}
-{% macro price_field(name='price', label='价格（表达式，如288+538）', value=null, id=null) %}
+{% macro price_field(name='price', label='价格（表达式）', value=null, id=null) %}
 <div class="form-group">
   <label for="{{ id or name }}">{{ label }}</label>
   <input type="text" id="{{ id or name }}" name="{{ name }}"

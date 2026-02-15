@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select, boolean_select, number_field %}
 
 {% block title %}编辑动车组模型 - 火车模型管理系统{% endblock %}
 
@@ -7,171 +8,39 @@
 
 <form id="trainset-form" method="POST">
   <div class="form-row">
-    <div class="form-group">
-      <label for="model_id">车型 *</label>
-      <select id="model_id" name="model_id" required onchange="autoFillTrainset()">
-        <option value="">请选择</option>
-        {% for model in trainset_models %}
-        <option value="{{ model.id }}" {{ 'selected' if model.id == trainset.model_id else '' }}>{{ model.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="series_id">系列</label>
-      <select id="series_id" name="series_id" onchange="handleTrainsetSeriesChange()">
-        <option value="">请选择</option>
-        {% for series in trainset_series %}
-        <option value="{{ series.id }}" {{ 'selected' if series.id == trainset.series_id else '' }}>{{ series.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="power_type_id">动力类型</label>
-      <select id="power_type_id" name="power_type_id">
-        <option value="">请选择</option>
-        {% for type in power_types %}
-        <option value="{{ type.id }}" {{ 'selected' if type.id == trainset.power_type_id else '' }}>{{ type.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
+    {{ select_field('model_id', '型号', trainset_models, required=true, value=trainset.model_id, onchange='autoFillTrainset()') }}
+    {{ select_field('series_id', '系列', trainset_series, value=trainset.series_id, onchange='handleTrainsetSeriesChange()') }}
+    {{ select_field('power_type_id', '动力类型', power_types, value=trainset.power_type_id) }}
+    {{ select_field('depot_id', '动车段', depots, value=trainset.depot_id) }}
+    {{ scale_select(value=trainset.scale) }}
+    {{ select_field('brand_id', '品牌', brands, required=true, value=trainset.brand_id) }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="brand_id">品牌 *</label>
-      <select id="brand_id" name="brand_id" required>
-        <option value="">请选择</option>
-        {% for brand in brands %}
-        <option value="{{ brand.id }}" {{ 'selected' if brand.id == trainset.brand_id else '' }}>{{ brand.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="depot_id">动车段</label>
-      <select id="depot_id" name="depot_id">
-        <option value="">请选择</option>
-        {% for depot in depots %}
-        <option value="{{ depot.id }}" {{ 'selected' if depot.id == trainset.depot_id else '' }}>{{ depot.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="scale">比例 *</label>
-      <select id="scale" name="scale" required>
-        <option value="HO" {{ 'selected' if trainset.scale == 'HO' else '' }}>HO</option>
-        <option value="N" {{ 'selected' if trainset.scale == 'N' else '' }}>N</option>
-      </select>
-    </div>
+    {{ text_field('trainset_number', '动车号', required=true, value=trainset.trainset_number) }}
+    {{ text_field('decoder_number', '编号', value=trainset.decoder_number) }}
+    {{ text_field('plaque', '挂牌', value=trainset.plaque) }}
+    {{ text_field('color', '颜色', value=trainset.color) }}
+    {{ number_field('formation', '编组数', value=trainset.formation) }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="trainset_number">动车号 *</label>
-      <input type="text" id="trainset_number" name="trainset_number" required value="{{ trainset.trainset_number }}">
-    </div>
-    <div class="form-group">
-      <label for="decoder_number">编号</label>
-      <input type="text" id="decoder_number" name="decoder_number" value="{{ trainset.decoder_number }}">
-    </div>
+    {{ boolean_select('head_light', '头车灯', value=trainset.head_light) }}
+    {{ text_field('interior_light', '室内灯', value=trainset.interior_light) }}
+    {{ select_field('chip_interface_id', '芯片接口', chip_interfaces, value=trainset.chip_interface_id) }}
+    {{ select_field('chip_model_id', '芯片型号', chip_models, value=trainset.chip_model_id) }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="plaque">挂牌</label>
-      <input type="text" id="plaque" name="plaque" value="{{ trainset.plaque }}">
-    </div>
-    <div class="form-group">
-      <label for="color">颜色</label>
-      <input type="text" id="color" name="color" value="{{ trainset.color }}">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="formation">编组数</label>
-    <input type="number" id="formation" name="formation" value="{{ trainset.formation }}">
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label>头车灯</label>
-      <select name="head_light">
-        <option value="">请选择</option>
-        <option value="true" {{ 'selected' if trainset.head_light == True else '' }}>有</option>
-        <option value="false" {{ 'selected' if trainset.head_light == False else '' }}>无</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="interior_light">室内灯</label>
-      <input type="text" id="interior_light" name="interior_light" value="{{ trainset.interior_light }}">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="chip_interface_id">芯片接口</label>
-      <select id="chip_interface_id" name="chip_interface_id">
-        <option value="">请选择</option>
-        {% for interface in chip_interfaces %}
-        <option value="{{ interface.id }}" {{ 'selected' if interface.id == trainset.chip_interface_id else '' }}>{{ interface.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="chip_model_id">芯片型号</label>
-      <select id="chip_model_id" name="chip_model_id">
-        <option value="">请选择</option>
-        {% for model in chip_models %}
-        <option value="{{ model.id }}" {{ 'selected' if model.id == trainset.chip_model_id else '' }}>{{ model.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="price">价格（表达式，如288+538）</label>
-      <input type="text" id="price" name="price" value="{{ trainset.price }}">
-    </div>
-    <div class="form-group">
-      <label for="item_number">货号</label>
-      <input type="text" id="item_number" name="item_number" value="{{ trainset.item_number }}">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="purchase_date">购买日期</label>
-    <input type="date" id="purchase_date" name="purchase_date" value="{{ trainset.purchase_date }}">
-  </div>
-
-  <div class="form-group">
-    <label for="merchant_id">购买商家</label>
-    <select id="merchant_id" name="merchant_id">
-      <option value="">请选择</option>
-      {% for merchant in merchants %}
-      <option value="{{ merchant.id }}" {{ 'selected' if merchant.id == trainset.merchant_id else '' }}>{{ merchant.name }}</option>
-      {% endfor %}
-    </select>
+    {{ text_field('item_number', '货号', value=trainset.item_number) }}
+    {{ price_field(value=trainset.price) }}
+    {{ select_field('merchant_id', '购买商家', merchants, value=trainset.merchant_id) }}
+    {{ date_field('purchase_date', '购买日期', value=trainset.purchase_date) }}
   </div>
 
   <button type="submit">保存</button>
   <a href="{{ url_for('trainset.trainset') }}" class="btn-cancel">取消</a>
 </form>
-
-<script>
-  // 将动车组系列和车型数据传递给前端
-  window.trainsetSeriesData = [
-    {% for series in trainset_series %}
-    { id: {{ series.id }}, name: '{{ series.name }}' },
-    {% endfor %}
-  ];
-  window.trainsetModelData = [
-    {% for model in trainset_models %}
-    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id }}, power_type_id: {{ model.power_type_id }} },
-    {% endfor %}
-  ];
-</script>
-
-<script src="/static/js/app.js"></script>
 
 {% if errors %}
 <div class="error">
@@ -180,5 +49,19 @@
   {% endfor %}
 </div>
 {% endif %}
+{% endblock %}
 
+{% block scripts %}
+<script>
+  window.trainsetSeriesData = [
+    {% for series in trainset_series %}
+    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  window.trainsetModelData = [
+    {% for model in trainset_models %}
+    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }}, power_type_id: {{ model.power_type_id or 'null' }} }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+</script>
 {% endblock %}

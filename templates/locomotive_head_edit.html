@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select, boolean_select %}
 
 {% block title %}编辑先头车模型 - 火车模型管理系统{% endblock %}
 
@@ -7,88 +8,20 @@
 
 <form id="locomotive-head-form" method="POST">
   <div class="form-row">
-    <div class="form-group">
-      <label for="model_id">车型 *</label>
-      <select id="model_id" name="model_id" required>
-        <option value="">请选择</option>
-        {% for model in trainset_models %}
-        <option value="{{ model.id }}" {{ 'selected' if model.id == locomotive_head.model_id else '' }}>{{ model.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="brand_id">品牌 *</label>
-      <select id="brand_id" name="brand_id" required>
-        <option value="">请选择</option>
-        {% for brand in brands %}
-        <option value="{{ brand.id }}" {{ 'selected' if brand.id == locomotive_head.brand_id else '' }}>{{ brand.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="scale">比例 *</label>
-      <select id="scale" name="scale" required>
-        <option value="HO" {{ 'selected' if locomotive_head.scale == 'HO' else '' }}>HO</option>
-        <option value="N" {{ 'selected' if locomotive_head.scale == 'N' else '' }}>N</option>
-      </select>
-    </div>
+    {{ select_field('model_id', '型号', trainset_models, required=true, value=locomotive_head.model_id) }}
+    {{ select_field('depot_id', '动车段', depots, value=locomotive_head.depot_id) }}
+    {{ scale_select(value=locomotive_head.scale) }}
+    {{ select_field('brand_id', '品牌', brands, required=true, value=locomotive_head.brand_id) }}
+    {{ text_field('special_color', '特涂', value=locomotive_head.special_color) }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="depot_id">动车段</label>
-      <select id="depot_id" name="depot_id">
-        <option value="">请选择</option>
-        {% for depot in depots %}
-        <option value="{{ depot.id }}" {{ 'selected' if depot.id == locomotive_head.depot_id else '' }}>{{ depot.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="special_color">特涂</label>
-      <input type="text" id="special_color" name="special_color" maxlength="32" value="{{ locomotive_head.special_color }}">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label>头车灯</label>
-      <select name="head_light">
-        <option value="">请选择</option>
-        <option value="true" {{ 'selected' if locomotive_head.head_light == True else '' }}>有</option>
-        <option value="false" {{ 'selected' if locomotive_head.head_light == False else '' }}>无</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="interior_light">室内灯</label>
-      <input type="text" id="interior_light" name="interior_light" value="{{ locomotive_head.interior_light }}">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="price">价格（表达式，如288+538）</label>
-      <input type="text" id="price" name="price" value="{{ locomotive_head.price }}">
-    </div>
-    <div class="form-group">
-      <label for="item_number">货号</label>
-      <input type="text" id="item_number" name="item_number" value="{{ locomotive_head.item_number }}">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="purchase_date">购买日期</label>
-    <input type="date" id="purchase_date" name="purchase_date" value="{{ locomotive_head.purchase_date }}">
-  </div>
-
-  <div class="form-group">
-    <label for="merchant_id">购买商家</label>
-    <select id="merchant_id" name="merchant_id">
-      <option value="">请选择</option>
-      {% for merchant in merchants %}
-      <option value="{{ merchant.id }}" {{ 'selected' if merchant.id == locomotive_head.merchant_id else '' }}>{{ merchant.name }}</option>
-      {% endfor %}
-    </select>
+    {{ boolean_select('head_light', '头车灯', value=locomotive_head.head_light) }}
+    {{ text_field('interior_light', '室内灯', value=locomotive_head.interior_light) }}
+    {{ text_field('item_number', '货号', value=locomotive_head.item_number) }}
+    {{ price_field(value=locomotive_head.price) }}
+    {{ select_field('merchant_id', '购买商家', merchants, value=locomotive_head.merchant_id) }}
+    {{ date_field('purchase_date', '购买日期', value=locomotive_head.purchase_date) }}
   </div>
 
   <button type="submit">保存</button>
@@ -102,5 +35,4 @@
   {% endfor %}
 </div>
 {% endif %}
-
 {% endblock %}

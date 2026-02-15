@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select, boolean_select, number_field %}
+{% from "macros/table.html" import action_buttons, relation_name %}
 
 {% block title %}动车组模型 - 火车模型管理系统{% endblock %}
 
@@ -7,193 +9,87 @@
 
 <form id="trainset-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/trainset/add');">
   <div class="form-row">
-    <div class="form-group">
-      <label for="model_id">车型 *</label>
-      <select id="model_id" name="model_id" required onchange="autoFillTrainset()">
-        <option value="">请选择</option>
-        {% for model in trainset_models %}
-        <option value="{{ model.id }}">{{ model.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="series_id">系列</label>
-      <select id="series_id" name="series_id" onchange="handleTrainsetSeriesChange()">
-        <option value="">请选择</option>
-        {% for series in trainset_series %}
-        <option value="{{ series.id }}">{{ series.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="power_type_id">动力类型</label>
-      <select id="power_type_id" name="power_type_id">
-        <option value="">请选择</option>
-        {% for type in power_types %}
-        <option value="{{ type.id }}">{{ type.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
+    {{ select_field('model_id', '型号', trainset_models, required=true, onchange='autoFillTrainset()') }}
+    {{ select_field('series_id', '系列', trainset_series, onchange='handleTrainsetSeriesChange()') }}
+    {{ select_field('power_type_id', '动力类型', power_types) }}
+    {{ select_field('depot_id', '动车段', depots) }}
+    {{ scale_select() }}
+    {{ select_field('brand_id', '品牌', brands, required=true) }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="brand_id">品牌 *</label>
-      <select id="brand_id" name="brand_id" required>
-        <option value="">请选择</option>
-        {% for brand in brands %}
-        <option value="{{ brand.id }}">{{ brand.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="depot_id">动车段</label>
-      <select id="depot_id" name="depot_id">
-        <option value="">请选择</option>
-        {% for depot in depots %}
-        <option value="{{ depot.id }}">{{ depot.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="scale">比例 *</label>
-      <select id="scale" name="scale" required>
-        <option value="HO">HO</option>
-        <option value="N">N</option>
-      </select>
-    </div>
+    {{ text_field('trainset_number', '动车号', required=true) }}
+    {{ text_field('decoder_number', '编号') }}
+    {{ text_field('plaque', '挂牌') }}
+    {{ text_field('color', '颜色') }}
+    {{ number_field('formation', '编组数') }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="trainset_number">动车号 *</label>
-      <input type="text" id="trainset_number" name="trainset_number" required>
-    </div>
-    <div class="form-group">
-      <label for="decoder_number">编号</label>
-      <input type="text" id="decoder_number" name="decoder_number">
-    </div>
+    {{ boolean_select('head_light', '头车灯', default=true) }}
+    {{ text_field('interior_light', '室内灯') }}
+    {{ select_field('chip_interface_id', '芯片接口', chip_interfaces) }}
+    {{ select_field('chip_model_id', '芯片型号', chip_models) }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="plaque">挂牌</label>
-      <input type="text" id="plaque" name="plaque">
-    </div>
-    <div class="form-group">
-      <label for="color">颜色</label>
-      <input type="text" id="color" name="color">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="formation">编组数</label>
-    <input type="number" id="formation" name="formation">
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label>头车灯</label>
-      <select name="head_light">
-        <option value="">请选择</option>
-        <option value="true">有</option>
-        <option value="false">无</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="interior_light">室内灯</label>
-      <input type="text" id="interior_light" name="interior_light">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="chip_interface_id">芯片接口</label>
-      <select id="chip_interface_id" name="chip_interface_id">
-        <option value="">请选择</option>
-        {% for interface in chip_interfaces %}
-        <option value="{{ interface.id }}">{{ interface.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="chip_model_id">芯片型号</label>
-      <select id="chip_model_id" name="chip_model_id">
-        <option value="">请选择</option>
-        {% for model in chip_models %}
-        <option value="{{ model.id }}">{{ model.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="price">价格（表达式，如288+538）</label>
-      <input type="text" id="price" name="price">
-    </div>
-    <div class="form-group">
-      <label for="item_number">货号</label>
-      <input type="text" id="item_number" name="item_number">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="purchase_date">购买日期</label>
-    <input type="date" id="purchase_date" name="purchase_date">
-  </div>
-
-  <div class="form-group">
-    <label for="merchant_id">购买商家</label>
-    <select id="merchant_id" name="merchant_id">
-      <option value="">请选择</option>
-      {% for merchant in merchants %}
-      <option value="{{ merchant.id }}">{{ merchant.name }}</option>
-      {% endfor %}
-    </select>
+    {{ text_field('item_number', '货号') }}
+    {{ price_field() }}
+    {{ select_field('merchant_id', '购买商家', merchants) }}
+    {{ date_field('purchase_date', '购买日期') }}
   </div>
 
   <button type="submit">添加</button>
 </form>
 
-<table id="trainset-table" class="sortable-filterable">
-  <thead>
-    <tr>
-      <th data-sort="model" data-filter="model">车型</th>
-      <th data-sort="series" data-filter="series">系列</th>
-      <th data-sort="brand" data-filter="brand">品牌</th>
-      <th data-sort="scale" data-filter="scale">比例</th>
-      <th data-sort="number" data-filter="number">动车号</th>
-      <th data-sort="decoder" data-filter="decoder">编号</th>
-      <th data-sort="price">总价</th>
-      <th>操作</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for trainset in trainsets %}
-    <tr data-model="{{ trainset.model.name }}" data-series="{{ trainset.series.name if trainset.series else '' }}" data-brand="{{ trainset.brand.name }}" data-scale="{{ trainset.scale }}" data-number="{{ trainset.trainset_number or '' }}" data-decoder="{{ trainset.decoder_number or '' }}" data-price="{{ trainset.total_price or 0 }}">
-      <td>{{ trainset.model.name }}</td>
-      <td>{{ trainset.series.name if trainset.series else '-' }}</td>
-      <td>{{ trainset.brand.name }}</td>
-      <td>{{ trainset.scale }}</td>
-      <td>{{ trainset.trainset_number }}</td>
-      <td>{{ trainset.decoder_number }}</td>
-      <td>{{ trainset.total_price }}</td>
-      <td>
-        <a href="{{ url_for('trainset.edit_trainset', id=trainset.id) }}" class="btn-edit">编辑</a>
-        <form method="POST" action="{{ url_for('trainset.delete_trainset', id=trainset.id) }}" onsubmit="return confirm('确定删除？')">
-          <button type="submit" class="btn-danger">删除</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="table-wrapper">
+  <table id="trainset-table" class="sortable-filterable">
+    <thead>
+      <tr>
+        <th data-sort="model" data-filter="model">型号</th>
+        <th data-sort="series" data-filter="series">系列</th>
+        <th data-sort="brand" data-filter="brand">品牌</th>
+        <th data-sort="depot" data-filter="depot">动车段</th>
+        <th data-sort="scale" data-filter="scale">比例</th>
+        <th data-sort="number" data-filter="number">动车号</th>
+        <th data-sort="decoder" data-filter="decoder">编号</th>
+        <th data-sort="formation" data-filter="formation">编组</th>
+        <th data-sort="head_light" data-filter="head_light">头车灯</th>
+        <th data-sort="interior_light" data-filter="interior_light">室内灯</th>
+        <th data-sort="chip_interface" data-filter="chip_interface">芯片接口</th>
+        <th data-sort="chip_model" data-filter="chip_model">芯片型号</th>
+        <th data-sort="item_number" data-filter="item_number">货号</th>
+        <th data-sort="price">总价</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trainset in trainsets %}
+      <tr data-model="{{ trainset.model.name }}" data-series="{{ trainset.series.name if trainset.series else '' }}" data-brand="{{ trainset.brand.name }}" data-depot="{{ trainset.depot.name if trainset.depot else '' }}" data-scale="{{ trainset.scale }}" data-number="{{ trainset.trainset_number or '' }}" data-decoder="{{ trainset.decoder_number or '' }}" data-formation="{{ trainset.formation or '' }}" data-head_light="{{ '有' if trainset.head_light else '无' }}" data-interior_light="{{ trainset.interior_light or '' }}" data-chip_interface="{{ trainset.chip_interface.name if trainset.chip_interface else '' }}" data-chip_model="{{ trainset.chip_model.name if trainset.chip_model else '' }}" data-item_number="{{ trainset.item_number or '' }}" data-price="{{ trainset.total_price or 0 }}">
+        <td>{{ trainset.model.name }}</td>
+        <td>{{ relation_name(trainset.series) }}</td>
+        <td>{{ trainset.brand.name }}</td>
+        <td>{{ relation_name(trainset.depot) }}</td>
+        <td>{{ trainset.scale }}</td>
+        <td>{{ trainset.trainset_number }}</td>
+        <td>{{ trainset.decoder_number }}</td>
+        <td>{{ trainset.formation }}</td>
+        <td>{{ '有' if trainset.head_light else '无' }}</td>
+        <td>{{ trainset.interior_light }}</td>
+        <td>{{ relation_name(trainset.chip_interface) }}</td>
+        <td>{{ relation_name(trainset.chip_model) }}</td>
+        <td>{{ trainset.item_number }}</td>
+        <td>{{ trainset.total_price }}</td>
+        {{ action_buttons(url_for('trainset.edit_trainset', id=trainset.id), url_for('trainset.delete_trainset', id=trainset.id)) }}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  // 将动车组系列和车型数据传递给前端
   window.trainsetSeriesData = [
     {% for series in trainset_series %}
     { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
@@ -204,7 +100,6 @@
     { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }}, power_type_id: {{ model.power_type_id or 'null' }} }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
-  // 初始化表格排序筛选
   initTableSortFilter('trainset-table');
 </script>
 {% endblock %}

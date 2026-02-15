@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "macros/form.html" import select_field, text_field, date_field, scale_select %}
+{% from "macros/table.html" import relation_name %}
 
 {% block title %}编辑车厢套装 - 火车模型管理系统{% endblock %}
 
@@ -7,78 +9,22 @@
 
 <form id="carriage-form" method="POST">
   <div class="form-row">
-    <div class="form-group">
-      <label for="brand_id">品牌 *</label>
-      <select id="brand_id" name="brand_id" required>
-        <option value="">请选择</option>
-        {% for brand in brands %}
-        <option value="{{ brand.id }}" {{ 'selected' if brand.id == carriage_set.brand_id else '' }}>{{ brand.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="series_id">系列</label>
-      <select id="series_id" name="series_id">
-        <option value="">请选择</option>
-        {% for series in carriage_series %}
-        <option value="{{ series.id }}" {{ 'selected' if series.id == carriage_set.series_id else '' }}>{{ series.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="scale">比例 *</label>
-      <select id="scale" name="scale" required>
-        <option value="HO" {{ 'selected' if carriage_set.scale == 'HO' else '' }}>HO</option>
-        <option value="N" {{ 'selected' if carriage_set.scale == 'N' else '' }}>N</option>
-      </select>
-    </div>
+    {{ select_field('series_id', '系列', carriage_series, value=carriage_set.series_id) }}
+    {{ select_field('depot_id', '车辆段', depots, value=carriage_set.depot_id) }}
+    {{ scale_select(value=carriage_set.scale) }}
+    {{ select_field('brand_id', '品牌', brands, required=true, value=carriage_set.brand_id) }}
   </div>
 
   <div class="form-row">
+    {{ text_field('train_number', '车次', value=carriage_set.train_number) }}
+    {{ text_field('plaque', '挂牌', value=carriage_set.plaque) }}
+    {{ text_field('item_number', '货号', value=carriage_set.item_number) }}
     <div class="form-group">
-      <label for="depot_id">车辆段</label>
-      <select id="depot_id" name="depot_id">
-        <option value="">请选择</option>
-        {% for depot in depots %}
-        <option value="{{ depot.id }}" {{ 'selected' if depot.id == carriage_set.depot_id else '' }}>{{ depot.name }}</option>
-        {% endfor %}
-      </select>
+      <label for="total_price">总价</label>
+      <input type="number" id="total_price" name="total_price" step="0.01" value="{{ carriage_set.total_price }}">
     </div>
-    <div class="form-group">
-      <label for="train_number">车次</label>
-      <input type="text" id="train_number" name="train_number" value="{{ carriage_set.train_number }}">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="plaque">挂牌</label>
-      <input type="text" id="plaque" name="plaque" value="{{ carriage_set.plaque }}">
-    </div>
-    <div class="form-group">
-      <label for="item_number">货号</label>
-      <input type="text" id="item_number" name="item_number" value="{{ carriage_set.item_number }}">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="total_price">总价</label>
-    <input type="number" id="total_price" name="total_price" step="0.01" value="{{ carriage_set.total_price }}">
-  </div>
-
-  <div class="form-group">
-    <label for="purchase_date">购买日期</label>
-    <input type="date" id="purchase_date" name="purchase_date" value="{{ carriage_set.purchase_date }}">
-  </div>
-
-  <div class="form-group">
-    <label for="merchant_id">购买商家</label>
-    <select id="merchant_id" name="merchant_id">
-      <option value="">请选择</option>
-      {% for merchant in merchants %}
-      <option value="{{ merchant.id }}" {{ 'selected' if merchant.id == carriage_set.merchant_id else '' }}>{{ merchant.name }}</option>
-      {% endfor %}
-    </select>
+    {{ select_field('merchant_id', '购买商家', merchants, value=carriage_set.merchant_id) }}
+    {{ date_field('purchase_date', '购买日期', value=carriage_set.purchase_date) }}
   </div>
 
   <h3>车厢列表</h3>
@@ -94,7 +40,7 @@
         </select>
       </div>
       <div class="form-group">
-        <label>车型</label>
+        <label>型号</label>
         <select name="model_{{ item.id }}">
           {% for model in carriage_models %}
           <option value="{{ model.id }}" {{ 'selected' if model.id == item.model_id else '' }}>{{ model.name }}</option>
@@ -123,22 +69,6 @@
   <a href="{{ url_for('carriage.carriage') }}" class="btn-cancel">取消</a>
 </form>
 
-<script>
-  // 将车厢系列和车型数据传递给前端
-  window.carriageSeriesData = [
-    {% for series in carriage_series %}
-    { id: {{ series.id }}, name: '{{ series.name }}' },
-    {% endfor %}
-  ];
-  window.carriageModelData = [
-    {% for model in carriage_models %}
-    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id }} },
-    {% endfor %}
-  ];
-</script>
-
-<script src="/static/js/app.js"></script>
-
 {% if errors %}
 <div class="error">
   {% for error in errors %}
@@ -146,5 +76,19 @@
   {% endfor %}
 </div>
 {% endif %}
+{% endblock %}
 
+{% block scripts %}
+<script>
+  window.carriageSeriesData = [
+    {% for series in carriage_series %}
+    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  window.carriageModelData = [
+    {% for model in carriage_models %}
+    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }} }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+</script>
 {% endblock %}

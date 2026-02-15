@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select, boolean_select %}
+{% from "macros/table.html" import action_buttons, relation_name %}
 
 {% block title %}先头车模型 - 火车模型管理系统{% endblock %}
 
@@ -7,127 +9,63 @@
 
 <form id="locomotive-head-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/locomotive-head/add');">
   <div class="form-row">
-    <div class="form-group">
-      <label for="model_id">车型 *</label>
-      <select id="model_id" name="model_id" required>
-        <option value="">请选择</option>
-        {% for model in trainset_models %}
-        <option value="{{ model.id }}">{{ model.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="brand_id">品牌 *</label>
-      <select id="brand_id" name="brand_id" required>
-        <option value="">请选择</option>
-        {% for brand in brands %}
-        <option value="{{ brand.id }}">{{ brand.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="scale">比例 *</label>
-      <select id="scale" name="scale" required>
-        <option value="HO">HO</option>
-        <option value="N">N</option>
-      </select>
-    </div>
+    {{ select_field('model_id', '型号', trainset_models, required=true) }}
+    {{ select_field('depot_id', '动车段', depots) }}
+    {{ scale_select() }}
+    {{ select_field('brand_id', '品牌', brands, required=true) }}
+    {{ text_field('special_color', '特涂') }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="depot_id">动车段</label>
-      <select id="depot_id" name="depot_id">
-        <option value="">请选择</option>
-        {% for depot in depots %}
-        <option value="{{ depot.id }}">{{ depot.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="special_color">特涂</label>
-      <input type="text" id="special_color" name="special_color" maxlength="32">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label>头车灯</label>
-      <select name="head_light">
-        <option value="">请选择</option>
-        <option value="true">有</option>
-        <option value="false">无</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="interior_light">室内灯</label>
-      <input type="text" id="interior_light" name="interior_light">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="price">价格（表达式，如288+538）</label>
-      <input type="text" id="price" name="price">
-    </div>
-    <div class="form-group">
-      <label for="item_number">货号</label>
-      <input type="text" id="item_number" name="item_number">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="purchase_date">购买日期</label>
-    <input type="date" id="purchase_date" name="purchase_date">
-  </div>
-
-  <div class="form-group">
-    <label for="merchant_id">购买商家</label>
-    <select id="merchant_id" name="merchant_id">
-      <option value="">请选择</option>
-      {% for merchant in merchants %}
-      <option value="{{ merchant.id }}">{{ merchant.name }}</option>
-      {% endfor %}
-    </select>
+    {{ boolean_select('head_light', '头车灯', default=true) }}
+    {{ text_field('interior_light', '室内灯') }}
+    {{ text_field('item_number', '货号') }}
+    {{ price_field() }}
+    {{ select_field('merchant_id', '购买商家', merchants) }}
+    {{ date_field('purchase_date', '购买日期') }}
   </div>
 
   <button type="submit">添加</button>
 </form>
 
-<table id="locomotive-head-table" class="sortable-filterable">
-  <thead>
-    <tr>
-      <th data-sort="model" data-filter="model">车型</th>
-      <th data-sort="brand" data-filter="brand">品牌</th>
-      <th data-sort="scale" data-filter="scale">比例</th>
-      <th data-sort="special_color" data-filter="special_color">特涂</th>
-      <th data-sort="price">总价</th>
-      <th>操作</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for head in locomotive_heads %}
-    <tr data-model="{{ head.model.name }}" data-brand="{{ head.brand.name }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-price="{{ head.total_price or 0 }}">
-      <td>{{ head.model.name }}</td>
-      <td>{{ head.brand.name }}</td>
-      <td>{{ head.scale }}</td>
-      <td>{{ head.special_color }}</td>
-      <td>{{ head.total_price }}</td>
-      <td>
-        <a href="{{ url_for('locomotive_head.edit_locomotive_head', id=head.id) }}" class="btn-edit">编辑</a>
-        <form method="POST" action="{{ url_for('locomotive_head.delete_locomotive_head', id=head.id) }}" onsubmit="return confirm('确定删除？')">
-          <button type="submit" class="btn-danger">删除</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+<div class="table-wrapper">
+  <table id="locomotive-head-table" class="sortable-filterable">
+    <thead>
+      <tr>
+        <th data-sort="model" data-filter="model">型号</th>
+        <th data-sort="brand" data-filter="brand">品牌</th>
+        <th data-sort="depot" data-filter="depot">动车段</th>
+        <th data-sort="scale" data-filter="scale">比例</th>
+        <th data-sort="special_color" data-filter="special_color">特涂</th>
+        <th data-sort="head_light" data-filter="head_light">头车灯</th>
+        <th data-sort="interior_light" data-filter="interior_light">室内灯</th>
+        <th data-sort="item_number" data-filter="item_number">货号</th>
+        <th data-sort="price">总价</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for head in locomotive_heads %}
+      <tr data-model="{{ head.model.name }}" data-brand="{{ head.brand.name }}" data-depot="{{ head.depot.name if head.depot else '' }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-head_light="{{ '有' if head.head_light else '无' }}" data-interior_light="{{ head.interior_light or '' }}" data-item_number="{{ head.item_number or '' }}" data-price="{{ head.total_price or 0 }}">
+        <td>{{ head.model.name }}</td>
+        <td>{{ head.brand.name }}</td>
+        <td>{{ relation_name(head.depot) }}</td>
+        <td>{{ head.scale }}</td>
+        <td>{{ head.special_color }}</td>
+        <td>{{ '有' if head.head_light else '无' }}</td>
+        <td>{{ head.interior_light }}</td>
+        <td>{{ head.item_number }}</td>
+        <td>{{ head.total_price }}</td>
+        {{ action_buttons(url_for('locomotive_head.edit_locomotive_head', id=head.id), url_for('locomotive_head.delete_locomotive_head', id=head.id)) }}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-  // 初始化表格排序筛选
   initTableSortFilter('locomotive-head-table');
 </script>
 {% endblock %}

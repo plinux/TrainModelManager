@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select %}
 
 {% block title %}编辑机车模型 - 火车模型管理系统{% endblock %}
 
@@ -7,151 +8,33 @@
 
 <form id="locomotive-form" method="POST">
   <div class="form-row">
-    <div class="form-group">
-      <label for="model_id">车型 *</label>
-      <select id="model_id" name="model_id" required onchange="autoFillLocomotive()">
-        <option value="">请选择</option>
-        {% for model in locomotive_models %}
-        <option value="{{ model.id }}" {{ 'selected' if model.id == locomotive.model_id else '' }}>{{ model.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="series_id">系列</label>
-      <select id="series_id" name="series_id" onchange="handleLocomotiveSeriesChange()">
-        <option value="">请选择</option>
-        {% for series in locomotive_series %}
-        <option value="{{ series.id }}" {{ 'selected' if series.id == locomotive.series_id else '' }}>{{ series.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="power_type_id">动力类型</label>
-      <select id="power_type_id" name="power_type_id">
-        <option value="">请选择</option>
-        {% for type in power_types %}
-        <option value="{{ type.id }}" {{ 'selected' if type.id == locomotive.power_type_id else '' }}>{{ type.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
+    {{ select_field('model_id', '型号', locomotive_models, required=true, value=locomotive.model_id, onchange='autoFillLocomotive()') }}
+    {{ select_field('series_id', '系列', locomotive_series, value=locomotive.series_id, onchange='handleLocomotiveSeriesChange()') }}
+    {{ select_field('power_type_id', '动力类型', power_types, value=locomotive.power_type_id) }}
+    {{ select_field('depot_id', '机务段', depots, value=locomotive.depot_id) }}
+    {{ scale_select(value=locomotive.scale) }}
+    {{ select_field('brand_id', '品牌', brands, required=true, value=locomotive.brand_id) }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="brand_id">品牌 *</label>
-      <select id="brand_id" name="brand_id" required>
-        <option value="">请选择</option>
-        {% for brand in brands %}
-        <option value="{{ brand.id }}" {{ 'selected' if brand.id == locomotive.brand_id else '' }}>{{ brand.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="depot_id">机务段</label>
-      <select id="depot_id" name="depot_id">
-        <option value="">请选择</option>
-        {% for depot in depots %}
-        <option value="{{ depot.id }}" {{ 'selected' if depot.id == locomotive.depot_id else '' }}>{{ depot.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="scale">比例 *</label>
-      <select id="scale" name="scale" required>
-        <option value="HO" {{ 'selected' if locomotive.scale == 'HO' else '' }}>HO</option>
-        <option value="N" {{ 'selected' if locomotive.scale == 'N' else '' }}>N</option>
-      </select>
-    </div>
+    {{ text_field('locomotive_number', '机车号', required=true, value=locomotive.locomotive_number) }}
+    {{ text_field('decoder_number', '编号', value=locomotive.decoder_number) }}
+    {{ text_field('plaque', '挂牌', value=locomotive.plaque) }}
+    {{ text_field('color', '颜色', value=locomotive.color) }}
+    {{ select_field('chip_interface_id', '芯片接口', chip_interfaces, value=locomotive.chip_interface_id) }}
+    {{ select_field('chip_model_id', '芯片型号', chip_models, value=locomotive.chip_model_id) }}
   </div>
 
   <div class="form-row">
-    <div class="form-group">
-      <label for="locomotive_number">机车号 *</label>
-      <input type="text" id="locomotive_number" name="locomotive_number" required value="{{ locomotive.locomotive_number }}">
-    </div>
-    <div class="form-group">
-      <label for="decoder_number">编号</label>
-      <input type="text" id="decoder_number" name="decoder_number" value="{{ locomotive.decoder_number }}">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="plaque">挂牌</label>
-      <input type="text" id="plaque" name="plaque" value="{{ locomotive.plague }}">
-    </div>
-    <div class="form-group">
-      <label for="color">颜色</label>
-      <input type="text" id="color" name="color" value="{{ locomotive.color }}">
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="chip_interface_id">芯片接口</label>
-      <select id="chip_interface_id" name="chip_interface_id">
-        <option value="">请选择</option>
-        {% for interface in chip_interfaces %}
-        <option value="{{ interface.id }}" {{ 'selected' if interface.id == locomotive.chip_interface_id else '' }}>{{ interface.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="chip_model_id">芯片型号</label>
-      <select id="chip_model_id" name="chip_model_id">
-        <option value="">请选择</option>
-        {% for model in chip_models %}
-        <option value="{{ model.id }}" {{ 'selected' if model.id == locomotive.chip_model_id else '' }}>{{ model.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <label for="price">价格（表达式，如288+538）</label>
-      <input type="text" id="price" name="price" value="{{ locomotive.price }}">
-    </div>
-    <div class="form-group">
-      <label for="item_number">货号</label>
-      <input type="text" id="item_number" name="item_number" value="{{ locomotive.item_number }}">
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label for="purchase_date">购买日期</label>
-    <input type="date" id="purchase_date" name="purchase_date" value="{{ locomotive.purchase_date }}">
-  </div>
-
-  <div class="form-group">
-    <label for="merchant_id">购买商家</label>
-    <select id="merchant_id" name="merchant_id">
-      <option value="">请选择</option>
-      {% for merchant in merchants %}
-      <option value="{{ merchant.id }}" {{ 'selected' if merchant.id == locomotive.merchant_id else '' }}>{{ merchant.name }}</option>
-      {% endfor %}
-    </select>
+    {{ text_field('item_number', '货号', value=locomotive.item_number) }}
+    {{ price_field(value=locomotive.price) }}
+    {{ select_field('merchant_id', '购买商家', merchants, value=locomotive.merchant_id) }}
+    {{ date_field('purchase_date', '购买日期', value=locomotive.purchase_date) }}
   </div>
 
   <button type="submit">保存</button>
   <a href="{{ url_for('locomotive.locomotive') }}" class="btn-cancel">取消</a>
 </form>
-
-<script>
-  // 将机车系列和车型数据传递给前端
-  window.locomotiveSeriesData = [
-    {% for series in locomotive_series %}
-    { id: {{ series.id }}, name: '{{ series.name }}' },
-    {% endfor %}
-  ];
-  window.locomotiveModelData = [
-    {% for model in locomotive_models %}
-    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id }}, power_type_id: {{ model.power_type_id }} },
-    {% endfor %}
-  ];
-</script>
-
-<script src="/static/js/app.js"></script>
 
 {% if errors %}
 <div class="error">
@@ -160,5 +43,19 @@
   {% endfor %}
 </div>
 {% endif %}
+{% endblock %}
 
+{% block scripts %}
+<script>
+  window.locomotiveSeriesData = [
+    {% for series in locomotive_series %}
+    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  window.locomotiveModelData = [
+    {% for model in locomotive_models %}
+    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }}, power_type_id: {{ model.power_type_id or 'null' }} }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+</script>
 {% endblock %}
