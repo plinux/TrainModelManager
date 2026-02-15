@@ -276,5 +276,5 @@ TrainModelManager/
 6. **CSS 变量统一**
 
 ## 参考文档
-- `系统描述.txt` - 完整的功能需求
-- `数据库初始化要求.txt` - 预置数据清单
+- `docs/SystemDescription.txt` - 完整的功能需求
+- `docs/DatabaseInitDescription.txt` - 预置数据清单
