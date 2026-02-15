@@ -46,19 +46,43 @@ const OptionEditor = {
 
     if (field === 'name') {
       const originalValue = this.originalValues[field];
-      cell.innerHTML = `<input type="text" name="${field}" value="${originalValue}" style="width:100%; padding:0.25rem 0.5rem;">`;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = field;
+      input.value = originalValue;
+      input.style.cssText = 'width:100%; padding:0.25rem 0.5rem;';
+      cell.textContent = '';
+      cell.appendChild(input);
     } else if (field === 'series_id' || field === 'power_type_id' || field === 'type') {
       const addFormSelect = row.closest('.tab-content').querySelector(`select[name="${field}"]`);
-      let optionsHtml = '';
       if (addFormSelect) {
+        const select = document.createElement('select');
+        select.name = field;
+        select.style.cssText = 'width:100%; padding:0.25rem 0.5rem;';
         const dataAttr = field === 'type' ? 'carriageType' : field.replace('_id', '');
         const originalValue = row.dataset[dataAttr] || '';
-        optionsHtml = addFormSelect.innerHTML.replace(
-          new RegExp(`value="${originalValue}"`, 'g'),
-          `value="${originalValue}" selected`
-        );
+        addFormSelect.querySelectorAll('option').forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.textContent = opt.textContent;
+          if (opt.value === originalValue) {
+            option.selected = true;
+          }
+          select.appendChild(option);
+        });
+        cell.textContent = '';
+        cell.appendChild(select);
       }
-      cell.innerHTML = `<select name="${field}" style="width:100%; padding:0.25rem 0.5rem;">${optionsHtml}</select>`;
+    } else if (field === 'website' || field === 'search_url') {
+      const originalValue = this.originalValues[field] || '';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = field;
+      input.value = originalValue;
+      input.style.cssText = 'width:100%; padding:0.25rem 0.5rem;';
+      input.placeholder = '可选';
+      cell.textContent = '';
+      cell.appendChild(input);
     }
   },
 
