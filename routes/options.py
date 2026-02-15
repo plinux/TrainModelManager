@@ -28,7 +28,8 @@ OPTION_CONFIG = {
   'brand': {
     'model': Brand,
     'cascade_check': None,
-    'fields': ['name', 'website', 'search_url']
+    'fields': ['name', 'website', 'search_url'],
+    'optional_fields': ['website', 'search_url']
   },
   'merchant': {
     'model': Merchant,
@@ -180,16 +181,24 @@ def create_option_edit_route(option_type):
   def edit(id):
     config = OPTION_CONFIG[option_type]
     model_class = config['model']
+    optional_fields = config.get('optional_fields', [])
     item = model_class.query.get_or_404(id)
 
     if request.method == 'POST':
       try:
         for field in config['fields']:
           value = request.form.get(field)
-          if field.endswith('_id') and value:
-            setattr(item, field, int(value))
+          # _id 字段需要非空才能转换为 int
+          if field.endswith('_id'):
+            if value:
+              setattr(item, field, int(value))
+          # type 字段特殊处理
           elif field == 'type':
             setattr(item, field, value)
+          # 可选字段允许设置为空
+          elif field in optional_fields:
+            setattr(item, field, value or None)
+          # 其他字段需要非空
           elif value:
             setattr(item, field, value)
 
@@ -238,16 +247,22 @@ def edit_option_api(type):
   try:
     config = OPTION_CONFIG[type]
     model_class = config['model']
+    optional_fields = config.get('optional_fields', [])
     id = request.form.get('id')
     item = model_class.query.get_or_404(id)
 
     for field in config['fields']:
       value = request.form.get(field)
-      if value:
-        if field.endswith('_id'):
+      # _id 字段需要非空才能转换为 int
+      if field.endswith('_id'):
+        if value:
           setattr(item, field, int(value))
-        else:
-          setattr(item, field, value)
+      # 可选字段允许设置为空
+      elif field in optional_fields:
+        setattr(item, field, value or None)
+      # 其他字段需要非空
+      elif value:
+        setattr(item, field, value)
 
     db.session.commit()
     return jsonify(api_success('保存成功'))
