@@ -89,7 +89,9 @@
           <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
           {% endif %}
           <a href="{{ url_for('locomotive.edit_locomotive', id=locomotive.id) }}" class="btn-edit">编辑</a>
-          <a href="{{ url_for('locomotive.delete_locomotive', id=locomotive.id) }}" class="btn-danger" onclick="return confirm('确定删除？')">删除</a>
+          <form action="{{ url_for('locomotive.delete_locomotive', id=locomotive.id) }}" method="POST" style="display:inline" onsubmit="return confirm('确定删除？')">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
         </td>
       </tr>
       {% endfor %}
