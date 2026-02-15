@@ -11,7 +11,7 @@
   <div class="form-grid-5">
     {{ autocomplete_field('model_id', '型号', trainset_models, required=true) }}
     {{ scale_select() }}
-    {{ text_field('special_color', '特涂') }}
+    {{ text_field('special_color', '涂装') }}
     {{ boolean_select('head_light', '头车灯', default=true) }}
     {{ text_field('interior_light', '室内灯') }}
   </div>
@@ -38,7 +38,7 @@
         <th data-sort="model" data-filter="model">型号</th>
         <th data-sort="brand" data-filter="brand">品牌</th>
         <th data-sort="scale" data-filter="scale">比例</th>
-        <th data-sort="special_color" data-filter="special_color">特涂</th>
+        <th data-sort="special_color" data-filter="special_color">涂装</th>
         <th data-sort="head_light" data-filter="head_light">头车灯</th>
         <th data-sort="interior_light" data-filter="interior_light">室内灯</th>
         <th data-sort="item_number" data-filter="item_number">货号</th>

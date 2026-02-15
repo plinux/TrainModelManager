@@ -30,7 +30,7 @@
   </div>
 
   <div class="form-grid-5">
-    {{ text_field('color', '颜色', value=trainset.color) }}
+    {{ text_field('color', '涂装', value=trainset.color) }}
     {{ price_field(value=trainset.price) }}
     {{ autocomplete_field('merchant_id', '购买商家', merchants, value=trainset.merchant_id, text_value=trainset.merchant.name if trainset.merchant else None, field_class='col-2') }}
     {{ date_field('purchase_date', '购买日期', value=trainset.purchase_date) }}
