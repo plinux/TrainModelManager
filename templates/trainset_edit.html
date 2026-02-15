@@ -8,12 +8,12 @@
 
 <form id="trainset-form" method="POST">
   <div class="form-row">
-    {{ autocomplete_field('model_id', '型号', trainset_models, required=true, value=trainset.model_id, text_value=trainset.model_rel.name if trainset.model_rel else None, onchange='autoFillTrainset()') }}
-    {{ autocomplete_field('series_id', '系列', trainset_series, value=trainset.series_id, text_value=trainset.series_rel.name if trainset.series_rel else None, onchange='handleTrainsetSeriesChange()') }}
-    {{ autocomplete_field('power_type_id', '动力类型', power_types, value=trainset.power_type_id, text_value=trainset.power_type_rel.name if trainset.power_type_rel else None) }}
-    {{ autocomplete_field('depot_id', '动车段', depots, value=trainset.depot_id, text_value=trainset.depot_rel.name if trainset.depot_rel else None) }}
+    {{ autocomplete_field('model_id', '型号', trainset_models, required=true, value=trainset.model_id, text_value=trainset.model.name if trainset.model else None, onchange='autoFillTrainset()') }}
+    {{ autocomplete_field('series_id', '系列', trainset_series, value=trainset.series_id, text_value=trainset.series.name if trainset.series else None, onchange='handleTrainsetSeriesChange()') }}
+    {{ autocomplete_field('power_type_id', '动力类型', power_types, value=trainset.power_type_id, text_value=trainset.power_type.name if trainset.power_type else None) }}
+    {{ autocomplete_field('depot_id', '动车段', depots, value=trainset.depot_id, text_value=trainset.depot.name if trainset.depot else None) }}
     {{ scale_select(value=trainset.scale) }}
-    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=trainset.brand_id, text_value=trainset.brand_rel.name if trainset.brand_rel else None) }}
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=trainset.brand_id, text_value=trainset.brand.name if trainset.brand else None) }}
   </div>
 
   <div class="form-row">
@@ -27,14 +27,14 @@
   <div class="form-row">
     {{ boolean_select('head_light', '头车灯', value=trainset.head_light) }}
     {{ text_field('interior_light', '室内灯', value=trainset.interior_light) }}
-    {{ autocomplete_field('chip_interface_id', '芯片接口', chip_interfaces, value=trainset.chip_interface_id, text_value=trainset.chip_interface_rel.name if trainset.chip_interface_rel else None) }}
-    {{ autocomplete_field('chip_model_id', '芯片型号', chip_models, value=trainset.chip_model_id, text_value=trainset.chip_model_rel.name if trainset.chip_model_rel else None) }}
+    {{ autocomplete_field('chip_interface_id', '芯片接口', chip_interfaces, value=trainset.chip_interface_id, text_value=trainset.chip_interface.name if trainset.chip_interface else None) }}
+    {{ autocomplete_field('chip_model_id', '芯片型号', chip_models, value=trainset.chip_model_id, text_value=trainset.chip_model.name if trainset.chip_model else None) }}
   </div>
 
   <div class="form-row">
     {{ text_field('item_number', '货号', value=trainset.item_number) }}
     {{ price_field(value=trainset.price) }}
-    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=trainset.merchant_id, text_value=trainset.merchant_rel.name if trainset.merchant_rel else None) }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=trainset.merchant_id, text_value=trainset.merchant.name if trainset.merchant else None) }}
     {{ date_field('purchase_date', '购买日期', value=trainset.purchase_date) }}
   </div>
 

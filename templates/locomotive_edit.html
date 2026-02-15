@@ -8,12 +8,12 @@
 
 <form id="locomotive-form" method="POST">
   <div class="form-row">
-    {{ autocomplete_field('model_id', '型号', locomotive_models, required=true, value=locomotive.model_id, text_value=locomotive.model_rel.name if locomotive.model_rel else '', onchange='autoFillLocomotive()') }}
-    {{ autocomplete_field('series_id', '系列', locomotive_series, value=locomotive.series_id, text_value=locomotive.series_rel.name if locomotive.series_rel else '', onchange='handleLocomotiveSeriesChange()') }}
-    {{ autocomplete_field('power_type_id', '动力类型', power_types, value=locomotive.power_type_id, text_value=locomotive.power_type_rel.name if locomotive.power_type_rel else '') }}
-    {{ autocomplete_field('depot_id', '机务段', depots, value=locomotive.depot_id, text_value=locomotive.depot_rel.name if locomotive.depot_rel else '') }}
+    {{ autocomplete_field('model_id', '型号', locomotive_models, required=true, value=locomotive.model_id, text_value=locomotive.model.name if locomotive.model else '', onchange='autoFillLocomotive()') }}
+    {{ autocomplete_field('series_id', '系列', locomotive_series, value=locomotive.series_id, text_value=locomotive.series.name if locomotive.series else '', onchange='handleLocomotiveSeriesChange()') }}
+    {{ autocomplete_field('power_type_id', '动力类型', power_types, value=locomotive.power_type_id, text_value=locomotive.power_type.name if locomotive.power_type else '') }}
+    {{ autocomplete_field('depot_id', '机务段', depots, value=locomotive.depot_id, text_value=locomotive.depot.name if locomotive.depot else '') }}
     {{ scale_select(value=locomotive.scale) }}
-    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=locomotive.brand_id, text_value=locomotive.brand_rel.name if locomotive.brand_rel else '') }}
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=locomotive.brand_id, text_value=locomotive.brand.name if locomotive.brand else '') }}
   </div>
 
   <div class="form-row">
@@ -21,14 +21,14 @@
     {{ text_field('decoder_number', '编号', value=locomotive.decoder_number) }}
     {{ text_field('plaque', '挂牌', value=locomotive.plaque) }}
     {{ text_field('color', '颜色', value=locomotive.color) }}
-    {{ autocomplete_field('chip_interface_id', '芯片接口', chip_interfaces, value=locomotive.chip_interface_id, text_value=locomotive.chip_interface_rel.name if locomotive.chip_interface_rel else '') }}
-    {{ autocomplete_field('chip_model_id', '芯片型号', chip_models, value=locomotive.chip_model_id, text_value=locomotive.chip_model_rel.name if locomotive.chip_model_rel else '') }}
+    {{ autocomplete_field('chip_interface_id', '芯片接口', chip_interfaces, value=locomotive.chip_interface_id, text_value=locomotive.chip_interface.name if locomotive.chip_interface else '') }}
+    {{ autocomplete_field('chip_model_id', '芯片型号', chip_models, value=locomotive.chip_model_id, text_value=locomotive.chip_model.name if locomotive.chip_model else '') }}
   </div>
 
   <div class="form-row">
     {{ text_field('item_number', '货号', value=locomotive.item_number) }}
     {{ price_field(value=locomotive.price) }}
-    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=locomotive.merchant_id, text_value=locomotive.merchant_rel.name if locomotive.merchant_rel else '') }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=locomotive.merchant_id, text_value=locomotive.merchant.name if locomotive.merchant else '') }}
     {{ date_field('purchase_date', '购买日期', value=locomotive.purchase_date) }}
   </div>
 

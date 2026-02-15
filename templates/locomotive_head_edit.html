@@ -8,10 +8,10 @@
 
 <form id="locomotive-head-form" method="POST">
   <div class="form-row">
-    {{ autocomplete_field('model_id', '型号', trainset_models, required=true, value=locomotive_head.model_id, text_value=locomotive_head.model_rel.name if locomotive_head.model_rel else None) }}
-    {{ autocomplete_field('depot_id', '动车段', depots, value=locomotive_head.depot_id, text_value=locomotive_head.depot_rel.name if locomotive_head.depot_rel else None) }}
+    {{ autocomplete_field('model_id', '型号', trainset_models, required=true, value=locomotive_head.model_id, text_value=locomotive_head.model.name if locomotive_head.model else None) }}
+    {{ autocomplete_field('depot_id', '动车段', depots, value=locomotive_head.depot_id, text_value=locomotive_head.depot.name if locomotive_head.depot else None) }}
     {{ scale_select(value=locomotive_head.scale) }}
-    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=locomotive_head.brand_id, text_value=locomotive_head.brand_rel.name if locomotive_head.brand_rel else None) }}
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=locomotive_head.brand_id, text_value=locomotive_head.brand.name if locomotive_head.brand else None) }}
     {{ text_field('special_color', '特涂', value=locomotive_head.special_color) }}
   </div>
 
@@ -20,7 +20,7 @@
     {{ text_field('interior_light', '室内灯', value=locomotive_head.interior_light) }}
     {{ text_field('item_number', '货号', value=locomotive_head.item_number) }}
     {{ price_field(value=locomotive_head.price) }}
-    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=locomotive_head.merchant_id, text_value=locomotive_head.merchant_rel.name if locomotive_head.merchant_rel else None) }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=locomotive_head.merchant_id, text_value=locomotive_head.merchant.name if locomotive_head.merchant else None) }}
     {{ date_field('purchase_date', '购买日期', value=locomotive_head.purchase_date) }}
   </div>
 

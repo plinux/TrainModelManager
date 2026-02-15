@@ -13,7 +13,7 @@
         {% if required %}required{% endif %}
         autocomplete="off">
     <input type="hidden" id="{{ id or name }}" name="{{ name }}"
-        {% if value %}value="{{ value }}"{% endif %}>
+        {% if value is not none %}value="{{ value }}"{% endif %}>
   </div>
   <script>
   (function() {
@@ -31,20 +31,18 @@
     };
 
     // 延迟初始化，确保 DOM 和 AutocompleteManager 都已加载
-    if (typeof AutocompleteManager !== 'undefined') {
+    function initAutocomplete() {
       AutocompleteManager.init('{{ id or name }}_text', '{{ id or name }}', options, config);
-      if (initialValue && initialText) {
+      // 使用 !== '' 检查，允许 text_value 为空但 value 存在的情况
+      if (initialValue !== '' && initialValue !== null && initialValue !== undefined) {
         AutocompleteManager.setValue('{{ id or name }}_text', initialValue, initialText);
       }
+    }
+
+    if (typeof AutocompleteManager !== 'undefined') {
+      initAutocomplete();
     } else {
-      document.addEventListener('DOMContentLoaded', function() {
-        if (typeof AutocompleteManager !== 'undefined') {
-          AutocompleteManager.init('{{ id or name }}_text', '{{ id or name }}', options, config);
-          if (initialValue && initialText) {
-            AutocompleteManager.setValue('{{ id or name }}_text', initialValue, initialText);
-          }
-        }
-      });
+      document.addEventListener('DOMContentLoaded', initAutocomplete);
     }
   })();
   </script>
