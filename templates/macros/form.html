@@ -11,7 +11,6 @@
   <div class="autocomplete-wrapper">
     <input type="text" id="{{ id or name }}_text" name="{{ name }}_text"
         {% if required %}required{% endif %}
-        {% if text_value %}value="{{ text_value }}"{% endif %}
         autocomplete="off">
     <input type="hidden" id="{{ id or name }}" name="{{ name }}"
         {% if value %}value="{{ value }}"{% endif %}>
@@ -20,11 +19,11 @@
   (function() {
     var options = [
       {% for item in items %}
-      { id: '{{ item.id }}', name: '{{ item.name | replace("'", "\\'") }}' }{% if not loop.last %},{% endif %}
+      { id: '{{ item.id }}', name: {{ item.name | tojson }} }{% if not loop.last %},{% endif %}
       {% endfor %}
     ];
-    var initialValue = '{{ value }}';
-    var initialText = '{{ text_value | replace("'", "\\'") }}';
+    var initialValue = {{ (value or '') | tojson }};
+    var initialText = {{ (text_value or '') | tojson }};
     var config = {
       {% if onchange %}
       onchange: function(id, name) { {{ onchange }} }
