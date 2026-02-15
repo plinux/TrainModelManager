@@ -14,6 +14,7 @@ from io import BytesIO
 from datetime import datetime
 import openpyxl
 import logging
+import random
 
 logger = logging.getLogger(__name__)
 api_bp = Blueprint('api', __name__, url_prefix='')
@@ -528,7 +529,7 @@ def export_to_excel():
     workbook.save(output)
     output.seek(0)
 
-    filename = f'火车模型数据导出_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    filename = f'TMM_Export_{datetime.now().strftime("%Y%m%d_%H%M%S")}_{random.randint(1000, 9999)}.xlsx'
 
     logger.info("Excel export completed successfully")
     return send_file(
