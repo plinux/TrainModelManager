@@ -349,8 +349,7 @@ def import_locomotive_head_data(data):
     locomotive_head = LocomotiveHead(
       model_id=model_id,
       brand_id=brand_id,
-      depot_id=find_id_by_name(Depot, row.get('动车段')),
-      special_color=row.get('特涂') or None,
+      special_color=row.get('涂装') or None,
       scale=scale,
       head_light=parse_boolean(row.get('头车灯')) or False,
       interior_light=row.get('室内灯') or None,
@@ -506,14 +505,13 @@ def export_to_excel():
     # 导出先头车模型
     if LocomotiveHead.query.count() > 0:
       sheet = workbook.create_sheet('先头车')
-      headers = ['车型', '品牌', '动车段', '特涂', '比例', '头车灯', '室内灯', '价格', '总价', '货号', '购买日期', '购买商家']
+      headers = ['车型', '品牌', '涂装', '比例', '头车灯', '室内灯', '价格', '总价', '货号', '购买日期', '购买商家']
       sheet.append(headers)
 
       for head in LocomotiveHead.query.all():
         sheet.append([
           head.model.name if head.model else '',
           head.brand.name if head.brand else '',
-          head.depot.name if head.depot else '',
           head.special_color or '',
           head.scale or '',
           '是' if head.head_light else '否',
