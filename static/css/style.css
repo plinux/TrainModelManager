@@ -729,3 +729,90 @@ td form button {
   white-space: nowrap;
   margin-top: 0;
 }
+
+/* ========== 可搜索下拉框样式 ========== */
+
+/* 下拉框容器 */
+.autocomplete-wrapper {
+  position: relative;
+}
+
+.autocomplete-wrapper input[type="text"] {
+  width: 100%;
+}
+
+/* 下拉列表 */
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+  display: none;
+}
+
+.autocomplete-dropdown.show {
+  display: block;
+}
+
+/* 下拉选项 */
+.autocomplete-option {
+  padding: 0.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.autocomplete-option:last-child {
+  border-bottom: none;
+}
+
+.autocomplete-option:hover {
+  background-color: #f5f5f5;
+}
+
+.autocomplete-option.selected {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* 高亮匹配文字 */
+.autocomplete-option .highlight {
+  background-color: #ffeb3b;
+  font-weight: bold;
+}
+
+/* 无匹配提示 */
+.autocomplete-option.no-match {
+  color: var(--color-danger);
+  cursor: default;
+  font-style: italic;
+}
+
+.autocomplete-option.no-match:hover {
+  background-color: white;
+}
+
+/* 无匹配时的输入框样式 */
+.autocomplete-wrapper.no-match input[type="text"] {
+  border-color: var(--color-warning);
+  background-color: #fffbeb;
+}
+
+/* 提示文字 */
+.autocomplete-hint {
+  font-size: 0.75rem;
+  color: var(--color-warning);
+  margin-top: 0.25rem;
+  display: none;
+}
+
+.autocomplete-wrapper.no-match .autocomplete-hint {
+  display: block;
+}

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select, boolean_select, number_field %}
+{% from "macros/form.html" import autocomplete_field, text_field, date_field, price_field, scale_select, boolean_select, number_field %}
 {% from "macros/table.html" import action_buttons, relation_name %}
 
 {% block title %}动车组模型 - 火车模型管理系统{% endblock %}
@@ -9,12 +9,12 @@
 
 <form id="trainset-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/trainset/add');">
   <div class="form-row">
-    {{ select_field('model_id', '型号', trainset_models, required=true, onchange='autoFillTrainset()') }}
-    {{ select_field('series_id', '系列', trainset_series, onchange='handleTrainsetSeriesChange()') }}
-    {{ select_field('power_type_id', '动力类型', power_types) }}
-    {{ select_field('depot_id', '动车段', depots) }}
+    {{ autocomplete_field('model_id', '型号', trainset_models, required=true, onchange='autoFillTrainset()') }}
+    {{ autocomplete_field('series_id', '系列', trainset_series, onchange='handleTrainsetSeriesChange()') }}
+    {{ autocomplete_field('power_type_id', '动力类型', power_types) }}
+    {{ autocomplete_field('depot_id', '动车段', depots) }}
     {{ scale_select() }}
-    {{ select_field('brand_id', '品牌', brands, required=true) }}
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
   </div>
 
   <div class="form-row">
@@ -28,14 +28,14 @@
   <div class="form-row">
     {{ boolean_select('head_light', '头车灯', default=true) }}
     {{ text_field('interior_light', '室内灯') }}
-    {{ select_field('chip_interface_id', '芯片接口', chip_interfaces) }}
-    {{ select_field('chip_model_id', '芯片型号', chip_models) }}
+    {{ autocomplete_field('chip_interface_id', '芯片接口', chip_interfaces) }}
+    {{ autocomplete_field('chip_model_id', '芯片型号', chip_models) }}
   </div>
 
   <div class="form-row">
     {{ text_field('item_number', '货号') }}
     {{ price_field() }}
-    {{ select_field('merchant_id', '购买商家', merchants) }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants) }}
     {{ date_field('purchase_date', '购买日期') }}
   </div>
 
@@ -92,14 +92,45 @@
 <script>
   window.trainsetSeriesData = [
     {% for series in trainset_series %}
-    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    { id: '{{ series.id }}', name: '{{ series.name | replace("'", "\\'") }}' }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
   window.trainsetModelData = [
     {% for model in trainset_models %}
-    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }}, power_type_id: {{ model.power_type_id or 'null' }} }{% if not loop.last %},{% endif %}
+    { id: '{{ model.id }}', name: '{{ model.name | replace("'", "\\'") }}', series_id: '{{ model.series_id or '' }}', power_type_id: '{{ model.power_type_id or '' }}' }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
+  window.trainsetPowerTypes = [
+    {% for pt in power_types %}
+    { id: '{{ pt.id }}', name: '{{ pt.name }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+
   initTableSortFilter('trainset-table');
+
+  function autoFillTrainset() {
+    var value = AutocompleteManager.getValue('model_id_text');
+    if (!value || !value.id) return;
+
+    var model = window.trainsetModelData.find(function(m) { return m.id === value.id; });
+    if (model) {
+      if (model.series_id) {
+        var series = window.trainsetSeriesData.find(function(s) { return s.id === model.series_id; });
+        if (series) {
+          AutocompleteManager.setValue('series_id_text', model.series_id, series.name);
+        }
+      }
+      if (model.power_type_id) {
+        var pt = window.trainsetPowerTypes.find(function(p) { return p.id === model.power_type_id; });
+        if (pt) {
+          AutocompleteManager.setValue('power_type_id_text', model.power_type_id, pt.name);
+        }
+      }
+    }
+  }
+
+  function handleTrainsetSeriesChange() {
+    // 系列变化时的处理
+  }
 </script>
 {% endblock %}

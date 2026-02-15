@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/form.html" import select_field, text_field, date_field, scale_select %}
+{% from "macros/form.html" import autocomplete_field, text_field, date_field, scale_select %}
 {% from "macros/table.html" import relation_name %}
 
 {% block title %}编辑车厢套装 - 火车模型管理系统{% endblock %}
@@ -9,10 +9,10 @@
 
 <form id="carriage-form" method="POST">
   <div class="form-row">
-    {{ select_field('series_id', '系列', carriage_series, value=carriage_set.series_id) }}
-    {{ select_field('depot_id', '车辆段', depots, value=carriage_set.depot_id) }}
+    {{ autocomplete_field('series_id', '系列', carriage_series, value=carriage_set.series_id, text_value=carriage_set.series_rel.name if carriage_set.series_rel else None) }}
+    {{ autocomplete_field('depot_id', '车辆段', depots, value=carriage_set.depot_id, text_value=carriage_set.depot_rel.name if carriage_set.depot_rel else None) }}
     {{ scale_select(value=carriage_set.scale) }}
-    {{ select_field('brand_id', '品牌', brands, required=true, value=carriage_set.brand_id) }}
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=carriage_set.brand_id, text_value=carriage_set.brand_rel.name if carriage_set.brand_rel else None) }}
   </div>
 
   <div class="form-row">
@@ -23,7 +23,7 @@
       <label for="total_price">总价</label>
       <input type="number" id="total_price" name="total_price" step="0.01" value="{{ carriage_set.total_price }}">
     </div>
-    {{ select_field('merchant_id', '购买商家', merchants, value=carriage_set.merchant_id) }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=carriage_set.merchant_id, text_value=carriage_set.merchant_rel.name if carriage_set.merchant_rel else None) }}
     {{ date_field('purchase_date', '购买日期', value=carriage_set.purchase_date) }}
   </div>
 
@@ -82,12 +82,12 @@
 <script>
   window.carriageSeriesData = [
     {% for series in carriage_series %}
-    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    { id: '{{ series.id }}', name: '{{ series.name | replace("'", "\\'") }}' }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
   window.carriageModelData = [
     {% for model in carriage_models %}
-    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }} }{% if not loop.last %},{% endif %}
+    { id: '{{ model.id }}', name: '{{ model.name | replace("'", "\\'") }}', series_id: '{{ model.series_id or '' }}' }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
 </script>

@@ -634,6 +634,328 @@ const TableManager = {
   }
 };
 
+// 可搜索下拉框管理器
+const AutocompleteManager = {
+  // 存储所有自动完成的实例
+  instances: {},
+
+  /**
+   * 初始化自动完成组件
+   * @param {string} inputId - 输入框ID
+   * @param {string} hiddenId - 隐藏域ID（存储实际值）
+   * @param {Array} options - 选项数组 [{id, name}]
+   * @param {Object} config - 配置项 { onchange }
+   */
+  init(inputId, hiddenId, options, config = {}) {
+    const input = document.getElementById(inputId);
+    const hidden = document.getElementById(hiddenId);
+    const wrapper = input?.closest('.autocomplete-wrapper');
+
+    if (!input || !hidden) return;
+
+    const instance = {
+      input,
+      hidden,
+      wrapper,
+      options: options || [],
+      config,
+      selectedIndex: -1,
+      filteredOptions: []
+    };
+
+    this.instances[inputId] = instance;
+
+    // 创建下拉列表
+    let dropdown = wrapper?.querySelector('.autocomplete-dropdown');
+    if (!dropdown && wrapper) {
+      dropdown = document.createElement('div');
+      dropdown.className = 'autocomplete-dropdown';
+      wrapper.appendChild(dropdown);
+    }
+    instance.dropdown = dropdown;
+
+    // 创建提示文字
+    let hint = wrapper?.querySelector('.autocomplete-hint');
+    if (!hint && wrapper) {
+      hint = document.createElement('div');
+      hint.className = 'autocomplete-hint';
+      hint.textContent = '该选项不存在，请先到选项维护页面添加';
+      wrapper.appendChild(hint);
+    }
+    instance.hint = hint;
+
+    // 绑定事件
+    this.bindEvents(instance);
+  },
+
+  /**
+   * 绑定事件
+   */
+  bindEvents(instance) {
+    const { input, hidden, dropdown, wrapper, config } = instance;
+
+    // 输入事件
+    input.addEventListener('input', (e) => {
+      this.handleInput(instance, e.target.value);
+    });
+
+    // 聚焦事件
+    input.addEventListener('focus', (e) => {
+      if (e.target.value) {
+        this.handleInput(instance, e.target.value);
+      } else {
+        this.showAllOptions(instance);
+      }
+    });
+
+    // 失焦事件（延迟处理，让点击事件先执行）
+    input.addEventListener('blur', () => {
+      setTimeout(() => {
+        this.handleBlur(instance);
+      }, 200);
+    });
+
+    // 键盘事件
+    input.addEventListener('keydown', (e) => {
+      this.handleKeydown(instance, e);
+    });
+  },
+
+  /**
+   * 处理输入
+   */
+  handleInput(instance, value) {
+    const { options, dropdown } = instance;
+    instance.selectedIndex = -1;
+
+    if (!value) {
+      this.showAllOptions(instance);
+      return;
+    }
+
+    // 过滤选项
+    const lowerValue = value.toLowerCase();
+    instance.filteredOptions = options.filter(opt =>
+      opt.name.toLowerCase().includes(lowerValue)
+    );
+
+    // 渲染下拉列表
+    this.renderDropdown(instance, value);
+
+    if (instance.filteredOptions.length > 0) {
+      dropdown.classList.add('show');
+    } else {
+      dropdown.classList.remove('show');
+    }
+  },
+
+  /**
+   * 显示所有选项
+   */
+  showAllOptions(instance) {
+    const { options, dropdown } = instance;
+    instance.filteredOptions = options;
+    instance.selectedIndex = -1;
+
+    this.renderDropdown(instance, '');
+    dropdown.classList.add('show');
+  },
+
+  /**
+   * 渲染下拉列表（使用安全的 DOM 方法）
+   */
+  renderDropdown(instance, searchValue) {
+    const { dropdown, filteredOptions } = instance;
+
+    // 清空下拉列表
+    while (dropdown.firstChild) {
+      dropdown.removeChild(dropdown.firstChild);
+    }
+
+    if (filteredOptions.length === 0) {
+      const noMatch = document.createElement('div');
+      noMatch.className = 'autocomplete-option no-match';
+      noMatch.textContent = '无匹配选项';
+      dropdown.appendChild(noMatch);
+      return;
+    }
+
+    const lowerSearch = searchValue.toLowerCase();
+    filteredOptions.forEach((opt, index) => {
+      const optionEl = document.createElement('div');
+      optionEl.className = 'autocomplete-option';
+      optionEl.dataset.index = index;
+      optionEl.dataset.id = opt.id;
+      optionEl.dataset.name = opt.name;
+
+      // 高亮匹配部分
+      if (searchValue) {
+        const displayName = opt.name;
+        const pos = displayName.toLowerCase().indexOf(lowerSearch);
+        if (pos !== -1) {
+          const before = document.createTextNode(displayName.substring(0, pos));
+          const highlight = document.createElement('span');
+          highlight.className = 'highlight';
+          highlight.textContent = displayName.substring(pos, pos + searchValue.length);
+          const after = document.createTextNode(displayName.substring(pos + searchValue.length));
+          optionEl.appendChild(before);
+          optionEl.appendChild(highlight);
+          optionEl.appendChild(after);
+        } else {
+          optionEl.textContent = displayName;
+        }
+      } else {
+        optionEl.textContent = opt.name;
+      }
+
+      // 点击事件
+      optionEl.addEventListener('click', () => {
+        this.selectOption(instance, opt.id, opt.name);
+      });
+
+      dropdown.appendChild(optionEl);
+    });
+  },
+
+  /**
+   * 选择选项
+   */
+  selectOption(instance, id, name) {
+    const { input, hidden, dropdown, wrapper, config } = instance;
+
+    input.value = name;
+    hidden.value = id;
+    dropdown.classList.remove('show');
+    wrapper?.classList.remove('no-match');
+
+    // 触发回调
+    if (config.onchange && typeof config.onchange === 'function') {
+      config.onchange(id, name);
+    }
+
+    // 触发原生 change 事件
+    const event = new Event('change', { bubbles: true });
+    hidden.dispatchEvent(event);
+  },
+
+  /**
+   * 处理失焦
+   */
+  handleBlur(instance) {
+    const { input, hidden, wrapper, options, config } = instance;
+    instance.dropdown.classList.remove('show');
+
+    const value = input.value.trim();
+
+    if (!value) {
+      hidden.value = '';
+      wrapper?.classList.remove('no-match');
+      return;
+    }
+
+    // 检查输入值是否在选项中
+    const matchedOption = options.find(opt =>
+      opt.name.toLowerCase() === value.toLowerCase()
+    );
+
+    if (matchedOption) {
+      hidden.value = matchedOption.id;
+      input.value = matchedOption.name; // 使用标准化的名称
+      wrapper?.classList.remove('no-match');
+    } else {
+      hidden.value = '';
+      wrapper?.classList.add('no-match');
+    }
+  },
+
+  /**
+   * 处理键盘事件
+   */
+  handleKeydown(instance, e) {
+    const { dropdown, filteredOptions, selectedIndex } = instance;
+
+    if (!dropdown.classList.contains('show')) return;
+
+    const options = dropdown.querySelectorAll('.autocomplete-option:not(.no-match)');
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        instance.selectedIndex = Math.min(selectedIndex + 1, options.length - 1);
+        this.updateSelection(instance, options);
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        instance.selectedIndex = Math.max(selectedIndex - 1, 0);
+        this.updateSelection(instance, options);
+        break;
+
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && options[selectedIndex]) {
+          const opt = options[selectedIndex];
+          this.selectOption(instance, opt.dataset.id, opt.dataset.name);
+        }
+        break;
+
+      case 'Escape':
+        dropdown.classList.remove('show');
+        break;
+    }
+  },
+
+  /**
+   * 更新选中状态
+   */
+  updateSelection(instance, options) {
+    options.forEach((opt, i) => {
+      opt.classList.toggle('selected', i === instance.selectedIndex);
+    });
+
+    // 滚动到可见
+    if (instance.selectedIndex >= 0 && options[instance.selectedIndex]) {
+      options[instance.selectedIndex].scrollIntoView({ block: 'nearest' });
+    }
+  },
+
+  /**
+   * 设置选项（用于动态更新）
+   */
+  setOptions(inputId, options) {
+    const instance = this.instances[inputId];
+    if (instance) {
+      instance.options = options || [];
+    }
+  },
+
+  /**
+   * 获取当前值
+   */
+  getValue(inputId) {
+    const instance = this.instances[inputId];
+    if (instance) {
+      return {
+        id: instance.hidden.value,
+        name: instance.input.value
+      };
+    }
+    return null;
+  },
+
+  /**
+   * 设置当前值
+   */
+  setValue(inputId, id, name) {
+    const instance = this.instances[inputId];
+    if (instance) {
+      instance.hidden.value = id;
+      instance.input.value = name;
+      instance.wrapper?.classList.remove('no-match');
+    }
+  }
+};
+
 // 全局函数兼容（保持与旧代码的兼容性）
 function filterLocomotiveModelsBySeries(seriesId) {
   Utils.filterModelsBySeries(seriesId, 'model_id', window.locomotiveModelData);
@@ -693,4 +1015,16 @@ function initTableSortFilter(tableId) {
 
 function resetTable(tableId) {
   TableManager.reset();
+}
+
+function initAutocomplete(inputId, hiddenId, options, config) {
+  AutocompleteManager.init(inputId, hiddenId, options, config);
+}
+
+function setAutocompleteOptions(inputId, options) {
+  AutocompleteManager.setOptions(inputId, options);
+}
+
+function setAutocompleteValue(inputId, id, name) {
+  AutocompleteManager.setValue(inputId, id, name);
 }

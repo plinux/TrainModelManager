@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select %}
+{% from "macros/form.html" import autocomplete_field, text_field, date_field, price_field, scale_select %}
 
 {% block title %}编辑机车模型 - 火车模型管理系统{% endblock %}
 
@@ -8,12 +8,12 @@
 
 <form id="locomotive-form" method="POST">
   <div class="form-row">
-    {{ select_field('model_id', '型号', locomotive_models, required=true, value=locomotive.model_id, onchange='autoFillLocomotive()') }}
-    {{ select_field('series_id', '系列', locomotive_series, value=locomotive.series_id, onchange='handleLocomotiveSeriesChange()') }}
-    {{ select_field('power_type_id', '动力类型', power_types, value=locomotive.power_type_id) }}
-    {{ select_field('depot_id', '机务段', depots, value=locomotive.depot_id) }}
+    {{ autocomplete_field('model_id', '型号', locomotive_models, required=true, value=locomotive.model_id, text_value=locomotive.model_rel.name if locomotive.model_rel else '', onchange='autoFillLocomotive()') }}
+    {{ autocomplete_field('series_id', '系列', locomotive_series, value=locomotive.series_id, text_value=locomotive.series_rel.name if locomotive.series_rel else '', onchange='handleLocomotiveSeriesChange()') }}
+    {{ autocomplete_field('power_type_id', '动力类型', power_types, value=locomotive.power_type_id, text_value=locomotive.power_type_rel.name if locomotive.power_type_rel else '') }}
+    {{ autocomplete_field('depot_id', '机务段', depots, value=locomotive.depot_id, text_value=locomotive.depot_rel.name if locomotive.depot_rel else '') }}
     {{ scale_select(value=locomotive.scale) }}
-    {{ select_field('brand_id', '品牌', brands, required=true, value=locomotive.brand_id) }}
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=locomotive.brand_id, text_value=locomotive.brand_rel.name if locomotive.brand_rel else '') }}
   </div>
 
   <div class="form-row">
@@ -21,14 +21,14 @@
     {{ text_field('decoder_number', '编号', value=locomotive.decoder_number) }}
     {{ text_field('plaque', '挂牌', value=locomotive.plaque) }}
     {{ text_field('color', '颜色', value=locomotive.color) }}
-    {{ select_field('chip_interface_id', '芯片接口', chip_interfaces, value=locomotive.chip_interface_id) }}
-    {{ select_field('chip_model_id', '芯片型号', chip_models, value=locomotive.chip_model_id) }}
+    {{ autocomplete_field('chip_interface_id', '芯片接口', chip_interfaces, value=locomotive.chip_interface_id, text_value=locomotive.chip_interface_rel.name if locomotive.chip_interface_rel else '') }}
+    {{ autocomplete_field('chip_model_id', '芯片型号', chip_models, value=locomotive.chip_model_id, text_value=locomotive.chip_model_rel.name if locomotive.chip_model_rel else '') }}
   </div>
 
   <div class="form-row">
     {{ text_field('item_number', '货号', value=locomotive.item_number) }}
     {{ price_field(value=locomotive.price) }}
-    {{ select_field('merchant_id', '购买商家', merchants, value=locomotive.merchant_id) }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=locomotive.merchant_id, text_value=locomotive.merchant_rel.name if locomotive.merchant_rel else '') }}
     {{ date_field('purchase_date', '购买日期', value=locomotive.purchase_date) }}
   </div>
 
@@ -49,13 +49,45 @@
 <script>
   window.locomotiveSeriesData = [
     {% for series in locomotive_series %}
-    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    { id: '{{ series.id }}', name: '{{ series.name | replace("'", "\\'") }}' }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
   window.locomotiveModelData = [
     {% for model in locomotive_models %}
-    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }}, power_type_id: {{ model.power_type_id or 'null' }} }{% if not loop.last %},{% endif %}
+    { id: '{{ model.id }}', name: '{{ model.name | replace("'", "\\'") }}', series_id: '{{ model.series_id or '' }}', power_type_id: '{{ model.power_type_id or '' }}' }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
+
+  // 覆盖原有的 autoFillLocomotive 函数，适配 autocomplete
+  function autoFillLocomotive() {
+    var value = AutocompleteManager.getValue('model_id_text');
+    if (!value || !value.id) return;
+
+    var modelId = value.id;
+    var model = window.locomotiveModelData.find(function(m) { return m.id === modelId; });
+    if (model) {
+      if (model.series_id) {
+        var series = window.locomotiveSeriesData.find(function(s) { return s.id === model.series_id; });
+        if (series) {
+          AutocompleteManager.setValue('series_id_text', model.series_id, series.name);
+        }
+      }
+      if (model.power_type_id) {
+        var powerTypes = [
+          {% for pt in power_types %}
+          { id: '{{ pt.id }}', name: '{{ pt.name }}' }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ];
+        var pt = powerTypes.find(function(p) { return p.id === model.power_type_id; });
+        if (pt) {
+          AutocompleteManager.setValue('power_type_id_text', model.power_type_id, pt.name);
+        }
+      }
+    }
+  }
+
+  function handleLocomotiveSeriesChange() {
+    // 系列变化时可以过滤型号（如果需要）
+  }
 </script>
 {% endblock %}

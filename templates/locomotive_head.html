@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/form.html" import select_field, text_field, date_field, price_field, scale_select, boolean_select %}
+{% from "macros/form.html" import autocomplete_field, text_field, date_field, price_field, scale_select, boolean_select %}
 {% from "macros/table.html" import action_buttons, relation_name %}
 
 {% block title %}先头车模型 - 火车模型管理系统{% endblock %}
@@ -9,10 +9,10 @@
 
 <form id="locomotive-head-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/locomotive-head/add');">
   <div class="form-row">
-    {{ select_field('model_id', '型号', trainset_models, required=true) }}
-    {{ select_field('depot_id', '动车段', depots) }}
+    {{ autocomplete_field('model_id', '型号', trainset_models, required=true) }}
+    {{ autocomplete_field('depot_id', '动车段', depots) }}
     {{ scale_select() }}
-    {{ select_field('brand_id', '品牌', brands, required=true) }}
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
     {{ text_field('special_color', '特涂') }}
   </div>
 
@@ -21,7 +21,7 @@
     {{ text_field('interior_light', '室内灯') }}
     {{ text_field('item_number', '货号') }}
     {{ price_field() }}
-    {{ select_field('merchant_id', '购买商家', merchants) }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants) }}
     {{ date_field('purchase_date', '购买日期') }}
   </div>
 

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros/form.html" import select_field, text_field, date_field, scale_select %}
+{% from "macros/form.html" import autocomplete_field, text_field, date_field, scale_select %}
 {% from "macros/table.html" import action_buttons, relation_name %}
 
 {% block title %}车厢模型 - 火车模型管理系统{% endblock %}
@@ -9,10 +9,10 @@
 
 <form id="carriage-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/carriage/add');">
   <div class="form-row">
-    {{ select_field('series_id', '系列', carriage_series, required=true, onchange='autoFillCarriage()') }}
-    {{ select_field('depot_id', '车辆段', depots) }}
+    {{ autocomplete_field('series_id', '系列', carriage_series, required=true, onchange='autoFillCarriage()') }}
+    {{ autocomplete_field('depot_id', '车辆段', depots) }}
     {{ scale_select() }}
-    {{ select_field('brand_id', '品牌', brands, required=true) }}
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
   </div>
 
   <div class="form-row">
@@ -23,7 +23,7 @@
       <label for="total_price">总价</label>
       <input type="number" id="total_price" name="total_price" step="0.01">
     </div>
-    {{ select_field('merchant_id', '购买商家', merchants) }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants) }}
     {{ date_field('purchase_date', '购买日期', value=today) }}
   </div>
 
@@ -74,14 +74,18 @@
 <script>
   window.carriageSeriesData = [
     {% for series in carriage_series %}
-    { id: {{ series.id }}, name: '{{ series.name }}' }{% if not loop.last %},{% endif %}
+    { id: '{{ series.id }}', name: '{{ series.name | replace("'", "\\'") }}' }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
   window.carriageModelData = [
     {% for model in carriage_models %}
-    { id: {{ model.id }}, name: '{{ model.name }}', series_id: {{ model.series_id or 'null' }} }{% if not loop.last %},{% endif %}
+    { id: '{{ model.id }}', name: '{{ model.name | replace("'", "\\'") }}', series_id: '{{ model.series_id or '' }}' }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
   initTableSortFilter('carriage-table');
+
+  function autoFillCarriage() {
+    // 系列变化时的处理
+  }
 </script>
 {% endblock %}
