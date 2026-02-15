@@ -59,11 +59,41 @@ def insert_reference_data():
     if not ChipModel.query.filter_by(name=name).first():
       db.session.add(ChipModel(name=name))
 
-  # 7. 品牌
-  brands = ['1435', 'ATHEARN', 'BLI', 'CMR', 'PIKO', 'ROCO', 'TRIX', '百万城', '浩瀚', '深东', '猩猩', '长鸣', '跨越', 'Kunter', '茂杉', 'KATO', 'HCMX', 'HTMX', 'KukePig', 'N27', '毫米制造', '火车花园', '曙光', 'WALTHERS', 'Tomix', '微景', 'ARNOLD', 'Fleischmann', 'MicroAce']
-  for name in brands:
+  # 7. 品牌（带官网）
+  brands = [
+    ('1435', None),
+    ('ATHEARN', 'https://www.athearn.com/'),
+    ('BLI', 'https://broadway-limited.com/'),
+    ('CMR', None),
+    ('PIKO', 'https://www.piko-shop.de/en/'),
+    ('ROCO', 'https://www.roco.cc/ren/'),
+    ('TRIX', 'https://www.trix.de/en'),
+    ('百万城', 'http://www.bachmannchina.com.cn/'),
+    ('浩瀚', None),
+    ('深东', None),
+    ('猩猩', 'http://www.lyxxmx.com/'),
+    ('长鸣', None),
+    ('跨越', 'https://www.auroraminiature.com/'),
+    ('Kunter', None),
+    ('茂杉', None),
+    ('KATO', 'https://www.katomodels.com/'),
+    ('HCMX', None),
+    ('HTMX', None),
+    ('KukePig', None),
+    ('N27', None),
+    ('毫米制造', None),
+    ('火车花园', None),
+    ('曙光', None),
+    ('WALTHERS', 'https://www.walthers.com/'),
+    ('Tomix', 'https://www.tomytec.co.jp/tomix/'),
+    ('微景', None),
+    ('ARNOLD', 'https://www.arnoldmodel.com/'),
+    ('Fleischmann', 'https://www.fleischmann.de/fen'),
+    ('MicroAce', 'http://www.microace-arii.co.jp/')
+  ]
+  for name, website in brands:
     if not Brand.query.filter_by(name=name).first():
-      db.session.add(Brand(name=name))
+      db.session.add(Brand(name=name, website=website))
 
   # 8. 商家
   merchants = ['星期五火车模型', 'SRE铁路模型店', '火车女侠店', '长鸣淘宝', '长鸣京东', '中车文创', 'Kunter飘局的模型店', '南京攀登者模型', '铸造模型', '天易模型', '日本N比例火车模型店', '百万城百克曼', '魔都铁路模型社', '火车模型之家', '百万城旗舰店', '1435火车模型', '浩瀚火车模型', '宁东火车模型', '百酷火车模型', '阿易火车模型', '闲鱼']
