@@ -120,8 +120,12 @@ const OptionEditor = {
     .then(response => response.json())
     .then(data => {
       if (data.success) {
+        // 更新单元格显示
         this.updateCellDisplay(row, fields);
-        this.cancelEdit(button);
+        // 清空原始值，避免被 cancelEdit 覆盖
+        this.originalValues = {};
+        // 恢复按钮状态
+        this.restoreButtonState(row);
       } else {
         alert('保存失败: ' + (data.error || '未知错误'));
       }
@@ -143,12 +147,23 @@ const OptionEditor = {
       const input = row.querySelector(`[name="${field}"]`);
       if (input) {
         if (input.tagName === 'SELECT') {
-          cell.innerHTML = input.options[input.selectedIndex].text;
+          cell.textContent = input.options[input.selectedIndex].text;
         } else {
-          cell.innerHTML = input.value;
+          cell.textContent = input.value;
         }
       }
     });
+  },
+
+  /**
+   * 恢复按钮状态
+   * @param {HTMLElement} row - 表格行
+   */
+  restoreButtonState(row) {
+    row.querySelector('.btn-edit').style.display = 'inline-block';
+    row.querySelector('.btn-save').style.display = 'none';
+    row.querySelector('.btn-cancel').style.display = 'none';
+    row.querySelector('.btn-danger').style.display = 'inline-block';
   },
 
   /**
@@ -170,10 +185,7 @@ const OptionEditor = {
     this.originalValues = {};
 
     // 恢复按钮状态
-    row.querySelector('.btn-edit').style.display = 'inline-block';
-    row.querySelector('.btn-save').style.display = 'none';
-    row.querySelector('.btn-cancel').style.display = 'none';
-    row.querySelector('.btn-danger').style.display = 'inline-block';
+    this.restoreButtonState(row);
   }
 };
 
