@@ -63,10 +63,26 @@
         <td>{{ relation_name(set.depot) }}</td>
         <td>{{ set.train_number }}</td>
         <td>{{ set.scale }}</td>
-        <td>{{ set.item_number }}</td>
+        <td class="item-number-cell">
+          {% if set.product_url %}
+          <a href="{{ set.product_url }}" target="_blank" title="点击打开产品页面">{{ set.item_number }}</a>
+          {% else %}
+          {{ set.item_number }}
+          {% endif %}
+        </td>
         <td>{{ set.items|length }}</td>
         <td>{{ set.total_price }}</td>
-        {{ action_buttons(url_for('carriage.edit_carriage', id=set.id), url_for('carriage.delete_carriage', id=set.id)) }}
+        <td>
+          {% set search_url = set.brand.search_url %}
+          {% set item_number = set.item_number %}
+          {% if search_url and item_number %}
+          <button type="button" class="btn-search" onclick="searchProduct(this, {{ (search_url | tojson) | safe }}, {{ (item_number | tojson) | safe }})" title="在官网搜索此货号">检索</button>
+          {% else %}
+          <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
+          {% endif %}
+          <a href="{{ url_for('carriage.edit_carriage', id=set.id) }}" class="btn-edit">编辑</a>
+          <a href="{{ url_for('carriage.delete_carriage', id=set.id) }}" class="btn-danger" onclick="return confirm('确定删除？')">删除</a>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -90,6 +106,13 @@
 
   function autoFillCarriage() {
     // 系列变化时的处理
+  }
+
+  // 搜索产品
+  function searchProduct(btn, searchUrl, itemNumber) {
+    if (!searchUrl || !itemNumber) return;
+    var url = searchUrl.replace('{query}', encodeURIComponent(itemNumber));
+    window.open(url, '_blank');
   }
 </script>
 {% endblock %}

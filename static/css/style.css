@@ -264,6 +264,37 @@ button:hover,
   background-color: #5a6268;
 }
 
+/* 搜索按钮样式 */
+.btn-search {
+  background-color: #17a2b8;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.btn-search:hover {
+  background-color: #138496;
+}
+
+.btn-search:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 货号链接样式 */
+.item-number-cell a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.item-number-cell a:hover {
+  text-decoration: none;
+}
+
 /* 表格中按钮样式 - 统一使用 line-height 实现居中 */
 td button,
 td form {

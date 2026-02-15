@@ -58,9 +58,25 @@
         <td>{{ head.special_color }}</td>
         <td>{{ '有' if head.head_light else '无' }}</td>
         <td>{{ head.interior_light }}</td>
-        <td>{{ head.item_number }}</td>
+        <td class="item-number-cell">
+          {% if head.product_url %}
+          <a href="{{ head.product_url }}" target="_blank" title="点击打开产品页面">{{ head.item_number }}</a>
+          {% else %}
+          {{ head.item_number }}
+          {% endif %}
+        </td>
         <td>{{ head.total_price }}</td>
-        {{ action_buttons(url_for('locomotive_head.edit_locomotive_head', id=head.id), url_for('locomotive_head.delete_locomotive_head', id=head.id)) }}
+        <td>
+          {% set search_url = head.brand.search_url %}
+          {% set item_number = head.item_number %}
+          {% if search_url and item_number %}
+          <button type="button" class="btn-search" onclick="searchProduct(this, {{ (search_url | tojson) | safe }}, {{ (item_number | tojson) | safe }})" title="在官网搜索此货号">检索</button>
+          {% else %}
+          <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
+          {% endif %}
+          <a href="{{ url_for('locomotive_head.edit_locomotive_head', id=head.id) }}" class="btn-edit">编辑</a>
+          <a href="{{ url_for('locomotive_head.delete_locomotive_head', id=head.id) }}" class="btn-danger" onclick="return confirm('确定删除？')">删除</a>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -71,5 +87,12 @@
 {% block scripts %}
 <script>
   initTableSortFilter('locomotive-head-table');
+
+  // 搜索产品
+  function searchProduct(btn, searchUrl, itemNumber) {
+    if (!searchUrl || !itemNumber) return;
+    var url = searchUrl.replace('{query}', encodeURIComponent(itemNumber));
+    window.open(url, '_blank');
+  }
 </script>
 {% endblock %}
