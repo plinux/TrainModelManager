@@ -3,69 +3,557 @@
 {% block title %}汇总统计 - 火车模型管理系统{% endblock %}
 
 {% block content %}
-<h1>汇总统计</h1>
+<div class="page-title-row">
+  <h1>汇总统计</h1>
+  <div class="global-stats">
+    模型总数: <span id="global-count">0</span> | 模型总价: <span id="global-total">¥0</span>
+  </div>
+</div>
 
-<div id="statistics">
-  <h2>各类型统计</h2>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <h3>机车模型</h3>
-      <p>数量: <span id="locomotive-count">0</span></p>
-      <p>总价: ¥<span id="locomotive-total">0</span></p>
+<!-- 标签导航 -->
+<div class="stats-tabs">
+  <button class="stats-tab active" onclick="switchStatsTab('type', event)">按类型</button>
+  <button class="stats-tab" onclick="switchStatsTab('scale', event)">按比例</button>
+  <button class="stats-tab" onclick="switchStatsTab('brand', event)">按品牌</button>
+  <button class="stats-tab" onclick="switchStatsTab('merchant', event)">按商家</button>
+</div>
+
+<!-- 按类型统计 -->
+<div id="type-stats" class="stats-section">
+  <div class="section-header">
+    <h2>按类型统计</h2>
+    <div class="view-toggle">
+      <button class="toggle-btn active" onclick="toggleView('type', 'table', event)">表格</button>
+      <button class="toggle-btn" onclick="toggleView('type', 'chart', event)">饼图</button>
     </div>
-    <div class="stat-card">
-      <h3>车厢模型</h3>
-      <p>数量: <span id="carriage-count">0</span></p>
-      <p>总价: ¥<span id="carriage-total">0</span></p>
-    </div>
-    <div class="stat-card">
-      <h3>动车组模型</h3>
-      <p>数量: <span id="trainset-count">0</span></p>
-      <p>总价: ¥<span id="trainset-total">0</span></p>
-    </div>
-    <div class="stat-card">
-      <h3>先头车模型</h3>
-      <p>数量: <span id="locomotive-head-count">0</span></p>
-      <p>总价: ¥<span id="locomotive-head-total">0</span></p>
+  </div>
+  <div id="type-table" class="stats-content">
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>类型</th>
+          <th>数量</th>
+          <th>总价</th>
+        </tr>
+      </thead>
+      <tbody id="type-table-body"></tbody>
+    </table>
+  </div>
+  <div id="type-chart" class="stats-content hidden">
+    <div class="chart-container">
+      <div class="chart-wrapper">
+        <h4>数量分布</h4>
+        <canvas id="type-count-chart"></canvas>
+      </div>
+      <div class="chart-wrapper">
+        <h4>金额分布</h4>
+        <canvas id="type-price-chart"></canvas>
+      </div>
     </div>
   </div>
 </div>
 
+<!-- 按比例统计 -->
+<div id="scale-stats" class="stats-section hidden">
+  <div class="section-header">
+    <h2>按比例统计</h2>
+    <div class="view-toggle">
+      <button class="toggle-btn active" onclick="toggleView('scale', 'table', event)">表格</button>
+      <button class="toggle-btn" onclick="toggleView('scale', 'chart', event)">饼图</button>
+    </div>
+  </div>
+  <div id="scale-table" class="stats-content">
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>比例</th>
+          <th>数量</th>
+          <th>总价</th>
+        </tr>
+      </thead>
+      <tbody id="scale-table-body"></tbody>
+    </table>
+  </div>
+  <div id="scale-chart" class="stats-content hidden">
+    <div class="chart-container">
+      <div class="chart-wrapper">
+        <h4>数量分布</h4>
+        <canvas id="scale-count-chart"></canvas>
+      </div>
+      <div class="chart-wrapper">
+        <h4>金额分布</h4>
+        <canvas id="scale-price-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 按品牌统计 -->
+<div id="brand-stats" class="stats-section hidden">
+  <div class="section-header">
+    <h2>按品牌统计</h2>
+    <div class="view-toggle">
+      <button class="toggle-btn active" onclick="toggleView('brand', 'table', event)">表格</button>
+      <button class="toggle-btn" onclick="toggleView('brand', 'chart', event)">饼图</button>
+    </div>
+  </div>
+  <div id="brand-table" class="stats-content">
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>品牌</th>
+          <th>数量</th>
+          <th>总价</th>
+        </tr>
+      </thead>
+      <tbody id="brand-table-body"></tbody>
+    </table>
+  </div>
+  <div id="brand-chart" class="stats-content hidden">
+    <div class="chart-container">
+      <div class="chart-wrapper">
+        <h4>数量分布</h4>
+        <canvas id="brand-count-chart"></canvas>
+      </div>
+      <div class="chart-wrapper">
+        <h4>金额分布</h4>
+        <canvas id="brand-price-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 按商家统计 -->
+<div id="merchant-stats" class="stats-section hidden">
+  <div class="section-header">
+    <h2>按商家统计</h2>
+    <div class="view-toggle">
+      <button class="toggle-btn active" onclick="toggleView('merchant', 'table', event)">表格</button>
+      <button class="toggle-btn" onclick="toggleView('merchant', 'chart', event)">饼图</button>
+    </div>
+  </div>
+  <div id="merchant-table" class="stats-content">
+    <table class="stats-table">
+      <thead>
+        <tr>
+          <th>商家</th>
+          <th>数量</th>
+          <th>总价</th>
+        </tr>
+      </thead>
+      <tbody id="merchant-table-body"></tbody>
+    </table>
+  </div>
+  <div id="merchant-chart" class="stats-content hidden">
+    <div class="chart-container">
+      <div class="chart-wrapper">
+        <h4>数量分布</h4>
+        <canvas id="merchant-count-chart"></canvas>
+      </div>
+      <div class="chart-wrapper">
+        <h4>金额分布</h4>
+        <canvas id="merchant-price-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
+// 图表实例存储
+let typeCountChart = null;
+let typePriceChart = null;
+let scaleCountChart = null;
+let scalePriceChart = null;
+let brandCountChart = null;
+let brandPriceChart = null;
+let merchantCountChart = null;
+let merchantPriceChart = null;
+
+// 图表颜色配置
+const chartColors = [
+  '#007bff', '#28a745', '#dc3545', '#ffc107', '#17a2b8',
+  '#6610f2', '#fd7e14', '#20c997', '#6f42c1', '#e83e8c'
+];
+
+/**
+ * 切换统计标签页
+ */
+function switchStatsTab(tabName, evt) {
+  // 更新标签按钮状态
+  document.querySelectorAll('.stats-tab').forEach(btn => btn.classList.remove('active'));
+  evt.target.classList.add('active');
+
+  // 切换显示对应区块
+  const sections = ['type', 'scale', 'brand', 'merchant'];
+  sections.forEach(name => {
+    const section = document.getElementById(name + '-stats');
+    if (name === tabName) {
+      section.classList.remove('hidden');
+    } else {
+      section.classList.add('hidden');
+    }
+  });
+}
+
+/**
+ * 切换视图（表格/饼图）
+ */
+function toggleView(type, view, evt) {
+  const section = evt.target.closest('.stats-section');
+  const tableEl = section.querySelector('[id$="-table"]');
+  const chartEl = section.querySelector('[id$="-chart"]');
+  const buttons = section.querySelectorAll('.toggle-btn');
+
+  // 更新按钮状态
+  buttons.forEach(btn => btn.classList.remove('active'));
+  evt.target.classList.add('active');
+
+  // 切换显示
+  if (view === 'table') {
+    tableEl.classList.remove('hidden');
+    chartEl.classList.add('hidden');
+  } else {
+    tableEl.classList.add('hidden');
+    chartEl.classList.remove('hidden');
+  }
+}
+
+/**
+ * 渲染表格（使用 DOM 方法避免 XSS）
+ */
+function renderTable(tableBodyId, stats, getLabelFunc) {
+  const tbody = document.getElementById(tableBodyId);
+  while (tbody.firstChild) {
+    tbody.removeChild(tbody.firstChild);
+  }
+
+  const sortedEntries = Object.entries(stats).sort((a, b) => b[1].total - a[1].total);
+
+  sortedEntries.forEach(([key, data]) => {
+    const tr = document.createElement('tr');
+
+    const tdName = document.createElement('td');
+    tdName.textContent = getLabelFunc ? getLabelFunc(key) : key;
+
+    const tdCount = document.createElement('td');
+    tdCount.textContent = data.count;
+
+    const tdTotal = document.createElement('td');
+    tdTotal.textContent = '\u00A5' + data.total.toLocaleString();
+
+    tr.appendChild(tdName);
+    tr.appendChild(tdCount);
+    tr.appendChild(tdTotal);
+    tbody.appendChild(tr);
+  });
+}
+
+/**
+ * 创建饼图
+ */
+function createPieChart(canvasId, labels, values) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+
+  return new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: chartColors.slice(0, labels.length),
+        borderWidth: 1,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            padding: 10,
+            usePointStyle: true
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((context.raw / total) * 100).toFixed(1);
+              const value = context.raw.toLocaleString();
+              return context.label + ': ' + value + ' (' + percentage + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * 渲染所有饼图
+ */
+function renderCharts(typeStats, scaleStats, brandStats, merchantStats) {
+  // 销毁旧图表
+  if (typeCountChart) typeCountChart.destroy();
+  if (typePriceChart) typePriceChart.destroy();
+  if (scaleCountChart) scaleCountChart.destroy();
+  if (scalePriceChart) scalePriceChart.destroy();
+  if (brandCountChart) brandCountChart.destroy();
+  if (brandPriceChart) brandPriceChart.destroy();
+  if (merchantCountChart) merchantCountChart.destroy();
+  if (merchantPriceChart) merchantPriceChart.destroy();
+
+  // 类型饼图
+  const typeLabels = Object.keys(typeStats).map(k => typeStats[k].name);
+  typeCountChart = createPieChart('type-count-chart', typeLabels, Object.keys(typeStats).map(k => typeStats[k].count));
+  typePriceChart = createPieChart('type-price-chart', typeLabels, Object.keys(typeStats).map(k => typeStats[k].total));
+
+  // 比例饼图
+  const scaleLabels = Object.keys(scaleStats).sort();
+  scaleCountChart = createPieChart('scale-count-chart', scaleLabels, scaleLabels.map(s => scaleStats[s].count));
+  scalePriceChart = createPieChart('scale-price-chart', scaleLabels, scaleLabels.map(s => scaleStats[s].total));
+
+  // 品牌饼图
+  const brandEntries = Object.entries(brandStats).sort((a, b) => b[1].total - a[1].total);
+  const brandLabels = brandEntries.map(e => e[0]);
+  brandCountChart = createPieChart('brand-count-chart', brandLabels, brandLabels.map(b => brandStats[b].count));
+  brandPriceChart = createPieChart('brand-price-chart', brandLabels, brandLabels.map(b => brandStats[b].total));
+
+  // 商家饼图
+  const merchantEntries = Object.entries(merchantStats).sort((a, b) => b[1].total - a[1].total);
+  const merchantLabels = merchantEntries.map(e => e[0]);
+  merchantCountChart = createPieChart('merchant-count-chart', merchantLabels, merchantLabels.map(m => merchantStats[m].count));
+  merchantPriceChart = createPieChart('merchant-price-chart', merchantLabels, merchantLabels.map(m => merchantStats[m].total));
+}
+
 // 页面加载时获取统计数据
 document.addEventListener('DOMContentLoaded', function() {
   fetch('/api/statistics')
     .then(response => response.json())
     .then(data => {
-      document.getElementById('locomotive-count').textContent = data.locomotive.count;
-      document.getElementById('locomotive-total').textContent = data.locomotive.total;
-      document.getElementById('carriage-count').textContent = data.carriage.count;
-      document.getElementById('carriage-total').textContent = data.carriage.total;
-      document.getElementById('trainset-count').textContent = data.trainset.count;
-      document.getElementById('trainset-total').textContent = data.trainset.total;
-      document.getElementById('locomotive-head-count').textContent = data.locomotive_head.count;
-      document.getElementById('locomotive-head-total').textContent = data.locomotive_head.total;
+      const typeStats = data.type_stats;
+      const scaleStats = data.scale_stats;
+      const brandStats = data.brand_stats;
+      const merchantStats = data.merchant_stats;
+
+      // 计算全局统计
+      let totalCount = 0;
+      let totalTotal = 0;
+      Object.values(typeStats).forEach(stat => {
+        totalCount += stat.count;
+        totalTotal += stat.total;
+      });
+      document.getElementById('global-count').textContent = totalCount;
+      document.getElementById('global-total').textContent = '\u00A5' + totalTotal.toLocaleString();
+
+      renderTable('type-table-body', typeStats, key => typeStats[key].name);
+      renderTable('scale-table-body', scaleStats);
+      renderTable('brand-table-body', brandStats);
+      renderTable('merchant-table-body', merchantStats);
+
+      renderCharts(typeStats, scaleStats, brandStats, merchantStats);
+    })
+    .catch(error => {
+      console.error('获取统计数据失败:', error);
     });
 });
 </script>
 
 <style>
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+/* 页面标题行 */
+.page-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
-.stat-card {
-  padding: 1rem;
+.page-title-row h1 {
+  margin: 0;
+}
+
+.global-stats {
+  font-size: 1rem;
+  color: #333;
   background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
   border-radius: 4px;
   border: 1px solid #dee2e6;
 }
 
-.stat-card h3 {
-  margin-bottom: 0.5rem;
+.global-stats span {
+  font-weight: 600;
+  color: #007bff;
+}
+
+/* 标签导航 */
+.stats-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #dee2e6;
+  flex-wrap: wrap;
+}
+
+.stats-tab {
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+  background-color: #e9ecef;
+  color: #333;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stats-tab:hover {
+  background-color: #dee2e6;
+}
+
+.stats-tab.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* 统计区块 */
+.stats-section {
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+/* 视图切换按钮 */
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toggle-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  background-color: #e9ecef;
+  color: #333;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+  background-color: #dee2e6;
+}
+
+.toggle-btn.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* 统计表格 */
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.stats-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.stats-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* 图表容器 */
+.chart-container {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.chart-wrapper {
+  flex: 1;
+  min-width: 250px;
+  max-width: 400px;
+  text-align: center;
+}
+
+.chart-wrapper h4 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.chart-wrapper canvas {
+  max-height: 300px;
+}
+
+/* 隐藏类 */
+.hidden {
+  display: none !important;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .page-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .global-stats {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  .stats-tabs {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .stats-tab {
+    text-align: center;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .chart-container {
+    flex-direction: column;
+  }
+
+  .chart-wrapper {
+    max-width: 100%;
+  }
 }
 </style>
 {% endblock %}
