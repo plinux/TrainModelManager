@@ -208,31 +208,29 @@ th {
 
 /* 通用按钮样式基础 */
 button,
-.btn-edit,
-.btn-cancel {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: inherit;
-  line-height: inherit;
-  text-decoration: none;
-  display: inline-block;
-}
-
-/* 表格中的按钮更紧凑 */
-td button,
+.btn-search,
 .btn-edit,
 .btn-cancel,
 .btn-danger {
   padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
   font-size: 0.875rem;
   line-height: normal;
+  text-decoration: none;
+  display: inline-block;
+  /* Safari 兼容性修复 */
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
 }
 
 button:hover,
+.btn-search:hover,
 .btn-edit:hover,
-.btn-cancel:hover {
+.btn-cancel:hover,
+.btn-danger:hover {
   opacity: 0.9;
 }
 
@@ -268,11 +266,6 @@ button:hover,
 .btn-search {
   background-color: #17a2b8;
   color: white;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
   margin-right: 0.5rem;
 }
 
@@ -300,6 +293,18 @@ td button,
 td form {
   vertical-align: middle;
   display: inline-block;
+}
+
+/* 表格操作按钮统一尺寸 */
+td .btn-search,
+td .btn-edit,
+td .btn-danger {
+  min-height: 1.75rem;
+  height: 1.75rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  box-sizing: border-box;
 }
 
 td form {
