@@ -13,10 +13,10 @@
     {{ autocomplete_field('depot_id', '车辆段', depots, value=carriage_set.depot_id, text_value=carriage_set.depot.name if carriage_set.depot else None) }}
     {{ scale_select(value=carriage_set.scale) }}
     {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=carriage_set.brand_id, text_value=carriage_set.brand.name if carriage_set.brand else None) }}
+    {{ text_field('train_number', '车次', value=carriage_set.train_number) }}
   </div>
 
   <div class="form-row">
-    {{ text_field('train_number', '车次', value=carriage_set.train_number) }}
     {{ text_field('plaque', '挂牌', value=carriage_set.plaque) }}
     {{ text_field('item_number', '货号', value=carriage_set.item_number) }}
     <div class="form-group">
@@ -68,9 +68,11 @@
     {% endfor %}
   </div>
 
-  <button type="button" onclick="addCarriageRow()">添加车厢</button>
-  <button type="submit">保存</button>
-  <a href="{{ url_for('carriage.carriage') }}" class="btn-cancel">取消</a>
+  <div class="form-actions">
+    <button type="button" onclick="addCarriageRow()">添加车厢</button>
+    <button type="submit">保存</button>
+    <a href="{{ url_for('carriage.carriage') }}" class="btn-cancel">取消</a>
+  </div>
 </form>
 
 {% if errors %}

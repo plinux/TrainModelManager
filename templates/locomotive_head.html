@@ -8,25 +8,24 @@
 <h1>先头车模型</h1>
 
 <form id="locomotive-head-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/locomotive-head/add');">
-  <div class="form-row">
+  <div class="form-grid-5">
     {{ autocomplete_field('model_id', '型号', trainset_models, required=true) }}
-    {{ autocomplete_field('depot_id', '动车段', depots) }}
     {{ scale_select() }}
-    {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
     {{ text_field('special_color', '特涂') }}
-  </div>
-
-  <div class="form-row">
     {{ boolean_select('head_light', '头车灯', default=true) }}
     {{ text_field('interior_light', '室内灯') }}
-    {{ text_field('item_number', '货号') }}
-    {{ price_field() }}
-    {{ autocomplete_field('merchant_id', '购买商家', merchants) }}
+  </div>
+
+  <div class="form-grid-5">
+    {{ price_field(field_class='col-2') }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants, field_class='col-2') }}
     {{ date_field('purchase_date', '购买日期') }}
   </div>
 
-  <div class="form-row">
-    {{ text_field('product_url', '产品地址') }}
+  <div class="form-grid-5">
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
+    {{ text_field('item_number', '货号') }}
+    {{ text_field('product_url', '产品地址', field_class='col-3') }}
   </div>
 
   <button type="submit">添加</button>
@@ -38,7 +37,6 @@
       <tr>
         <th data-sort="model" data-filter="model">型号</th>
         <th data-sort="brand" data-filter="brand">品牌</th>
-        <th data-sort="depot" data-filter="depot">动车段</th>
         <th data-sort="scale" data-filter="scale">比例</th>
         <th data-sort="special_color" data-filter="special_color">特涂</th>
         <th data-sort="head_light" data-filter="head_light">头车灯</th>
@@ -50,10 +48,9 @@
     </thead>
     <tbody>
       {% for head in locomotive_heads %}
-      <tr data-model="{{ head.model.name }}" data-brand="{{ head.brand.name }}" data-depot="{{ head.depot.name if head.depot else '' }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-head_light="{{ '有' if head.head_light else '无' }}" data-interior_light="{{ head.interior_light or '' }}" data-item_number="{{ head.item_number or '' }}" data-price="{{ head.total_price or 0 }}">
+      <tr data-model="{{ head.model.name }}" data-brand="{{ head.brand.name }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-head_light="{{ '有' if head.head_light else '无' }}" data-interior_light="{{ head.interior_light or '' }}" data-item_number="{{ head.item_number or '' }}" data-price="{{ head.total_price or 0 }}">
         <td>{{ head.model.name }}</td>
         <td>{{ head.brand.name }}</td>
-        <td>{{ relation_name(head.depot) }}</td>
         <td>{{ head.scale }}</td>
         <td>{{ head.special_color }}</td>
         <td>{{ '有' if head.head_light else '无' }}</td>

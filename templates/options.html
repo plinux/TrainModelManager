@@ -24,7 +24,7 @@
   <div class="option-group">
     <h3>铁路信息</h3>
     <div class="tab-group">
-      <button onclick="showTab('power_types')" class="tab-btn active">动力类型</button>
+      <button onclick="showTab('power_types')" class="tab-btn active">动力</button>
       <button onclick="showTab('depots')" class="tab-btn">局段</button>
     </div>
   </div>
@@ -147,9 +147,9 @@
 <div class="tabs-container">
 
 <div id="power_types" class="tab-content">
-  <h2>动力类型</h2>
+  <h2>动力</h2>
   <form method="POST" class="inline-form">
-    <input type="text" name="name" placeholder="新增动力类型" required>
+    <input type="text" name="name" placeholder="新增动力" required>
     <button type="submit">添加</button>
   </form>
   <table>
@@ -367,7 +367,7 @@
         {% endfor %}
       </select>
       <select name="power_type_id" required>
-        <option value="">选择动力类型</option>
+        <option value="">选择动力</option>
         {% for type in power_types %}
         <option value="{{ type.id }}">{{ type.name }}</option>
         {% endfor %}
@@ -380,7 +380,7 @@
       <tr>
         <th>名称</th>
         <th>系列</th>
-        <th>动力类型</th>
+        <th>动力</th>
         <th>操作</th>
       </tr>
     </thead>
@@ -521,7 +521,7 @@
         {% endfor %}
       </select>
       <select name="power_type_id" required>
-        <option value="">选择动力类型</option>
+        <option value="">选择动力</option>
         {% for type in power_types %}
         <option value="{{ type.id }}">{{ type.name }}</option>
         {% endfor %}
@@ -534,7 +534,7 @@
       <tr>
         <th>名称</th>
         <th>系列</th>
-        <th>动力类型</th>
+        <th>动力</th>
         <th>操作</th>
       </tr>
     </thead>

@@ -87,14 +87,23 @@ main {
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* 表单组 - 水平布局（标签和输入框同一行）*/
 .form-group {
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  min-width: 0; /* 防止 flex 子项溢出 */
 }
 
+/* 表单标签 */
 label {
-  display: block;
-  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+  width: 5rem;
   font-weight: bold;
+  font-size: var(--font-size-base);
+  white-space: nowrap;
+  text-align: right;
 }
 
 input, select {
@@ -108,17 +117,114 @@ input, select {
   box-sizing: border-box;
 }
 
-button {
-  padding: 0.5rem 1rem;
-  background-color: #007bff;
-  color: white;
+/* ========== 通用按钮样式 ========== */
+/* 按钮基础样式 - 适用于所有按钮和链接按钮 */
+button,
+.btn-search,
+.btn-edit,
+.btn-cancel,
+.btn-danger,
+.btn-primary,
+.btn-save {
+  padding: 0.25rem 0.5rem;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
   cursor: pointer;
+  font-size: var(--font-size-base);
+  font-family: var(--font-family);
+  line-height: normal;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Safari 兼容性修复 */
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
 }
 
-button:hover {
-  background-color: #0056b3;
+/* 主按钮样式（用于表单提交等主要操作）*/
+button[type="submit"]:not(.btn-danger):not(.btn-cancel):not(.btn-search):not(.btn-edit):not(.btn-save) {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+button[type="submit"]:not(.btn-danger):not(.btn-cancel):not(.btn-search):not(.btn-edit):not(.btn-save):hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* 按钮悬停效果 */
+button:hover,
+.btn-search:hover,
+.btn-edit:hover,
+.btn-cancel:hover,
+.btn-danger:hover,
+.btn-primary:hover,
+.btn-save:hover {
+  opacity: 0.9;
+}
+
+/* 按钮颜色变体 */
+.btn-danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: var(--color-danger-dark);
+}
+
+.btn-edit {
+  background-color: var(--color-success);
+  color: white;
+  margin-right: var(--spacing-xs);
+}
+
+.btn-edit:hover {
+  background-color: var(--color-success-dark);
+}
+
+.btn-cancel {
+  background-color: var(--color-secondary);
+  color: white;
+  margin-left: var(--spacing-xs);
+}
+
+.btn-cancel:hover {
+  background-color: var(--color-secondary-dark);
+}
+
+.btn-search {
+  background-color: #17a2b8;
+  color: white;
+  margin-right: var(--spacing-xs);
+}
+
+.btn-search:hover {
+  background-color: #138496;
+}
+
+.btn-search:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.btn-save {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.btn-save:hover {
+  background-color: var(--color-success-dark);
 }
 
 table {
@@ -155,7 +261,7 @@ th {
   display: none;
   position: absolute;
   bottom: calc(100% - 0.5rem);
-  left: 0;
+  left: 5.5rem; /* label 宽度 + gap */
   margin-bottom: 0.25rem;
   padding: 0.35rem 0.6rem;
   background-color: #dc3545;
@@ -206,78 +312,6 @@ th {
   display: none;
 }
 
-/* 通用按钮样式基础 */
-button,
-.btn-search,
-.btn-edit,
-.btn-cancel,
-.btn-danger {
-  padding: 0.25rem 0.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  line-height: normal;
-  text-decoration: none;
-  display: inline-block;
-  /* Safari 兼容性修复 */
-  -webkit-appearance: none;
-  appearance: none;
-  box-sizing: border-box;
-}
-
-button:hover,
-.btn-search:hover,
-.btn-edit:hover,
-.btn-cancel:hover,
-.btn-danger:hover {
-  opacity: 0.9;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-}
-
-.btn-edit {
-  background-color: #28a745;
-  color: white;
-  margin-right: 0.5rem;
-}
-
-.btn-edit:hover {
-  background-color: #218838;
-}
-
-.btn-cancel {
-  background-color: #6c757d;
-  color: white;
-  margin-left: 0.5rem;
-}
-
-.btn-cancel:hover {
-  background-color: #5a6268;
-}
-
-/* 搜索按钮样式 */
-.btn-search {
-  background-color: #17a2b8;
-  color: white;
-  margin-right: 0.5rem;
-}
-
-.btn-search:hover {
-  background-color: #138496;
-}
-
-.btn-search:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
 /* 货号链接样式 */
 .item-number-cell a {
   color: var(--color-primary);
@@ -325,13 +359,6 @@ td form {
   padding: 0;
 }
 
-.btn-edit,
-.btn-cancel,
-.btn-danger {
-  display: inline-block;
-  vertical-align: middle;
-}
-
 .form-row {
   display: flex;
   gap: 1rem;
@@ -339,6 +366,73 @@ td form {
 
 .form-row .form-group {
   flex: 1;
+}
+
+.form-row .form-group.flex-2 {
+  flex: 2;
+}
+
+.form-row .form-group.flex-3 {
+  flex: 3;
+}
+
+.form-row .form-group.flex-4 {
+  flex: 4;
+}
+
+/* 5列网格布局 - 用于精确垂直对齐 */
+.form-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+
+.form-grid-5 .form-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  min-width: 0;
+}
+
+.form-grid-5 .form-group > input,
+.form-grid-5 .form-group > select,
+.form-grid-5 .form-group .autocomplete-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-grid-5 .form-group.col-2 {
+  grid-column: span 2;
+}
+
+.form-grid-5 .form-group.col-3 {
+  grid-column: span 3;
+}
+
+/* 表单操作按钮区域 */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* 表单操作按钮 - 取消按钮与保存按钮统一尺寸 */
+.form-actions button,
+.form-actions .btn-cancel {
+  /* 固定高度确保 Safari 下一致性 */
+  height: 28px;
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  /* 使用 inline-flex 确保文字垂直居中，两个按钮使用相同的 display */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 内联表单 - 输入框和按钮在同一行 */
@@ -369,6 +463,22 @@ td form {
   main {
     margin: 1rem;
     padding: 1rem;
+  }
+
+  /* 移动端表单组改为垂直布局 */
+  .form-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .form-group label {
+    width: auto;
+    text-align: left;
+  }
+
+  .form-group .error-bubble {
+    left: 0;
   }
 
   .form-row {
@@ -439,14 +549,22 @@ td form {
 .page-header .btn-export {
   color: white !important;
   border: none !important;
-  border-radius: 4px !important;
+  border-radius: var(--border-radius) !important;
   cursor: pointer;
   font-weight: 500 !important;
-  font-size: 1rem !important;
+  font-size: var(--font-size-lg) !important;
+  font-family: var(--font-family);
   line-height: 1 !important;
   padding: 0.5rem 1.25rem !important;
   transition: background-color 0.2s;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Safari 兼容性修复 */
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  box-sizing: border-box !important;
 }
 
 .page-header .btn-danger-reinit {
@@ -666,12 +784,14 @@ td form {
   background-color: #fafafa;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
+  align-items: flex-end; /* 让删除按钮底部对齐 */
 }
 
 .carriage-item button {
   background-color: var(--color-danger);
   color: white;
-  margin-top: var(--spacing-sm);
+  flex-shrink: 0;
+  margin-bottom: 0.5rem; /* 与 form-group 的 margin-bottom 一致 */
 }
 
 .carriage-item button:hover {

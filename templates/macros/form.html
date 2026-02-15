@@ -5,8 +5,8 @@
 
 
 {# 可搜索下拉选择框（推荐使用） #}
-{% macro autocomplete_field(name, label, items, required=false, value=null, text_value=null, id=null, onchange=null) %}
-<div class="form-group">
+{% macro autocomplete_field(name, label, items, required=false, value=null, text_value=null, id=null, onchange=null, field_class=null) %}
+<div class="form-group{% if field_class %} {{ field_class }}{% endif %}">
   <label for="{{ id or name }}_text">{{ label }}{% if required %} *{% endif %}</label>
   <div class="autocomplete-wrapper">
     <input type="text" id="{{ id or name }}_text" name="{{ name }}_text"
@@ -101,8 +101,8 @@
 
 
 {# 布尔选择框（有/无）#}
-{% macro boolean_select(name, label, required=false, value=null, id=null, default=null) %}
-<div class="form-group">
+{% macro boolean_select(name, label, required=false, value=null, id=null, default=null, field_class=null) %}
+<div class="form-group{% if field_class %} {{ field_class }}{% endif %}">
   <label for="{{ id or name }}">{{ label }}</label>
   <select id="{{ id or name }}" name="{{ name }}" {% if required %}required{% endif %}>
     <option value="">请选择</option>
@@ -114,8 +114,8 @@
 
 
 {# 文本输入框 #}
-{% macro text_field(name, label, required=false, value=null, id=null, placeholder=null, type='text') %}
-<div class="form-group">
+{% macro text_field(name, label, required=false, value=null, id=null, placeholder=null, type='text', field_class=null) %}
+<div class="form-group{% if field_class %} {{ field_class }}{% endif %}">
   <label for="{{ id or name }}">{{ label }}{% if required %} *{% endif %}</label>
   <input type="{{ type }}" id="{{ id or name }}" name="{{ name }}"
       {% if required %}required{% endif %}
@@ -126,8 +126,8 @@
 
 
 {# 数字输入框 #}
-{% macro number_field(name, label, required=false, value=null, id=null, min=null, max=null) %}
-<div class="form-group">
+{% macro number_field(name, label, required=false, value=null, id=null, min=null, max=null, field_class=null) %}
+<div class="form-group{% if field_class %} {{ field_class }}{% endif %}">
   <label for="{{ id or name }}">{{ label }}{% if required %} *{% endif %}</label>
   <input type="number" id="{{ id or name }}" name="{{ name }}"
       {% if required %}required{% endif %}
@@ -139,8 +139,8 @@
 
 
 {# 日期输入框 #}
-{% macro date_field(name, label, required=false, value=null, id=null) %}
-<div class="form-group">
+{% macro date_field(name, label, required=false, value=null, id=null, field_class=null) %}
+<div class="form-group{% if field_class %} {{ field_class }}{% endif %}">
   <label for="{{ id or name }}">{{ label }}</label>
   <input type="date" id="{{ id or name }}" name="{{ name }}"
       {% if required %}required{% endif %}
@@ -150,8 +150,8 @@
 
 
 {# 价格输入框（带提示）#}
-{% macro price_field(name='price', label='价格（表达式）', value=null, id=null) %}
-<div class="form-group">
+{% macro price_field(name='price', label='价格', value=null, id=null, field_class=null) %}
+<div class="form-group{% if field_class %} {{ field_class }}{% endif %}">
   <label for="{{ id or name }}">{{ label }}</label>
   <input type="text" id="{{ id or name }}" name="{{ name }}"
       {% if value %}value="{{ value }}"{% endif %}

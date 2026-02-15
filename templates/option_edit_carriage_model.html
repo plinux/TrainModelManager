@@ -29,8 +29,10 @@
     </div>
   </div>
 
-  <button type="submit">保存</button>
-  <a href="{{ url_for('options.options') }}" class="btn-cancel">取消</a>
+  <div class="form-actions">
+    <button type="submit">保存</button>
+    <a href="{{ url_for('options.options') }}" class="btn-cancel">取消</a>
+  </div>
 </form>
 
 {% endblock %}

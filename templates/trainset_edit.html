@@ -7,43 +7,45 @@
 <h1>编辑动车组模型</h1>
 
 <form id="trainset-form" method="POST">
-  <div class="form-row">
+  <div class="form-grid-5">
     {{ autocomplete_field('model_id', '型号', trainset_models, required=true, value=trainset.model_id, text_value=trainset.model.name if trainset.model else None, onchange='autoFillTrainset()') }}
     {{ autocomplete_field('series_id', '系列', trainset_series, value=trainset.series_id, text_value=trainset.series.name if trainset.series else None, onchange='handleTrainsetSeriesChange()') }}
-    {{ autocomplete_field('power_type_id', '动力类型', power_types, value=trainset.power_type_id, text_value=trainset.power_type.name if trainset.power_type else None) }}
+    {{ autocomplete_field('power_type_id', '动力', power_types, value=trainset.power_type_id, text_value=trainset.power_type.name if trainset.power_type else None) }}
     {{ autocomplete_field('depot_id', '动车段', depots, value=trainset.depot_id, text_value=trainset.depot.name if trainset.depot else None) }}
     {{ scale_select(value=trainset.scale) }}
-    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=trainset.brand_id, text_value=trainset.brand.name if trainset.brand else None) }}
   </div>
 
-  <div class="form-row">
+  <div class="form-grid-5">
     {{ text_field('trainset_number', '动车号', required=true, value=trainset.trainset_number) }}
     {{ text_field('decoder_number', '编号', value=trainset.decoder_number) }}
     {{ text_field('plaque', '挂牌', value=trainset.plaque) }}
-    {{ text_field('color', '颜色', value=trainset.color) }}
-    {{ number_field('formation', '编组数', value=trainset.formation) }}
-  </div>
-
-  <div class="form-row">
-    {{ boolean_select('head_light', '头车灯', value=trainset.head_light) }}
-    {{ text_field('interior_light', '室内灯', value=trainset.interior_light) }}
     {{ autocomplete_field('chip_interface_id', '芯片接口', chip_interfaces, value=trainset.chip_interface_id, text_value=trainset.chip_interface.name if trainset.chip_interface else None) }}
     {{ autocomplete_field('chip_model_id', '芯片型号', chip_models, value=trainset.chip_model_id, text_value=trainset.chip_model.name if trainset.chip_model else None) }}
   </div>
 
-  <div class="form-row">
-    {{ text_field('item_number', '货号', value=trainset.item_number) }}
+  <div class="form-grid-5">
+    {{ number_field('formation', '编组', value=trainset.formation) }}
+    {{ boolean_select('head_light', '头车灯', value=trainset.head_light) }}
+    {{ text_field('interior_light', '室内灯', value=trainset.interior_light, field_class='col-3') }}
+  </div>
+
+  <div class="form-grid-5">
+    {{ text_field('color', '颜色', value=trainset.color) }}
     {{ price_field(value=trainset.price) }}
-    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=trainset.merchant_id, text_value=trainset.merchant.name if trainset.merchant else None) }}
+    {{ autocomplete_field('merchant_id', '购买商家', merchants, value=trainset.merchant_id, text_value=trainset.merchant.name if trainset.merchant else None, field_class='col-2') }}
     {{ date_field('purchase_date', '购买日期', value=trainset.purchase_date) }}
   </div>
 
-  <div class="form-row">
-    {{ text_field('product_url', '产品地址', value=trainset.product_url) }}
+  <div class="form-grid-5">
+    {{ autocomplete_field('brand_id', '品牌', brands, required=true, value=trainset.brand_id, text_value=trainset.brand.name if trainset.brand else None) }}
+    {{ text_field('item_number', '货号', value=trainset.item_number) }}
+    {{ text_field('product_url', '产品地址', value=trainset.product_url, field_class='col-3') }}
   </div>
 
-  <button type="submit">保存</button>
-  <a href="{{ url_for('trainset.trainset') }}" class="btn-cancel">取消</a>
+  <div class="form-actions">
+    <button type="submit">保存</button>
+    <a href="{{ url_for('trainset.trainset') }}" class="btn-cancel">取消</a>
+  </div>
 </form>
 
 {% if errors %}

@@ -155,7 +155,7 @@ def import_locomotive_data(data):
       continue
 
     series_id = find_id_by_name(LocomotiveSeries, row.get('系列'))
-    power_type_id = find_id_by_name(PowerType, row.get('动力类型'))
+    power_type_id = find_id_by_name(PowerType, row.get('动力'))
     model_id = find_id_by_name(LocomotiveModel, row.get('车型'),
       lambda q: q.filter_by(name=row.get('车型'), series_id=series_id, power_type_id=power_type_id).first())
 
@@ -295,7 +295,7 @@ def import_trainset_data(data):
       continue
 
     series_id = find_id_by_name(TrainsetSeries, row.get('系列'))
-    power_type_id = find_id_by_name(PowerType, row.get('动力类型'))
+    power_type_id = find_id_by_name(PowerType, row.get('动力'))
     model_id = find_id_by_name(TrainsetModel, row.get('车型'),
       lambda q: q.filter_by(name=row.get('车型'), series_id=series_id, power_type_id=power_type_id).first())
 
@@ -389,7 +389,7 @@ def export_to_excel():
     # 导出机车模型
     if Locomotive.query.count() > 0:
       sheet = workbook.create_sheet('机车')
-      headers = ['系列', '动力类型', '车型', '品牌', '机务段', '挂牌', '颜色', '比例', '机车号', '编号',
+      headers = ['系列', '动力', '车型', '品牌', '机务段', '挂牌', '颜色', '比例', '机车号', '编号',
              '芯片接口', '芯片型号', '价格', '总价', '货号', '购买日期', '购买商家']
       sheet.append(headers)
 
@@ -475,7 +475,7 @@ def export_to_excel():
     # 导出动车组模型
     if Trainset.query.count() > 0:
       sheet = workbook.create_sheet('动车组')
-      headers = ['系列', '动力类型', '车型', '品牌', '动车段', '挂牌', '颜色', '比例', '编组', '动车号', '编号',
+      headers = ['系列', '动力', '车型', '品牌', '动车段', '挂牌', '颜色', '比例', '编组', '动车号', '编号',
              '头车灯', '室内灯', '芯片接口', '芯片型号', '价格', '总价', '货号', '购买日期', '购买商家']
       sheet.append(headers)
 

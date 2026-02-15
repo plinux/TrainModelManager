@@ -20,7 +20,7 @@
       </select>
     </div>
     <div class="form-group">
-      <label for="power_type_id">动力类型 *</label>
+      <label for="power_type_id">动力 *</label>
       <select id="power_type_id" name="power_type_id" required>
         {% for type in power_types %}
         <option value="{{ type.id }}" {{ 'selected' if type.id == model.power_type_id else '' }}>{{ type.name }}</option>
@@ -29,8 +29,10 @@
     </div>
   </div>
 
-  <button type="submit">保存</button>
-  <a href="{{ url_for('options.options') }}" class="btn-cancel">取消</a>
+  <div class="form-actions">
+    <button type="submit">保存</button>
+    <a href="{{ url_for('options.options') }}" class="btn-cancel">取消</a>
+  </div>
 </form>
 
 {% endblock %}

@@ -13,10 +13,10 @@
     {{ autocomplete_field('depot_id', '车辆段', depots) }}
     {{ scale_select() }}
     {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
+    {{ text_field('train_number', '车次') }}
   </div>
 
   <div class="form-row">
-    {{ text_field('train_number', '车次') }}
     {{ text_field('plaque', '挂牌') }}
     {{ text_field('item_number', '货号') }}
     <div class="form-group">
