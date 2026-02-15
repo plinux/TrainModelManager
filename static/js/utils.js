@@ -19,8 +19,8 @@ const Utils = {
 
     if (!seriesId || !modelData) return;
 
-    const seriesIdInt = parseInt(seriesId);
-    const filteredModels = modelData.filter(model => model.series_id === seriesIdInt);
+    const seriesIdNum = Number(seriesId);
+    const filteredModels = modelData.filter(model => Number(model.series_id) === seriesIdNum);
     filteredModels.forEach(model => {
       const option = document.createElement('option');
       option.value = model.id;
