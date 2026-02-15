@@ -209,3 +209,8 @@ __marimo__/
 # IDE
 myenv
 .codeartsdoer
+
+# Node.js (not needed for Flask project)
+node_modules/
+package-lock.json
+package.json
