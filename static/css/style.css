@@ -310,14 +310,19 @@ td .btn-danger {
 td form {
   margin: 0;
   padding: 0;
-  line-height: 1;
 }
 
-td form button {
+/* 操作列使用 flexbox 确保按钮对齐 */
+.action-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+}
+
+.action-cell form {
   margin: 0;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
+  padding: 0;
 }
 
 .btn-edit,

@@ -80,7 +80,7 @@
           {% endif %}
         </td>
         <td>{{ locomotive.total_price }}</td>
-        <td>
+        <td class="action-cell">
           {% set search_url = locomotive.brand.search_url %}
           {% set item_number = locomotive.item_number %}
           {% if search_url and item_number %}
@@ -89,7 +89,7 @@
           <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
           {% endif %}
           <a href="{{ url_for('locomotive.edit_locomotive', id=locomotive.id) }}" class="btn-edit">编辑</a>
-          <form action="{{ url_for('locomotive.delete_locomotive', id=locomotive.id) }}" method="POST" style="display:inline" onsubmit="return confirm('确定删除？')">
+          <form action="{{ url_for('locomotive.delete_locomotive', id=locomotive.id) }}" method="POST" onsubmit="return confirm('确定删除？')">
             <button type="submit" class="btn-danger">删除</button>
           </form>
         </td>
