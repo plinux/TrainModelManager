@@ -142,27 +142,43 @@ th {
   color: red;
 }
 
-/* 表单错误气泡样式 */
+/* 表单错误气泡样式 - 悬浮显示 */
+.form-group {
+  position: relative;
+}
+
 .form-group.error label {
   color: #dc3545;
 }
 
-.form-group.error label .error-bubble {
-  display: inline-block;
-  position: relative;
-  margin-left: 0.5rem;
-  padding: 0.25rem 0.5rem;
+.form-group .error-bubble {
+  display: none;
+  position: absolute;
+  bottom: calc(100% - 0.5rem);
+  left: 0;
+  margin-bottom: 0.25rem;
+  padding: 0.35rem 0.6rem;
   background-color: #dc3545;
   color: white;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: normal;
-  cursor: help;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.form-group.error label .error-bubble::before {
-  content: '?';
-  font-weight: bold;
+.form-group .error-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 12px;
+  border: 6px solid transparent;
+  border-top-color: #dc3545;
+}
+
+.form-group.error .error-bubble {
+  display: block;
 }
 
 .form-group.error input,

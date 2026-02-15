@@ -147,21 +147,17 @@ const FormHelper = {
         if (input) {
           const formGroup = input.closest('.form-group');
           if (formGroup) {
-            const label = formGroup.querySelector('label');
-
             formGroup.classList.add('error');
 
             // 移除旧的错误气泡
-            const oldBubble = label ? label.querySelector('.error-bubble') : null;
+            const oldBubble = formGroup.querySelector('.error-bubble');
             if (oldBubble) oldBubble.remove();
 
-            // 添加新的错误气泡
-            if (label) {
-              const bubble = document.createElement('span');
-              bubble.className = 'error-bubble';
-              bubble.textContent = error.message;
-              label.appendChild(bubble);
-            }
+            // 添加新的悬浮错误气泡到 form-group
+            const bubble = document.createElement('span');
+            bubble.className = 'error-bubble';
+            bubble.textContent = error.message;
+            formGroup.appendChild(bubble);
           } else {
             // 找不到 form-group，记录未匹配的错误
             hasUnmatchedErrors = true;
