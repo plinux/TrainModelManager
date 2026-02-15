@@ -94,7 +94,7 @@
           {% set search_url = trainset.brand.search_url %}
           {% set item_number = trainset.item_number %}
           {% if search_url and item_number %}
-          <button type="button" class="btn-search" onclick="searchProduct(this, {{ (search_url | tojson) | safe }}, {{ (item_number | tojson) | safe }})" title="在官网搜索此货号">检索</button>
+          <button type="button" class="btn-search" onclick='searchProduct(this, {{ search_url | tojson }}, {{ item_number | tojson }})' title="在官网搜索此货号">检索</button>
           {% else %}
           <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
           {% endif %}
