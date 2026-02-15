@@ -2,7 +2,7 @@
 先头车模型路由 Blueprint
 """
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
-from models import db, LocomotiveHead, TrainsetModel, Brand, Depot, Merchant
+from models import db, LocomotiveHead, TrainsetModel, Brand, Merchant
 from utils.helpers import parse_purchase_date, safe_int, parse_boolean, api_success, api_error
 from utils.price_calculator import calculate_price
 import logging
@@ -16,7 +16,6 @@ def get_locomotive_head_form_data():
   return {
     'trainset_models': TrainsetModel.query.all(),
     'brands': Brand.query.all(),
-    'depots': Depot.query.all(),
     'merchants': Merchant.query.all()
   }
 
@@ -28,7 +27,6 @@ def create_locomotive_head_from_form(form_data, is_json=False):
   return LocomotiveHead(
     model_id=safe_int(get_value('model_id')),
     brand_id=safe_int(get_value('brand_id')),
-    depot_id=safe_int(get_value('depot_id')),
     special_color=get_value('special_color'),
     scale=get_value('scale'),
     head_light=parse_boolean(get_value('head_light')) or False,
@@ -46,7 +44,6 @@ def update_locomotive_head_from_form(locomotive_head, form_data):
   """从表单数据更新先头车对象"""
   locomotive_head.model_id = safe_int(form_data.get('model_id'))
   locomotive_head.brand_id = safe_int(form_data.get('brand_id'))
-  locomotive_head.depot_id = safe_int(form_data.get('depot_id'))
   locomotive_head.special_color = form_data.get('special_color')
   locomotive_head.scale = form_data.get('scale')
   locomotive_head.head_light = parse_boolean(form_data.get('head_light')) or False

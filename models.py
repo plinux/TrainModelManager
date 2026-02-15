@@ -274,7 +274,6 @@ class LocomotiveHead(db.Model):
   id = db.Column(Integer, primary_key=True, comment='主键')
   model_id = db.Column(Integer, ForeignKey('trainset_model.id'), comment='关联动车组车型ID')
   brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
-  depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联动车段ID')
   special_color = db.Column(String(32), comment='特涂')
   scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
   head_light = db.Column(Boolean, comment='头车灯（有/无）')
@@ -289,7 +288,6 @@ class LocomotiveHead(db.Model):
   # 关系
   model = relationship('TrainsetModel', backref='locomotive_heads')
   brand = relationship('Brand', backref='locomotive_heads')
-  depot = relationship('Depot', backref='locomotive_heads')
   merchant = relationship('Merchant', backref='locomotive_heads')
 
   def __repr__(self):
