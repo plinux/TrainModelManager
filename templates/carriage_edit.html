@@ -27,6 +27,10 @@
     {{ date_field('purchase_date', '购买日期', value=carriage_set.purchase_date) }}
   </div>
 
+  <div class="form-row">
+    {{ text_field('product_url', '产品地址', value=carriage_set.product_url) }}
+  </div>
+
   <h3>车厢列表</h3>
   <div id="carriage-items">
     {% for item in carriage_set.items %}

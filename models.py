@@ -165,6 +165,7 @@ class Locomotive(db.Model):
   price = db.Column(String(50), comment='价格表达式（如288+538）')
   total_price = db.Column(Float, comment='总价（自动计算）')
   item_number = db.Column(String(50), comment='货号')
+  product_url = db.Column(String(1024), comment='产品地址')
   purchase_date = db.Column(Date, default=date.today, comment='购买日期')
   merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
 
@@ -194,6 +195,7 @@ class CarriageSet(db.Model):
   item_number = db.Column(String(50), comment='货号')
   scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
   total_price = db.Column(Float, comment='总价')
+  product_url = db.Column(String(1024), comment='产品地址')
   purchase_date = db.Column(Date, default=date.today, comment='购买日期')
   merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
 
@@ -247,6 +249,7 @@ class Trainset(db.Model):
   price = db.Column(String(50), comment='价格表达式（如288+538）')
   total_price = db.Column(Float, comment='总价（自动计算）')
   item_number = db.Column(String(50), comment='货号')
+  product_url = db.Column(String(1024), comment='产品地址')
   purchase_date = db.Column(Date, default=date.today, comment='购买日期')
   merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
 
@@ -278,6 +281,7 @@ class LocomotiveHead(db.Model):
   price = db.Column(String(50), comment='价格表达式（如288+538）')
   total_price = db.Column(Float, comment='总价（自动计算）')
   item_number = db.Column(String(50), comment='货号')
+  product_url = db.Column(String(1024), comment='产品地址')
   purchase_date = db.Column(Date, default=date.today, comment='购买日期')
   merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
 
