@@ -52,6 +52,7 @@ def create_carriage_set_from_form(form_data, is_json=False):
     item_number=get_value('item_number'),
     scale=get_value('scale'),
     total_price=safe_float(get_value('total_price')),
+    product_url=get_value('product_url'),
     purchase_date=parse_purchase_date(get_value('purchase_date')),
     merchant_id=safe_int(get_value('merchant_id'))
   )
@@ -183,6 +184,7 @@ def edit_carriage(id):
       carriage_set.item_number = request.form.get('item_number')
       carriage_set.scale = request.form.get('scale')
       carriage_set.total_price = safe_float(request.form.get('total_price'))
+      carriage_set.product_url = request.form.get('product_url')
       carriage_set.purchase_date = parse_purchase_date(request.form.get('purchase_date'))
       carriage_set.merchant_id = safe_int(request.form.get('merchant_id'))
 

@@ -69,6 +69,7 @@ def create_trainset_from_form(form_data, is_json=False):
     price=get_value('price'),
     total_price=calculate_price(get_value('price')),
     item_number=get_value('item_number'),
+    product_url=get_value('product_url'),
     purchase_date=parse_purchase_date(get_value('purchase_date')),
     merchant_id=safe_int(get_value('merchant_id'))
   )
@@ -94,6 +95,7 @@ def update_trainset_from_form(trainset, form_data):
   trainset.price = form_data.get('price')
   trainset.total_price = calculate_price(form_data.get('price'))
   trainset.item_number = form_data.get('item_number')
+  trainset.product_url = form_data.get('product_url')
   trainset.purchase_date = parse_purchase_date(form_data.get('purchase_date'))
   trainset.merchant_id = safe_int(form_data.get('merchant_id'))
 

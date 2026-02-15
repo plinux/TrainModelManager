@@ -65,6 +65,7 @@ def create_locomotive_from_form(form_data, is_json=False):
     price=get_value('price'),
     total_price=calculate_price(get_value('price')),
     item_number=get_value('item_number'),
+    product_url=get_value('product_url'),
     purchase_date=parse_purchase_date(get_value('purchase_date')),
     merchant_id=safe_int(get_value('merchant_id'))
   )
@@ -87,6 +88,7 @@ def update_locomotive_from_form(locomotive, form_data):
   locomotive.price = form_data.get('price')
   locomotive.total_price = calculate_price(form_data.get('price'))
   locomotive.item_number = form_data.get('item_number')
+  locomotive.product_url = form_data.get('product_url')
   locomotive.purchase_date = parse_purchase_date(form_data.get('purchase_date'))
   locomotive.merchant_id = safe_int(form_data.get('merchant_id'))
 
