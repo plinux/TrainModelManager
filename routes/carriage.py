@@ -34,7 +34,7 @@ def validate_carriage_items(form_data, is_json=False):
     if get_value(model_key):
       car_number = get_value(car_number_key)
       if car_number and not validate_car_number(car_number):
-        errors.append({'field': car_number_key, 'message': f'车辆号 {car_number} 格式错误：应为3-10位数字，无前导0'})
+        errors.append({'field': car_number_key, 'message': f'车辆号 {car_number} 格式错误：应为1-20位字母、数字或连字符'})
 
   return errors
 

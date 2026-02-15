@@ -53,7 +53,7 @@ def validate_trainset_number(number: str) -> bool:
 
 def validate_car_number(number: str) -> bool:
   """
-  验证车辆号格式：3-10位数字，无前导0
+  验证车辆号格式：1-20位字母、数字、连字符组合
 
   Args:
     number: 车辆号字符串
@@ -63,7 +63,8 @@ def validate_car_number(number: str) -> bool:
   """
   if not number:
     return False
-  return bool(re.match(r'^[1-9]\d{2,9}$', number))
+  # 允许字母、数字、连字符，长度1-20位
+  return bool(re.match(r'^[A-Za-z0-9\-]{1,20}$', number))
 
 
 # 验证规则配置，用于前端和后端统一
@@ -87,10 +88,10 @@ VALIDATION_RULES = {
     'max_length': 12
   },
   'car_number': {
-    'pattern': r'^[1-9]\d{2,9}$',
-    'message': '车辆号格式错误：应为3-10位数字，无前导0',
-    'min_length': 3,
-    'max_length': 10
+    'pattern': r'^[A-Za-z0-9\-]{1,20}$',
+    'message': '车辆号格式错误：应为1-20位字母、数字或连字符',
+    'min_length': 1,
+    'max_length': 20
   }
 }
 

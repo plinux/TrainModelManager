@@ -138,29 +138,80 @@ const FormHelper = {
    * @param {Array} errors - 错误数组 [{field, message}]
    */
   showErrors(form, errors) {
+    let hasUnmatchedErrors = false;
+    let unmatchedMessages = [];
+
     errors.forEach(error => {
       if (error.field) {
         const input = form.querySelector(`[name="${error.field}"]`);
         if (input) {
           const formGroup = input.closest('.form-group');
-          const label = formGroup.querySelector('label');
+          if (formGroup) {
+            const label = formGroup.querySelector('label');
 
-          formGroup.classList.add('error');
+            formGroup.classList.add('error');
 
-          // 移除旧的错误气泡
-          const oldBubble = label.querySelector('.error-bubble');
-          if (oldBubble) oldBubble.remove();
+            // 移除旧的错误气泡
+            const oldBubble = label ? label.querySelector('.error-bubble') : null;
+            if (oldBubble) oldBubble.remove();
 
-          // 添加新的错误气泡
-          const bubble = document.createElement('span');
-          bubble.className = 'error-bubble';
-          bubble.textContent = error.message;
-          label.appendChild(bubble);
+            // 添加新的错误气泡
+            if (label) {
+              const bubble = document.createElement('span');
+              bubble.className = 'error-bubble';
+              bubble.textContent = error.message;
+              label.appendChild(bubble);
+            }
+          } else {
+            // 找不到 form-group，记录未匹配的错误
+            hasUnmatchedErrors = true;
+            unmatchedMessages.push(`${error.field}: ${error.message}`);
+          }
+        } else {
+          // 找不到输入框，记录未匹配的错误
+          hasUnmatchedErrors = true;
+          unmatchedMessages.push(`${error.field}: ${error.message}`);
         }
       } else {
-        alert(error.message);
+        hasUnmatchedErrors = true;
+        if (error.message) {
+          unmatchedMessages.push(error.message);
+        }
       }
     });
+
+    // 只有没有任何字段错误被成功显示时，才显示汇总错误
+    if (hasUnmatchedErrors && unmatchedMessages.length > 0) {
+      this.showErrorSummary(form, unmatchedMessages.join('\n'));
+    }
+  },
+
+  /**
+   * 显示错误汇总
+   * @param {HTMLFormElement} form - 表单元素
+   * @param {string} message - 错误消息
+   */
+  showErrorSummary(form, message) {
+    let errorDiv = form.querySelector('.form-error.error-summary');
+    if (!errorDiv) {
+      errorDiv = document.createElement('div');
+      errorDiv.className = 'form-error error-summary';
+      errorDiv.style.cssText = 'background: #fee; border: 1px solid #f5c6cb; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 10px; white-space: pre-line;';
+      form.insertBefore(errorDiv, form.firstChild);
+    }
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+  },
+
+  /**
+   * 清除错误汇总
+   * @param {HTMLFormElement} form - 表单元素
+   */
+  clearErrorSummary(form) {
+    const errorDiv = form.querySelector('.form-error.error-summary');
+    if (errorDiv) {
+      errorDiv.remove();
+    }
   },
 
   /**
@@ -194,6 +245,7 @@ const FormHelper = {
     });
 
     this.clearErrors(form);
+    this.clearErrorSummary(form);
 
     return Api.post(apiUrl, formDataObj)
       .then(data => {
@@ -201,18 +253,24 @@ const FormHelper = {
           this.showSuccess(form, data.message || '添加成功');
           setTimeout(() => location.reload(), 1000);
         } else {
-          if (data.errors) {
+          if (data.errors && data.errors.length > 0) {
             this.showErrors(form, data.errors);
-          }
-          if (data.error) {
-            alert(data.error);
+          } else if (data.error) {
+            // 单个错误消息，显示为汇总
+            this.showErrorSummary(form, data.error);
           }
         }
         return data;
       })
       .catch(error => {
         console.error('Submit error:', error);
-        alert('提交失败，请重试');
+        // 检查是否是验证错误（包含 errors 数组）
+        if (error.errors && error.errors.length > 0) {
+          this.showErrors(form, error.errors);
+        } else {
+          const errorMsg = error.error || error.message || '提交失败，请重试';
+          this.showErrorSummary(form, errorMsg);
+        }
       });
   }
 };

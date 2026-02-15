@@ -213,7 +213,7 @@ class CarriageItem(db.Model):
   id = db.Column(Integer, primary_key=True, comment='主键')
   set_id = db.Column(Integer, ForeignKey('carriage_set.id'), nullable=False, comment='关联套装ID')
   model_id = db.Column(Integer, ForeignKey('carriage_model.id'), comment='关联车厢型号ID')
-  car_number = db.Column(String(10), comment='车辆号（3-10位数字，无前导0）')
+  car_number = db.Column(String(20), comment='车辆号（1-20位字母、数字或连字符）')
   color = db.Column(String(50), comment='颜色')
   lighting = db.Column(String(50), comment='灯光')
 
