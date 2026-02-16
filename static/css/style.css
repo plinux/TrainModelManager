@@ -543,54 +543,6 @@ td form {
   margin-right: auto;
 }
 
-/* 页面头部按钮统一样式 */
-.page-header .btn-danger-reinit,
-.page-header .btn-import,
-.page-header .btn-export {
-  color: white !important;
-  border: none !important;
-  border-radius: var(--border-radius) !important;
-  cursor: pointer;
-  font-weight: 500 !important;
-  font-size: var(--font-size-lg) !important;
-  font-family: var(--font-family);
-  line-height: 1 !important;
-  padding: 0.5rem 1.25rem !important;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  /* Safari 兼容性修复 */
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  box-sizing: border-box !important;
-}
-
-.page-header .btn-danger-reinit {
-  background-color: #dc3545;
-}
-
-.page-header .btn-danger-reinit:hover {
-  background-color: #b02a37;
-}
-
-.page-header .btn-export {
-  background-color: #28a745;
-}
-
-.page-header .btn-export:hover {
-  background-color: #218838;
-}
-
-.page-header .btn-import {
-  background-color: #0d6efd;
-}
-
-.page-header .btn-import:hover {
-  background-color: #0b5ed7;
-}
-
 /* 模态对话框样式 */
 .modal {
   position: fixed;

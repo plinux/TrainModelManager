@@ -24,7 +24,7 @@ const OptionEditor = {
     // 存储原始值
     row.querySelectorAll('[data-field]').forEach(cell => {
       const fieldName = cell.dataset.field;
-      this.originalValues[fieldName] = cell.innerHTML.trim();
+      this.originalValues[fieldName] = cell.textContent.trim();
     });
 
     // 获取字段列表
@@ -177,7 +177,7 @@ const OptionEditor = {
     Object.keys(this.originalValues).forEach(field => {
       const cell = row.querySelector(`[data-field="${field}"]`);
       if (cell) {
-        cell.innerHTML = this.originalValues[field];
+        cell.textContent = this.originalValues[field];
       }
     });
 
@@ -186,161 +186,6 @@ const OptionEditor = {
 
     // 恢复按钮状态
     this.restoreButtonState(row);
-  }
-};
-
-// 模态框管理
-const ModalManager = {
-  /**
-   * 打开重新初始化对话框
-   */
-  openReinitDialog() {
-    document.getElementById('reinit-modal').style.display = 'flex';
-    document.getElementById('reinit-input').value = '';
-    document.getElementById('reinit-confirm-btn').disabled = true;
-  },
-
-  /**
-   * 关闭重新初始化对话框
-   */
-  closeReinitDialog() {
-    document.getElementById('reinit-modal').style.display = 'none';
-  },
-
-  /**
-   * 检查重新初始化输入
-   */
-  checkReinitInput() {
-    const input = document.getElementById('reinit-input');
-    const btn = document.getElementById('reinit-confirm-btn');
-    btn.disabled = input.value.trim().toLowerCase() !== 'yes';
-  },
-
-  /**
-   * 执行最终确认
-   */
-  proceedToFinalConfirmation() {
-    this.closeReinitDialog();
-    const confirmed = confirm('真的要删除所有数据并重新初始化数据库吗？此操作不可撤销！');
-    if (confirmed) {
-      this.submitReinit();
-    }
-  },
-
-  /**
-   * 提交重新初始化
-   */
-  submitReinit() {
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/options/reinit';
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-  },
-
-  /**
-   * 打开导入对话框
-   */
-  openImportDialog() {
-    document.getElementById('import-modal').style.display = 'flex';
-    document.getElementById('import-file').value = '';
-    document.getElementById('import-result').style.display = 'none';
-  },
-
-  /**
-   * 关闭导入对话框
-   */
-  closeImportDialog() {
-    document.getElementById('import-modal').style.display = 'none';
-  }
-};
-
-// 导入导出管理
-const ImportExport = {
-  /**
-   * 从 Excel 导入
-   */
-  importFromExcel() {
-    const fileInput = document.getElementById('import-file');
-    const file = fileInput.files[0];
-
-    if (!file) {
-      alert('请选择要导入的Excel文件');
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const resultDiv = document.getElementById('import-result');
-    const importBtn = document.getElementById('import-btn');
-
-    resultDiv.style.display = 'block';
-    resultDiv.className = 'import-result loading';
-    resultDiv.innerHTML = '<p>正在导入中，请稍候...</p>';
-    importBtn.disabled = true;
-
-    fetch('/api/import/excel', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      importBtn.disabled = false;
-      if (data.success) {
-        resultDiv.className = 'import-result success';
-        resultDiv.innerHTML = `
-          <p>导入成功！</p>
-          ${data.summary ? '<ul>' + Object.entries(data.summary).map(([key, value]) => `<li>${key}: ${value}条</li>`).join('') + '</ul>' : ''}
-        `;
-        setTimeout(() => location.reload(), 2000);
-      } else {
-        resultDiv.className = 'import-result error';
-        resultDiv.innerHTML = `<p>导入失败: ${data.error || '未知错误'}</p>`;
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      importBtn.disabled = false;
-      resultDiv.className = 'import-result error';
-      resultDiv.innerHTML = '<p>导入失败，请重试</p>';
-    });
-  },
-
-  /**
-   * 导出到 Excel
-   */
-  exportToExcel() {
-    fetch('/api/export/excel')
-    .then(response => {
-      if (response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/vnd.openxmlformats-officedocument')) {
-          return response.blob().then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = response.headers.get('content-disposition')?.match(/filename=(.+)/)?.[1] || '火车模型数据导出.xlsx';
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-          });
-        }
-        return response.json();
-      }
-      return response.json();
-    })
-    .then(data => {
-      if (data && data.success === false) {
-        alert(data.error || '导出失败');
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('导出失败，请重试');
-    });
   }
 };
 
@@ -390,52 +235,6 @@ function saveRow(button, type) {
 
 function cancelEdit(button) {
   OptionEditor.cancelEdit(button);
-}
-
-function openReinitDialog() {
-  ModalManager.openReinitDialog();
-}
-
-function closeReinitDialog() {
-  ModalManager.closeReinitDialog();
-}
-
-function checkReinitInput() {
-  ModalManager.checkReinitInput();
-}
-
-function proceedToFinalConfirmation() {
-  ModalManager.proceedToFinalConfirmation();
-}
-
-function submitReinit() {
-  ModalManager.submitReinit();
-}
-
-function confirmReinit() {
-  const confirmed = confirm('警告：此操作将删除所有数据并重新初始化数据库！\n\n此操作不可撤销，请确认是否继续？');
-  if (confirmed) {
-    const doubleConfirmed = confirm('再次确认：真的要删除所有数据吗？');
-    if (doubleConfirmed) {
-      ModalManager.submitReinit();
-    }
-  }
-}
-
-function openImportDialog() {
-  ModalManager.openImportDialog();
-}
-
-function closeImportDialog() {
-  ModalManager.closeImportDialog();
-}
-
-function importFromExcel() {
-  ImportExport.importFromExcel();
-}
-
-function exportToExcel() {
-  ImportExport.exportToExcel();
 }
 
 function deleteItem(button, type, id, deleteUrl) {

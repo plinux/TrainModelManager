@@ -6,6 +6,7 @@ from .trainset import trainset_bp
 from .locomotive_head import locomotive_head_bp
 from .options import options_bp
 from .api import api_bp
+from .system import system_bp
 
 __all__ = [
   'main_bp',
@@ -14,7 +15,8 @@ __all__ = [
   'trainset_bp',
   'locomotive_head_bp',
   'options_bp',
-  'api_bp'
+  'api_bp',
+  'system_bp'
 ]
 
 
@@ -27,3 +29,4 @@ def register_blueprints(app):
   app.register_blueprint(locomotive_head_bp)
   app.register_blueprint(options_bp)
   app.register_blueprint(api_bp)
+  app.register_blueprint(system_bp)

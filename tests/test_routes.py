@@ -44,6 +44,16 @@ class TestPageRoutes:
         assert response.status_code == 200
         assert '选项维护' in response.data.decode('utf-8')
 
+    def test_system_page(self, client):
+        """测试系统维护页面"""
+        response = client.get('/system')
+        assert response.status_code == 200
+        assert '系统维护' in response.data.decode('utf-8')
+        # 验证三个功能按钮
+        assert '导出数据到 Excel' in response.data.decode('utf-8')
+        assert '从 Excel 导入数据' in response.data.decode('utf-8')
+        assert '重新初始化数据库' in response.data.decode('utf-8')
+
 
 class TestLocomotiveHeadRoutes:
     """先头车路由测试 - 验证 depot 已被移除"""

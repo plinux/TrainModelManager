@@ -270,39 +270,3 @@ def edit_option_api(type):
     db.session.rollback()
     logger.error(f"Error editing {type}: {e}")
     return jsonify(api_error(str(e))), 500
-
-
-@options_bp.route('/options/reinit', methods=['POST'])
-def reinit_database():
-  """重新初始化数据库"""
-  try:
-    # 删除所有数据（按外键依赖顺序）
-    from models import CarriageItem, Locomotive, CarriageSet, Trainset, LocomotiveHead
-    CarriageItem.query.delete()
-    Locomotive.query.delete()
-    CarriageSet.query.delete()
-    Trainset.query.delete()
-    LocomotiveHead.query.delete()
-    LocomotiveModel.query.delete()
-    TrainsetModel.query.delete()
-    CarriageModel.query.delete()
-    LocomotiveSeries.query.delete()
-    CarriageSeries.query.delete()
-    TrainsetSeries.query.delete()
-    ChipModel.query.delete()
-    ChipInterface.query.delete()
-    Depot.query.delete()
-    Merchant.query.delete()
-    Brand.query.delete()
-    PowerType.query.delete()
-    db.session.commit()
-
-    # 运行初始化脚本
-    subprocess.run(['python', 'init_db.py'], check=True)
-
-    logger.info("Database reinitialized successfully")
-  except Exception as e:
-    db.session.rollback()
-    logger.error(f"Error reinitializing database: {e}")
-
-  return redirect(url_for('options.options'))

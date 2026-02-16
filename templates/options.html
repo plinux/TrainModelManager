@@ -5,9 +5,6 @@
 {% block content %}
 <div class="page-header">
   <h1>选项维护</h1>
-  <button onclick="openImportDialog()" class="btn-import">从Excel导入数据</button>
-  <button onclick="exportToExcel()" class="btn-export">导出数据到Excel</button>
-  <button onclick="openReinitDialog()" class="btn-danger-reinit">重新初始化数据库</button>
 </div>
 
 <div class="option-groups">
@@ -62,84 +59,6 @@
     <div class="tab-group">
       <button onclick="showTab('trainset_series')" class="tab-btn">动车组系列</button>
       <button onclick="showTab('trainset_models')" class="tab-btn">动车组型号</button>
-    </div>
-  </div>
-</div>
-
-<!-- Excel导入对话框 -->
-<div id="import-modal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>📊 从Excel导入数据</h3>
-    </div>
-    <div class="modal-body">
-      <p>请上传Excel文件，将根据工作表名自动导入到对应的数据表：</p>
-      <ul class="import-info">
-        <li><strong>机车</strong> → 机车模型表</li>
-        <li><strong>车厢</strong> → 车厢模型表</li>
-        <li><strong>动车组</strong> → 动车组模型表</li>
-        <li><strong>先头车</strong> → 先头车模型表</li>
-      </ul>
-      <p>Excel列名必须与系统中的字段名对应。</p>
-
-      <div class="import-step">
-        <input type="file" id="import-file" accept=".xlsx,.xls" />
-        <div class="modal-buttons">
-          <button onclick="closeImportDialog()" class="btn-cancel">取消</button>
-          <button onclick="importFromExcel()" class="btn-primary" id="import-btn">导入</button>
-        </div>
-      </div>
-      <div id="import-result" class="import-result" style="display:none;"></div>
-    </div>
-  </div>
-</div>
-
-<!-- 重新初始化数据库确认对话框 -->
-<div id="reinit-modal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>⚠️ 危险操作确认</h3>
-    </div>
-    <div class="modal-body">
-      <p class="warning-text">此操作将删除所有数据并重新初始化数据库！</p>
-      <p class="warning-text">此操作不可撤销，请确认是否继续？</p>
-
-      <div class="confirmation-step">
-        <p>请输入 <strong>yes</strong> 继续</p>
-        <input type="text" id="reinit-input" placeholder="请输入 yes" oninput="checkReinitInput()">
-        <div class="modal-buttons">
-          <button onclick="closeReinitDialog()" class="btn-cancel">取消</button>
-          <button onclick="proceedToFinalConfirmation()" class="btn-danger" id="reinit-confirm-btn" disabled>确认</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Excel导入对话框 -->
-<div id="import-modal" class="modal" style="display:none;">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>📊 从Excel导入数据</h3>
-    </div>
-    <div class="modal-body">
-      <p>请上传Excel文件，将根据工作表名自动导入到对应的数据表：</p>
-      <ul class="import-info">
-        <li><strong>机车</strong> → 机车模型表</li>
-        <li><strong>车厢</strong> → 车厢模型表</li>
-        <li><strong>动车组</strong> → 动车组模型表</li>
-        <li><strong>先头车</strong> → 先头车模型表</li>
-      </ul>
-      <p>Excel列名必须与系统中的字段名对应。</p>
-
-      <div class="import-step">
-        <input type="file" id="import-file" accept=".xlsx,.xls" />
-        <div class="modal-buttons">
-          <button onclick="closeImportDialog()" class="btn-cancel">取消</button>
-          <button onclick="importFromExcel()" class="btn-primary" id="import-btn">导入</button>
-        </div>
-      </div>
-      <div id="import-result" class="import-result" style="display:none;"></div>
     </div>
   </div>
 </div>
@@ -611,22 +530,6 @@
   font-weight: 500;
 }
 
-.btn-danger-reinit {
-  padding: 0.75rem 1.5rem;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-}
-
-.btn-danger-reinit:hover {
-  background-color: #b02a37;
-}
-
 .tabs-container {
   margin-top: 2rem;
 }
@@ -700,55 +603,6 @@
   .tab-btn {
     padding: 0.05rem 0.2rem;
   }
-}
-
-/* 导入对话框样式 */
-.import-info {
-  background-color: #f8f9fa;
-  padding: 1rem;
-  border-radius: 4px;
-  margin: 1rem 0;
-  list-style-position: inside;
-}
-
-.import-step {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid #dee2e6;
-}
-
-.import-step input[type="file"] {
-  width: 100%;
-  margin-bottom: 1rem;
-}
-
-.btn-primary {
-  background-color: #0d6efd;
-}
-
-.btn-primary:hover {
-  background-color: #0b5ed7;
-}
-
-.import-result {
-  margin-top: 1rem;
-  padding: 1rem;
-  border-radius: 4px;
-}
-
-.import-result.success {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.import-result.error {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-.import-result.loading {
-  background-color: #cce5ff;
-  color: #004085;
 }
 </style>
 {% endblock %}

@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}系统维护 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<div class="system-page">
+  <h1>系统维护</h1>
+
+  <div class="system-sections">
+    <!-- 数据导出 -->
+    <section class="system-section">
+      <h2>数据导出</h2>
+      <p class="section-desc">将系统中所有模型数据导出到 Excel 文件，包含机车、车厢、动车组和先头车数据。</p>
+      <div class="section-actions">
+        <button type="button" class="btn btn-primary" id="btn-export">
+          导出数据到 Excel
+        </button>
+      </div>
+    </section>
+
+    <!-- 数据导入 -->
+    <section class="system-section">
+      <h2>数据导入</h2>
+      <p class="section-desc">从 Excel 文件导入模型数据。文件应包含与导出格式相同的工作表结构。</p>
+      <div class="section-actions">
+        <input type="file" id="import-file" accept=".xlsx,.xls" style="display: none;">
+        <button type="button" class="btn btn-primary" id="btn-import">
+          从 Excel 导入数据
+        </button>
+        <span id="import-filename" class="filename"></span>
+      </div>
+    </section>
+
+    <!-- 数据库初始化 -->
+    <section class="system-section danger-zone">
+      <h2>数据库初始化</h2>
+      <p class="section-desc">
+        <strong class="warning-text">危险操作！</strong>
+        重新初始化数据库将删除所有数据并恢复为预置数据。此操作不可撤销。
+      </p>
+      <div class="section-actions">
+        <button type="button" class="btn btn-danger" id="btn-reinit">
+          重新初始化数据库
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 确认对话框 -->
+<div id="confirm-dialog" class="modal-overlay" style="display: none;">
+  <div class="modal-dialog">
+    <h3>确认操作</h3>
+    <p id="confirm-message"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="btn-cancel">取消</button>
+      <button type="button" class="btn btn-danger" id="btn-confirm">确认</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.system-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.system-page h1 {
+  margin-bottom: 2rem;
+  color: var(--color-primary, #333);
+}
+
+.system-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.system-section {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: var(--border-radius, 4px);
+  padding: 1.5rem;
+}
+
+.system-section h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: var(--color-primary, #333);
+}
+
+.section-desc {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.danger-zone {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+
+.warning-text {
+  color: #dc3545;
+}
+
+.btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: var(--border-radius, 4px);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #545b62;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.filename {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* 模态对话框 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  background: white;
+  padding: 1.5rem;
+  border-radius: var(--border-radius, 4px);
+  max-width: 400px;
+  width: 90%;
+}
+
+.modal-dialog h3 {
+  margin: 0 0 1rem 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/system.js') }}"></script>
+{% endblock %}
