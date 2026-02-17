@@ -74,7 +74,7 @@ def validate_required(value, field_name):
 
 @api_bp.route('/api/import/excel', methods=['POST'])
 def import_from_excel():
-  """从 Excel 文件导入数据"""
+  """从 Excel 文件导入数据 - 自适应导入，根据 sheet 名称判断导入类型"""
   try:
     if 'file' not in request.files:
       return jsonify({'success': False, 'error': '未选择文件'}), 400
@@ -89,6 +89,32 @@ def import_from_excel():
     workbook = openpyxl.load_workbook(file)
     summary = {}
     errors = []
+
+    # 模型数据 sheet 名称映射
+    model_sheets = {
+      '机车': ('机车模型', import_locomotive_data),
+      '车厢': ('车厢模型', import_carriage_data),
+      '动车组': ('动车组模型', import_trainset_data),
+      '先头车': ('先头车模型', import_locomotive_head_data)
+    }
+
+    # 系统信息 sheet 名称映射
+    system_sheets = {
+      '品牌': ('品牌', import_brand_data),
+      '机务段': ('机务段', import_depot_data),
+      '车辆段': ('机务段', import_depot_data),  # 别名
+      '商家': ('商家', import_merchant_data),
+      '动力类型': ('动力类型', import_power_type_data),
+      '芯片接口': ('芯片接口', import_chip_interface_data),
+      '芯片型号': ('芯片型号', import_chip_model_data),
+      '机车系列': ('机车系列', import_locomotive_series_data),
+      '机关系列': ('机车系列', import_locomotive_series_data),  # 兼容旧名称
+      '车厢系列': ('车厢系列', import_carriage_series_data),
+      '动车组系列': ('动车组系列', import_trainset_series_data),
+      '机车车型': ('机车车型', import_locomotive_model_data),
+      '车厢车型': ('车厢车型', import_carriage_model_data),
+      '动车组车型': ('动车组车型', import_trainset_model_data)
+    }
 
     for sheet_name in workbook.sheetnames:
       sheet = workbook[sheet_name]
@@ -106,19 +132,16 @@ def import_from_excel():
         continue
 
       try:
-        # 每个模型类型使用独立事务
-        if sheet_name == '机车':
-          count = import_locomotive_data(data)
-          summary['机车模型'] = count
-        elif sheet_name == '车厢':
-          count = import_carriage_data(data)
-          summary['车厢模型'] = count
-        elif sheet_name == '动车组':
-          count = import_trainset_data(data)
-          summary['动车组模型'] = count
-        elif sheet_name == '先头车':
-          count = import_locomotive_head_data(data)
-          summary['先头车模型'] = count
+        # 检查是否是模型数据
+        if sheet_name in model_sheets:
+          display_name, import_func = model_sheets[sheet_name]
+          count = import_func(data)
+          summary[display_name] = count
+        # 检查是否是系统信息
+        elif sheet_name in system_sheets:
+          display_name, import_func = system_sheets[sheet_name]
+          count = import_func(data)
+          summary[display_name] = count
         else:
           logger.warning(f"Unknown sheet name: {sheet_name}")
       except Exception as e:
@@ -366,82 +389,278 @@ def import_locomotive_head_data(data):
   return count
 
 
+# 系统信息导入函数
+def import_brand_data(data):
+  """导入品牌数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('品牌')
+    if not name:
+      continue
+    # 检查是否已存在
+    if not Brand.query.filter_by(name=name).first():
+      brand = Brand(
+        name=name,
+        search_url=row.get('搜索地址') or row.get('search_url') or None
+      )
+      db.session.add(brand)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_depot_data(data):
+  """导入机务段/车辆段数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('机务段') or row.get('车辆段')
+    if not name:
+      continue
+    if not Depot.query.filter_by(name=name).first():
+      depot = Depot(name=name)
+      db.session.add(depot)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_merchant_data(data):
+  """导入商家数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('商家')
+    if not name:
+      continue
+    if not Merchant.query.filter_by(name=name).first():
+      merchant = Merchant(name=name)
+      db.session.add(merchant)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_power_type_data(data):
+  """导入动力类型数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('动力类型')
+    if not name:
+      continue
+    if not PowerType.query.filter_by(name=name).first():
+      power_type = PowerType(name=name)
+      db.session.add(power_type)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_chip_interface_data(data):
+  """导入芯片接口数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('芯片接口')
+    if not name:
+      continue
+    if not ChipInterface.query.filter_by(name=name).first():
+      chip_interface = ChipInterface(name=name)
+      db.session.add(chip_interface)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_chip_model_data(data):
+  """导入芯片型号数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('芯片型号')
+    if not name:
+      continue
+    if not ChipModel.query.filter_by(name=name).first():
+      chip_model = ChipModel(name=name)
+      db.session.add(chip_model)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_locomotive_series_data(data):
+  """导入机车系列数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('系列')
+    if not name:
+      continue
+    if not LocomotiveSeries.query.filter_by(name=name).first():
+      series = LocomotiveSeries(name=name)
+      db.session.add(series)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_carriage_series_data(data):
+  """导入车厢系列数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('系列')
+    if not name:
+      continue
+    if not CarriageSeries.query.filter_by(name=name).first():
+      series = CarriageSeries(name=name)
+      db.session.add(series)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_trainset_series_data(data):
+  """导入动车组系列数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('系列')
+    if not name:
+      continue
+    if not TrainsetSeries.query.filter_by(name=name).first():
+      series = TrainsetSeries(name=name)
+      db.session.add(series)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_locomotive_model_data(data):
+  """导入机车车型数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('车型')
+    if not name:
+      continue
+    if not LocomotiveModel.query.filter_by(name=name).first():
+      model = LocomotiveModel(
+        name=name,
+        series_id=find_id_by_name(LocomotiveSeries, row.get('系列')),
+        power_type_id=find_id_by_name(PowerType, row.get('动力类型'))
+      )
+      db.session.add(model)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_carriage_model_data(data):
+  """导入车厢车型数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('车型')
+    if not name:
+      continue
+    if not CarriageModel.query.filter_by(name=name).first():
+      model = CarriageModel(
+        name=name,
+        series_id=find_id_by_name(CarriageSeries, row.get('系列')),
+        type=row.get('类型') or '客车'
+      )
+      db.session.add(model)
+      count += 1
+  db.session.commit()
+  return count
+
+
+def import_trainset_model_data(data):
+  """导入动车组车型数据"""
+  count = 0
+  for row in data:
+    name = row.get('名称') or row.get('车型')
+    if not name:
+      continue
+    if not TrainsetModel.query.filter_by(name=name).first():
+      model = TrainsetModel(
+        name=name,
+        series_id=find_id_by_name(TrainsetSeries, row.get('系列')),
+        power_type_id=find_id_by_name(PowerType, row.get('动力类型'))
+      )
+      db.session.add(model)
+      count += 1
+  db.session.commit()
+  return count
+
+
 @api_bp.route('/api/export/excel')
 def export_to_excel():
-  """导出数据到Excel"""
+  """导出数据到Excel - 支持 mode 参数: models(模型数据), system(系统信息), all(全部)"""
   try:
-    has_data = (
+    mode = request.args.get('mode', 'models')
+
+    # 检查是否有数据
+    has_model_data = (
       Locomotive.query.count() > 0 or
       CarriageSet.query.count() > 0 or
       Trainset.query.count() > 0 or
       LocomotiveHead.query.count() > 0
     )
+    has_system_data = (
+      Brand.query.count() > 0 or
+      Depot.query.count() > 0 or
+      Merchant.query.count() > 0 or
+      PowerType.query.count() > 0 or
+      ChipInterface.query.count() > 0 or
+      ChipModel.query.count() > 0
+    )
 
-    if not has_data:
-      return jsonify({'success': False, 'error': '当前没有可导出的数据，请先添加模型后再导出'}), 400
+    if mode == 'models' and not has_model_data:
+      return jsonify({'success': False, 'error': '当前没有可导出的模型数据'}), 400
+    if mode == 'system' and not has_system_data:
+      return jsonify({'success': False, 'error': '当前没有可导出的系统信息'}), 400
+    if mode == 'all' and not has_model_data and not has_system_data:
+      return jsonify({'success': False, 'error': '当前没有可导出的数据'}), 400
 
     workbook = openpyxl.Workbook()
 
     if 'Sheet' in workbook.sheetnames:
       workbook.remove(workbook['Sheet'])
 
-    # 导出机车模型
-    if Locomotive.query.count() > 0:
-      sheet = workbook.create_sheet('机车')
-      headers = ['系列', '动力', '车型', '品牌', '机务段', '挂牌', '颜色', '比例', '机车号', '编号',
-             '芯片接口', '芯片型号', '价格', '总价', '货号', '购买日期', '购买商家']
-      sheet.append(headers)
+    # 导出模型数据（models 或 all 模式）
+    if mode in ('models', 'all'):
+      # 导出机车模型
+      if Locomotive.query.count() > 0:
+        sheet = workbook.create_sheet('机车')
+        headers = ['系列', '动力', '车型', '品牌', '机务段', '挂牌', '颜色', '比例', '机车号', '编号',
+               '芯片接口', '芯片型号', '价格', '总价', '货号', '购买日期', '购买商家']
+        sheet.append(headers)
 
-      for loco in Locomotive.query.all():
-        sheet.append([
-          loco.series.name if loco.series else '',
-          loco.power_type.name if loco.power_type else '',
-          loco.model.name if loco.model else '',
-          loco.brand.name if loco.brand else '',
-          loco.depot.name if loco.depot else '',
-          loco.plaque or '',
-          loco.color or '',
-          loco.scale or '',
-          loco.locomotive_number or '',
-          loco.decoder_number or '',
-          loco.chip_interface.name if loco.chip_interface else '',
-          loco.chip_model.name if loco.chip_model else '',
-          loco.price or '',
-          loco.total_price or '',
-          loco.item_number or '',
-          loco.purchase_date.strftime('%Y-%m-%d') if loco.purchase_date else '',
-          loco.merchant.name if loco.merchant else ''
-        ])
-
-    # 导出车厢模型（使用合并单元格标识套装）
-    if CarriageSet.query.count() > 0:
-      sheet = workbook.create_sheet('车厢')
-      headers = ['品牌', '系列', '车辆段', '车次', '挂牌', '货号', '比例', '车型', '车辆号', '颜色', '灯光', '总价', '购买日期', '购买商家']
-      sheet.append(headers)
-
-      current_row = 2  # 从第2行开始（第1行是表头）
-      for carriage_set in CarriageSet.query.all():
-        items = carriage_set.items
-        if not items:
-          # 无车厢项的套装，单独一行
+        for loco in Locomotive.query.all():
           sheet.append([
-            carriage_set.brand.name if carriage_set.brand else '',
-            carriage_set.series.name if carriage_set.series else '',
-            carriage_set.depot.name if carriage_set.depot else '',
-            carriage_set.train_number or '',
-            carriage_set.plaque or '',
-            carriage_set.item_number or '',
-            carriage_set.scale or '',
-            '', '', '', '',
-            carriage_set.total_price or '',
-            carriage_set.purchase_date.strftime('%Y-%m-%d') if carriage_set.purchase_date else '',
-            carriage_set.merchant.name if carriage_set.merchant else ''
+            loco.series.name if loco.series else '',
+            loco.power_type.name if loco.power_type else '',
+            loco.model.name if loco.model else '',
+            loco.brand.name if loco.brand else '',
+            loco.depot.name if loco.depot else '',
+            loco.plaque or '',
+            loco.color or '',
+            loco.scale or '',
+            loco.locomotive_number or '',
+            loco.decoder_number or '',
+            loco.chip_interface.name if loco.chip_interface else '',
+            loco.chip_model.name if loco.chip_model else '',
+            loco.price or '',
+            loco.total_price or '',
+            loco.item_number or '',
+            loco.purchase_date.strftime('%Y-%m-%d') if loco.purchase_date else '',
+            loco.merchant.name if loco.merchant else ''
           ])
-          current_row += 1
-        else:
-          # 有车厢项的套装，合并公共信息列
-          start_row = current_row
-          for item in items:
+
+      # 导出车厢模型（使用合并单元格标识套装）
+      if CarriageSet.query.count() > 0:
+        sheet = workbook.create_sheet('车厢')
+        headers = ['品牌', '系列', '车辆段', '车次', '挂牌', '货号', '比例', '车型', '车辆号', '颜色', '灯光', '总价', '购买日期', '购买商家']
+        sheet.append(headers)
+
+        current_row = 2  # 从第2行开始（第1行是表头）
+        for carriage_set in CarriageSet.query.all():
+          items = carriage_set.items
+          if not items:
+            # 无车厢项的套装，单独一行
             sheet.append([
               carriage_set.brand.name if carriage_set.brand else '',
               carriage_set.series.name if carriage_set.series else '',
@@ -450,86 +669,212 @@ def export_to_excel():
               carriage_set.plaque or '',
               carriage_set.item_number or '',
               carriage_set.scale or '',
-              item.model.name if item.model else '',
-              item.car_number or '',
-              item.color or '',
-              item.lighting or '',
+              '', '', '', '',
               carriage_set.total_price or '',
               carriage_set.purchase_date.strftime('%Y-%m-%d') if carriage_set.purchase_date else '',
               carriage_set.merchant.name if carriage_set.merchant else ''
             ])
             current_row += 1
+          else:
+            # 有车厢项的套装，合并公共信息列
+            start_row = current_row
+            for item in items:
+              sheet.append([
+                carriage_set.brand.name if carriage_set.brand else '',
+                carriage_set.series.name if carriage_set.series else '',
+                carriage_set.depot.name if carriage_set.depot else '',
+                carriage_set.train_number or '',
+                carriage_set.plaque or '',
+                carriage_set.item_number or '',
+                carriage_set.scale or '',
+                item.model.name if item.model else '',
+                item.car_number or '',
+                item.color or '',
+                item.lighting or '',
+                carriage_set.total_price or '',
+                carriage_set.purchase_date.strftime('%Y-%m-%d') if carriage_set.purchase_date else '',
+                carriage_set.merchant.name if carriage_set.merchant else ''
+              ])
+              current_row += 1
 
-          # 合并公共信息列（前7列：A-G，即品牌到比例）
-          # 合并总价、购买日期、购买商家列（L-N，即第12-14列）
-          if len(items) > 1:
-            end_row = current_row - 1
-            # 合并前7列（品牌、系列、车辆段、车次、挂牌、货号、比例）
-            for col in range(1, 8):  # A-G 列
-              sheet.merge_cells(start_row=start_row, start_column=col, end_row=end_row, end_column=col)
-            # 合并后3列（总价、购买日期、购买商家）
-            for col in range(12, 15):  # L-N 列
-              sheet.merge_cells(start_row=start_row, start_column=col, end_row=end_row, end_column=col)
+            # 合并公共信息列（前7列：A-G，即品牌到比例）
+            # 合并总价、购买日期、购买商家列（L-N，即第12-14列）
+            if len(items) > 1:
+              end_row = current_row - 1
+              # 合并前7列（品牌、系列、车辆段、车次、挂牌、货号、比例）
+              for col in range(1, 8):  # A-G 列
+                sheet.merge_cells(start_row=start_row, start_column=col, end_row=end_row, end_column=col)
+              # 合并后3列（总价、购买日期、购买商家）
+              for col in range(12, 15):  # L-N 列
+                sheet.merge_cells(start_row=start_row, start_column=col, end_row=end_row, end_column=col)
 
-    # 导出动车组模型
-    if Trainset.query.count() > 0:
-      sheet = workbook.create_sheet('动车组')
-      headers = ['系列', '动力', '车型', '品牌', '动车段', '挂牌', '颜色', '比例', '编组', '动车号', '编号',
-             '头车灯', '室内灯', '芯片接口', '芯片型号', '价格', '总价', '货号', '购买日期', '购买商家']
-      sheet.append(headers)
+      # 导出动车组模型
+      if Trainset.query.count() > 0:
+        sheet = workbook.create_sheet('动车组')
+        headers = ['系列', '动力', '车型', '品牌', '动车段', '挂牌', '颜色', '比例', '编组', '动车号', '编号',
+               '头车灯', '室内灯', '芯片接口', '芯片型号', '价格', '总价', '货号', '购买日期', '购买商家']
+        sheet.append(headers)
 
-      for ts in Trainset.query.all():
-        sheet.append([
-          ts.series.name if ts.series else '',
-          ts.power_type.name if ts.power_type else '',
-          ts.model.name if ts.model else '',
-          ts.brand.name if ts.brand else '',
-          ts.depot.name if ts.depot else '',
-          ts.plaque or '',
-          ts.color or '',
-          ts.scale or '',
-          ts.formation or '',
-          ts.trainset_number or '',
-          ts.decoder_number or '',
-          '是' if ts.head_light else '否',
-          ts.interior_light or '',
-          ts.chip_interface.name if ts.chip_interface else '',
-          ts.chip_model.name if ts.chip_model else '',
-          ts.price or '',
-          ts.total_price or '',
-          ts.item_number or '',
-          ts.purchase_date.strftime('%Y-%m-%d') if ts.purchase_date else '',
-          ts.merchant.name if ts.merchant else ''
-        ])
+        for ts in Trainset.query.all():
+          sheet.append([
+            ts.series.name if ts.series else '',
+            ts.power_type.name if ts.power_type else '',
+            ts.model.name if ts.model else '',
+            ts.brand.name if ts.brand else '',
+            ts.depot.name if ts.depot else '',
+            ts.plaque or '',
+            ts.color or '',
+            ts.scale or '',
+            ts.formation or '',
+            ts.trainset_number or '',
+            ts.decoder_number or '',
+            '是' if ts.head_light else '否',
+            ts.interior_light or '',
+            ts.chip_interface.name if ts.chip_interface else '',
+            ts.chip_model.name if ts.chip_model else '',
+            ts.price or '',
+            ts.total_price or '',
+            ts.item_number or '',
+            ts.purchase_date.strftime('%Y-%m-%d') if ts.purchase_date else '',
+            ts.merchant.name if ts.merchant else ''
+          ])
 
-    # 导出先头车模型
-    if LocomotiveHead.query.count() > 0:
-      sheet = workbook.create_sheet('先头车')
-      headers = ['车型', '品牌', '涂装', '比例', '头车灯', '室内灯', '价格', '总价', '货号', '购买日期', '购买商家']
-      sheet.append(headers)
+      # 导出先头车模型
+      if LocomotiveHead.query.count() > 0:
+        sheet = workbook.create_sheet('先头车')
+        headers = ['车型', '品牌', '涂装', '比例', '头车灯', '室内灯', '价格', '总价', '货号', '购买日期', '购买商家']
+        sheet.append(headers)
 
-      for head in LocomotiveHead.query.all():
-        sheet.append([
-          head.model.name if head.model else '',
-          head.brand.name if head.brand else '',
-          head.special_color or '',
-          head.scale or '',
-          '是' if head.head_light else '否',
-          head.interior_light or '',
-          head.price or '',
-          head.total_price or '',
-          head.item_number or '',
-          head.purchase_date.strftime('%Y-%m-%d') if head.purchase_date else '',
-          head.merchant.name if head.merchant else ''
-        ])
+        for head in LocomotiveHead.query.all():
+          sheet.append([
+            head.model.name if head.model else '',
+            head.brand.name if head.brand else '',
+            head.special_color or '',
+            head.scale or '',
+            '是' if head.head_light else '否',
+            head.interior_light or '',
+            head.price or '',
+            head.total_price or '',
+            head.item_number or '',
+            head.purchase_date.strftime('%Y-%m-%d') if head.purchase_date else '',
+            head.merchant.name if head.merchant else ''
+          ])
+
+    # 导出系统信息（system 或 all 模式）
+    if mode in ('system', 'all'):
+      # 导出品牌
+      if Brand.query.count() > 0:
+        sheet = workbook.create_sheet('品牌')
+        sheet.append(['名称', '搜索地址'])
+        for brand in Brand.query.all():
+          sheet.append([brand.name, brand.search_url or ''])
+
+      # 导出机务段
+      if Depot.query.count() > 0:
+        sheet = workbook.create_sheet('机务段')
+        sheet.append(['名称'])
+        for depot in Depot.query.all():
+          sheet.append([depot.name])
+
+      # 导出商家
+      if Merchant.query.count() > 0:
+        sheet = workbook.create_sheet('商家')
+        sheet.append(['名称'])
+        for merchant in Merchant.query.all():
+          sheet.append([merchant.name])
+
+      # 导出动力类型
+      if PowerType.query.count() > 0:
+        sheet = workbook.create_sheet('动力类型')
+        sheet.append(['名称'])
+        for pt in PowerType.query.all():
+          sheet.append([pt.name])
+
+      # 导出芯片接口
+      if ChipInterface.query.count() > 0:
+        sheet = workbook.create_sheet('芯片接口')
+        sheet.append(['名称'])
+        for ci in ChipInterface.query.all():
+          sheet.append([ci.name])
+
+      # 导出芯片型号
+      if ChipModel.query.count() > 0:
+        sheet = workbook.create_sheet('芯片型号')
+        sheet.append(['名称'])
+        for cm in ChipModel.query.all():
+          sheet.append([cm.name])
+
+      # 导出机车系列
+      if LocomotiveSeries.query.count() > 0:
+        sheet = workbook.create_sheet('机车系列')
+        sheet.append(['名称'])
+        for series in LocomotiveSeries.query.all():
+          sheet.append([series.name])
+
+      # 导出车厢系列
+      if CarriageSeries.query.count() > 0:
+        sheet = workbook.create_sheet('车厢系列')
+        sheet.append(['名称'])
+        for series in CarriageSeries.query.all():
+          sheet.append([series.name])
+
+      # 导出动车组系列
+      if TrainsetSeries.query.count() > 0:
+        sheet = workbook.create_sheet('动车组系列')
+        sheet.append(['名称'])
+        for series in TrainsetSeries.query.all():
+          sheet.append([series.name])
+
+      # 导出机车车型
+      if LocomotiveModel.query.count() > 0:
+        sheet = workbook.create_sheet('机车车型')
+        sheet.append(['名称', '系列', '动力类型'])
+        for model in LocomotiveModel.query.all():
+          sheet.append([
+            model.name,
+            model.series.name if model.series else '',
+            model.power_type.name if model.power_type else ''
+          ])
+
+      # 导出车厢车型
+      if CarriageModel.query.count() > 0:
+        sheet = workbook.create_sheet('车厢车型')
+        sheet.append(['名称', '系列', '类型'])
+        for model in CarriageModel.query.all():
+          sheet.append([
+            model.name,
+            model.series.name if model.series else '',
+            model.type or ''
+          ])
+
+      # 导出动车组车型
+      if TrainsetModel.query.count() > 0:
+        sheet = workbook.create_sheet('动车组车型')
+        sheet.append(['名称', '系列', '动力类型'])
+        for model in TrainsetModel.query.all():
+          sheet.append([
+            model.name,
+            model.series.name if model.series else '',
+            model.power_type.name if model.power_type else ''
+          ])
+
+    # 加粗所有工作表的第一行（标题行）
+    from openpyxl.styles import Font
+    bold_font = Font(bold=True)
+    for sheet_name in workbook.sheetnames:
+      sheet = workbook[sheet_name]
+      for cell in sheet[1]:
+        cell.font = bold_font
 
     output = BytesIO()
     workbook.save(output)
     output.seek(0)
 
-    filename = f'TMM_Export_{datetime.now().strftime("%Y%m%d_%H%M%S")}_{random.randint(1000, 9999)}.xlsx'
+    # 根据模式设置文件名
+    mode_names = {'models': 'Models', 'system': 'System', 'all': 'All'}
+    filename = f'TMM_{mode_names.get(mode, "Export")}_{datetime.now().strftime("%Y%m%d_%H%M%S")}_{random.randint(1000, 9999)}.xlsx'
 
-    logger.info("Excel export completed successfully")
+    logger.info(f"Excel export completed successfully, mode={mode}")
     return send_file(
       output,
       as_attachment=True,

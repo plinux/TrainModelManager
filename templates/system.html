@@ -10,18 +10,35 @@
     <!-- 数据导出 -->
     <section class="system-section">
       <h2>数据导出</h2>
-      <p class="section-desc">将系统中所有模型数据导出到 Excel 文件，包含机车、车厢、动车组和先头车数据。</p>
+      <p class="section-desc">将系统数据导出到 Excel 文件。可选择导出范围：</p>
+      <ul class="export-options">
+        <li><strong>模型数据</strong>：机车、车厢、动车组、先头车等模型记录</li>
+        <li><strong>系统信息</strong>：品牌、系列、车型等选项数据</li>
+        <li><strong>全部数据</strong>：导出系统中的所有数据</li>
+      </ul>
       <div class="section-actions">
-        <button type="button" class="btn btn-primary" id="btn-export">
-          导出数据到 Excel
-        </button>
+        <div class="export-buttons">
+          <button type="button" class="btn btn-primary" id="btn-export-models">
+            导出模型数据
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-export-system">
+            导出系统信息
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-export-all">
+            全部导出
+          </button>
+        </div>
       </div>
     </section>
 
     <!-- 数据导入 -->
     <section class="system-section">
       <h2>数据导入</h2>
-      <p class="section-desc">从 Excel 文件导入模型数据。文件应包含与导出格式相同的工作表结构。</p>
+      <p class="section-desc">从 Excel 文件导入数据。系统会根据工作表名称自动识别导入类型。</p>
+      <div class="import-info">
+        <p><strong>支持的模型数据工作表：</strong>机车、车厢、动车组、先头车</p>
+        <p><strong>支持的系统信息工作表：</strong>品牌、机务段/车辆段、商家、动力类型、芯片接口、芯片型号、机车系列、车厢系列、动车组系列、机车车型、车厢车型、动车组车型</p>
+      </div>
       <div class="section-actions">
         <input type="file" id="import-file" accept=".xlsx,.xls" style="display: none;">
         <button type="button" class="btn btn-primary" id="btn-import">
@@ -96,10 +113,39 @@
   line-height: 1.5;
 }
 
+.export-options {
+  color: #666;
+  margin: 0 0 1rem 1.5rem;
+  line-height: 1.8;
+}
+
+.export-options li {
+  margin-bottom: 0.25rem;
+}
+
+.import-info {
+  background: #f8f9fa;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius, 4px);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.import-info p {
+  margin: 0.25rem 0;
+  color: #666;
+}
+
 .section-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.export-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .danger-zone {

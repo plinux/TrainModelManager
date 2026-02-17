@@ -49,8 +49,11 @@ class TestPageRoutes:
         response = client.get('/system')
         assert response.status_code == 200
         assert '系统维护' in response.data.decode('utf-8')
-        # 验证三个功能按钮
-        assert '导出数据到 Excel' in response.data.decode('utf-8')
+        # 验证导出按钮（三种模式）
+        assert '导出模型数据' in response.data.decode('utf-8')
+        assert '导出系统信息' in response.data.decode('utf-8')
+        assert '全部导出' in response.data.decode('utf-8')
+        # 验证导入和初始化按钮
         assert '从 Excel 导入数据' in response.data.decode('utf-8')
         assert '重新初始化数据库' in response.data.decode('utf-8')
 

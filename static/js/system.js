@@ -5,7 +5,9 @@
   'use strict';
 
   // DOM 元素
-  const btnExport = document.getElementById('btn-export');
+  const btnExportModels = document.getElementById('btn-export-models');
+  const btnExportSystem = document.getElementById('btn-export-system');
+  const btnExportAll = document.getElementById('btn-export-all');
   const btnImport = document.getElementById('btn-import');
   const importFile = document.getElementById('import-file');
   const importFilename = document.getElementById('import-filename');
@@ -44,26 +46,40 @@
 
   /**
    * 导出数据到 Excel
+   * @param {string} mode - 导出模式: 'models', 'system', 'all'
+   * @param {HTMLElement} button - 触发的按钮元素
    */
-  function exportToExcel() {
-    btnExport.disabled = true;
-    btnExport.textContent = '导出中...';
+  function exportToExcel(mode, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = '导出中...';
 
-    fetch('/api/export/excel')
+    fetch('/api/export/excel?mode=' + mode)
       .then(function(response) {
         if (!response.ok) {
           return response.json().then(function(data) {
             throw new Error(data.error || '导出失败');
           });
         }
-        return response.blob();
+        // 从响应头获取文件名
+        var contentDisposition = response.headers.get('Content-Disposition');
+        var filename = 'export.xlsx';
+        if (contentDisposition) {
+          var filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-\d['"]*)?([^'";\s]+)['"]?;?/i);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = decodeURIComponent(filenameMatch[1]);
+          }
+        }
+        return response.blob().then(function(blob) {
+          return { blob: blob, filename: filename };
+        });
       })
-      .then(function(blob) {
+      .then(function(result) {
         // 创建下载链接
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        var url = window.URL.createObjectURL(result.blob);
+        var a = document.createElement('a');
         a.href = url;
-        a.download = 'train_models_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+        a.download = result.filename;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -74,13 +90,13 @@
         showMessage(error.message, true);
       })
       .finally(function() {
-        btnExport.disabled = false;
-        btnExport.textContent = '导出数据到 Excel';
+        button.disabled = false;
+        button.textContent = originalText;
       });
   }
 
   /**
-   * 从 Excel 导入数据
+   * 从 Excel 导入数据（自适应导入）
    */
   function importFromExcel(file) {
     btnImport.disabled = true;
@@ -99,12 +115,14 @@
       .then(function(data) {
         if (data.success) {
           let message = '导入成功！';
-          if (data.summary) {
+          if (data.summary && Object.keys(data.summary).length > 0) {
             const parts = [];
             for (const key in data.summary) {
               parts.push(key + ': ' + data.summary[key] + ' 条');
             }
             message += '\n' + parts.join('，');
+          } else {
+            message += '\n没有找到可导入的数据（请检查工作表名称是否正确）';
           }
           showMessage(message);
         } else {
@@ -151,9 +169,20 @@
       });
   }
 
-  // 事件绑定
-  btnExport.addEventListener('click', exportToExcel);
+  // 事件绑定 - 导出按钮
+  btnExportModels.addEventListener('click', function() {
+    exportToExcel('models', btnExportModels);
+  });
 
+  btnExportSystem.addEventListener('click', function() {
+    exportToExcel('system', btnExportSystem);
+  });
+
+  btnExportAll.addEventListener('click', function() {
+    exportToExcel('all', btnExportAll);
+  });
+
+  // 事件绑定 - 导入
   btnImport.addEventListener('click', function() {
     importFile.click();
   });
@@ -166,6 +195,7 @@
     }
   });
 
+  // 事件绑定 - 数据库初始化
   btnReinit.addEventListener('click', function() {
     showConfirmDialog(
       '确定要重新初始化数据库吗？此操作将删除所有数据，且不可撤销！',
