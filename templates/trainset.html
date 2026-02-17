@@ -69,7 +69,7 @@
     </thead>
     <tbody>
       {% for trainset in trainsets %}
-      <tr data-model="{{ trainset.model.name }}" data-series="{{ trainset.series.name if trainset.series else '' }}" data-brand="{{ trainset.brand.name }}" data-depot="{{ trainset.depot.name if trainset.depot else '' }}" data-scale="{{ trainset.scale }}" data-number="{{ trainset.trainset_number or '' }}" data-decoder="{{ trainset.decoder_number or '' }}" data-formation="{{ trainset.formation or '' }}" data-head_light="{{ '有' if trainset.head_light else '无' }}" data-interior_light="{{ trainset.interior_light or '' }}" data-chip_interface="{{ trainset.chip_interface.name if trainset.chip_interface else '' }}" data-chip_model="{{ trainset.chip_model.name if trainset.chip_model else '' }}" data-item_number="{{ trainset.item_number or '' }}" data-price="{{ trainset.total_price or 0 }}">
+      <tr data-model="{{ trainset.model.name }}" data-model_id="{{ trainset.model_id }}" data-series="{{ trainset.series.name if trainset.series else '' }}" data-series_id="{{ trainset.series_id or '' }}" data-power_type="{{ trainset.power_type.name if trainset.power_type else '' }}" data-power_type_id="{{ trainset.power_type_id or '' }}" data-brand="{{ trainset.brand.name }}" data-brand_id="{{ trainset.brand_id }}" data-depot="{{ trainset.depot.name if trainset.depot else '' }}" data-depot_id="{{ trainset.depot_id or '' }}" data-scale="{{ trainset.scale }}" data-trainset_number="{{ trainset.trainset_number or '' }}" data-decoder_number="{{ trainset.decoder_number or '' }}" data-formation="{{ trainset.formation or '' }}" data-head_light="{{ 'true' if trainset.head_light else 'false' }}" data-interior_light="{{ trainset.interior_light or '' }}" data-chip_interface="{{ trainset.chip_interface.name if trainset.chip_interface else '' }}" data-chip_interface_id="{{ trainset.chip_interface_id or '' }}" data-chip_model="{{ trainset.chip_model.name if trainset.chip_model else '' }}" data-chip_model_id="{{ trainset.chip_model_id or '' }}" data-color="{{ trainset.color or '' }}" data-price="{{ trainset.price or '' }}" data-merchant="{{ trainset.merchant.name if trainset.merchant else '' }}" data-merchant_id="{{ trainset.merchant_id or '' }}" data-item_number="{{ trainset.item_number or '' }}" data-product_url="{{ trainset.product_url or '' }}" data-purchase_date="{{ trainset.purchase_date or '' }}">
         <td>{{ trainset.model.name }}</td>
         <td>{{ relation_name(trainset.series) }}</td>
         <td>{{ trainset.brand.name }}</td>
@@ -98,6 +98,7 @@
           {% else %}
           <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
           {% endif %}
+          <button type="button" class="btn-copy" onclick="copyTrainset(this)" title="复制此行数据到表单">复制</button>
           <a href="{{ url_for('trainset.edit_trainset', id=trainset.id) }}" class="btn-edit">编辑</a>
           <form action="{{ url_for('trainset.delete_trainset', id=trainset.id) }}" method="POST" onsubmit="return confirm('确定删除？')">
             <button type="submit" class="btn-danger">删除</button>

@@ -48,7 +48,7 @@
     </thead>
     <tbody>
       {% for head in locomotive_heads %}
-      <tr data-model="{{ head.model.name }}" data-brand="{{ head.brand.name }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-head_light="{{ '有' if head.head_light else '无' }}" data-interior_light="{{ head.interior_light or '' }}" data-item_number="{{ head.item_number or '' }}" data-price="{{ head.total_price or 0 }}">
+      <tr data-model="{{ head.model.name }}" data-model_id="{{ head.model_id }}" data-brand="{{ head.brand.name }}" data-brand_id="{{ head.brand_id }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-head_light="{{ 'true' if head.head_light else 'false' }}" data-interior_light="{{ head.interior_light or '' }}" data-item_number="{{ head.item_number or '' }}" data-price="{{ head.price or '' }}" data-merchant="{{ head.merchant.name if head.merchant else '' }}" data-merchant_id="{{ head.merchant_id or '' }}" data-product_url="{{ head.product_url or '' }}" data-purchase_date="{{ head.purchase_date or '' }}">
         <td>{{ head.model.name }}</td>
         <td>{{ head.brand.name }}</td>
         <td>{{ head.scale }}</td>
@@ -71,6 +71,7 @@
           {% else %}
           <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
           {% endif %}
+          <button type="button" class="btn-copy" onclick="copyLocomotiveHead(this)" title="复制此行数据到表单">复制</button>
           <a href="{{ url_for('locomotive_head.edit_locomotive_head', id=head.id) }}" class="btn-edit">编辑</a>
           <form action="{{ url_for('locomotive_head.delete_locomotive_head', id=head.id) }}" method="POST" onsubmit="return confirm('确定删除？')">
             <button type="submit" class="btn-danger">删除</button>

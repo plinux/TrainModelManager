@@ -952,6 +952,142 @@ const AutocompleteManager = {
   }
 };
 
+// 表单填充器（复制功能）
+const FormFiller = {
+  /**
+   * 从表格行复制数据到表单
+   * @param {HTMLElement} button - 复制按钮
+   * @param {Object} fieldMappings - 字段映射 { dataAttr: 'formFieldId' }
+   *   对于自动完成字段，dataAttr 应该是存储 ID 的属性名（如 model_id）
+   *   会自动查找对应的名称属性（如 data-model）来获取显示名称
+   */
+  copyFromRow(button, fieldMappings) {
+    const row = button.closest('tr');
+    if (!row) return;
+
+    // 遍历字段映射，填充表单
+    Object.entries(fieldMappings).forEach(([dataAttr, fieldId]) => {
+      const value = row.dataset[dataAttr];
+      const element = document.getElementById(fieldId);
+
+      if (!element) return;
+
+      // 检查是否是自动完成组件（隐藏域在 autocomplete-wrapper 内）
+      const wrapper = element.closest('.autocomplete-wrapper');
+      if (wrapper) {
+        // 使用 AutocompleteManager 设置值
+        const inputId = wrapper.querySelector('input[type="text"]')?.id;
+        if (inputId) {
+          // 对于自动完成字段，dataAttr 存储的是 ID（如 model_id）
+          // 需要查找对应的名称属性（去掉 _id 后缀）
+          const nameAttr = dataAttr.replace('_id', '');
+          const nameValue = row.dataset[nameAttr] || value;
+          AutocompleteManager.setValue(inputId, value || '', nameValue || '');
+        }
+      } else {
+        // 普通表单字段
+        element.value = value || '';
+      }
+    });
+
+    // 滚动到表单顶部
+    const form = document.querySelector('form');
+    if (form) {
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  },
+
+  /**
+   * 复制机车数据
+   */
+  copyLocomotive(button) {
+    this.copyFromRow(button, {
+      model_id: 'model_id',
+      series_id: 'series_id',
+      power_type_id: 'power_type_id',
+      depot_id: 'depot_id',
+      scale: 'scale',
+      locomotive_number: 'locomotive_number',
+      decoder_number: 'decoder_number',
+      plaque: 'plaque',
+      chip_interface_id: 'chip_interface_id',
+      chip_model_id: 'chip_model_id',
+      color: 'color',
+      price: 'price',
+      merchant_id: 'merchant_id',
+      brand_id: 'brand_id',
+      item_number: 'item_number',
+      product_url: 'product_url',
+      purchase_date: 'purchase_date'
+    });
+  },
+
+  /**
+   * 复制动车组数据
+   */
+  copyTrainset(button) {
+    this.copyFromRow(button, {
+      model_id: 'model_id',
+      series_id: 'series_id',
+      power_type_id: 'power_type_id',
+      depot_id: 'depot_id',
+      scale: 'scale',
+      trainset_number: 'trainset_number',
+      decoder_number: 'decoder_number',
+      formation: 'formation',
+      head_light: 'head_light',
+      interior_light: 'interior_light',
+      chip_interface_id: 'chip_interface_id',
+      chip_model_id: 'chip_model_id',
+      color: 'color',
+      price: 'price',
+      merchant_id: 'merchant_id',
+      brand_id: 'brand_id',
+      item_number: 'item_number',
+      product_url: 'product_url',
+      purchase_date: 'purchase_date'
+    });
+  },
+
+  /**
+   * 复制先头车数据
+   */
+  copyLocomotiveHead(button) {
+    this.copyFromRow(button, {
+      model_id: 'model_id',
+      special_color: 'special_color',
+      scale: 'scale',
+      head_light: 'head_light',
+      interior_light: 'interior_light',
+      price: 'price',
+      merchant_id: 'merchant_id',
+      brand_id: 'brand_id',
+      item_number: 'item_number',
+      product_url: 'product_url',
+      purchase_date: 'purchase_date'
+    });
+  },
+
+  /**
+   * 复制车厢数据
+   */
+  copyCarriage(button) {
+    this.copyFromRow(button, {
+      series_id: 'series_id',
+      depot_id: 'depot_id',
+      scale: 'scale',
+      train_number: 'train_number',
+      plaque: 'plaque',
+      item_number: 'item_number',
+      total_price: 'total_price',
+      merchant_id: 'merchant_id',
+      brand_id: 'brand_id',
+      product_url: 'product_url',
+      purchase_date: 'purchase_date'
+    });
+  }
+};
+
 // 全局函数兼容（保持与旧代码的兼容性）
 function filterLocomotiveModelsBySeries(seriesId) {
   Utils.filterModelsBySeries(seriesId, 'model_id', window.locomotiveModelData);
@@ -1023,4 +1159,20 @@ function setAutocompleteOptions(inputId, options) {
 
 function setAutocompleteValue(inputId, id, name) {
   AutocompleteManager.setValue(inputId, id, name);
+}
+
+function copyLocomotive(button) {
+  FormFiller.copyLocomotive(button);
+}
+
+function copyTrainset(button) {
+  FormFiller.copyTrainset(button);
+}
+
+function copyLocomotiveHead(button) {
+  FormFiller.copyLocomotiveHead(button);
+}
+
+function copyCarriage(button) {
+  FormFiller.copyCarriage(button);
 }

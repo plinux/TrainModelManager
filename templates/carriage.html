@@ -57,7 +57,7 @@
     </thead>
     <tbody>
       {% for set in carriage_sets %}
-      <tr data-series="{{ set.series.name if set.series else '' }}" data-brand="{{ set.brand.name }}" data-depot="{{ set.depot.name if set.depot else '' }}" data-train_number="{{ set.train_number or '' }}" data-scale="{{ set.scale }}" data-item_number="{{ set.item_number or '' }}" data-count="{{ set.items|length }}" data-price="{{ set.total_price or 0 }}">
+      <tr data-series="{{ set.series.name if set.series else '' }}" data-series_id="{{ set.series_id or '' }}" data-brand="{{ set.brand.name }}" data-brand_id="{{ set.brand_id }}" data-depot="{{ set.depot.name if set.depot else '' }}" data-depot_id="{{ set.depot_id or '' }}" data-train_number="{{ set.train_number or '' }}" data-scale="{{ set.scale }}" data-plaque="{{ set.plaque or '' }}" data-item_number="{{ set.item_number or '' }}" data-total_price="{{ set.total_price or '' }}" data-merchant="{{ set.merchant.name if set.merchant else '' }}" data-merchant_id="{{ set.merchant_id or '' }}" data-product_url="{{ set.product_url or '' }}" data-purchase_date="{{ set.purchase_date or '' }}" data-count="{{ set.items|length }}" data-price="{{ set.total_price or 0 }}">
         <td>{{ relation_name(set.series) }}</td>
         <td>{{ set.brand.name }}</td>
         <td>{{ relation_name(set.depot) }}</td>
@@ -80,6 +80,7 @@
           {% else %}
           <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
           {% endif %}
+          <button type="button" class="btn-copy" onclick="copyCarriage(this)" title="复制此行数据到表单">复制</button>
           <a href="{{ url_for('carriage.edit_carriage', id=set.id) }}" class="btn-edit">编辑</a>
           <form action="{{ url_for('carriage.delete_carriage', id=set.id) }}" method="POST" onsubmit="return confirm('确定删除？')">
             <button type="submit" class="btn-danger">删除</button>

@@ -125,7 +125,8 @@ button,
 .btn-cancel,
 .btn-danger,
 .btn-primary,
-.btn-save {
+.btn-save,
+.btn-copy {
   padding: 0.25rem 0.5rem;
   border: none;
   border-radius: var(--border-radius);
@@ -144,12 +145,12 @@ button,
 }
 
 /* 主按钮样式（用于表单提交等主要操作）*/
-button[type="submit"]:not(.btn-danger):not(.btn-cancel):not(.btn-search):not(.btn-edit):not(.btn-save) {
+button[type="submit"]:not(.btn-danger):not(.btn-cancel):not(.btn-search):not(.btn-edit):not(.btn-save):not(.btn-copy) {
   background-color: var(--color-primary);
   color: white;
 }
 
-button[type="submit"]:not(.btn-danger):not(.btn-cancel):not(.btn-search):not(.btn-edit):not(.btn-save):hover {
+button[type="submit"]:not(.btn-danger):not(.btn-cancel):not(.btn-search):not(.btn-edit):not(.btn-save):not(.btn-copy):hover {
   background-color: var(--color-primary-dark);
 }
 
@@ -160,7 +161,8 @@ button:hover,
 .btn-cancel:hover,
 .btn-danger:hover,
 .btn-primary:hover,
-.btn-save:hover {
+.btn-save:hover,
+.btn-copy:hover {
   opacity: 0.9;
 }
 
@@ -216,6 +218,16 @@ button:hover,
 
 .btn-primary:hover {
   background-color: var(--color-primary-dark);
+}
+
+.btn-copy {
+  background-color: #6c757d;
+  color: white;
+  margin-right: var(--spacing-xs);
+}
+
+.btn-copy:hover {
+  background-color: #5a6268;
 }
 
 .btn-save {
@@ -332,7 +344,8 @@ td form {
 /* 表格操作按钮统一尺寸 */
 td .btn-search,
 td .btn-edit,
-td .btn-danger {
+td .btn-danger,
+td .btn-copy {
   min-height: 1.75rem;
   height: 1.75rem;
   padding: 0.25rem 0.5rem;

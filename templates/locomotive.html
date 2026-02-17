@@ -61,7 +61,7 @@
     </thead>
     <tbody>
       {% for locomotive in locomotives %}
-      <tr data-model="{{ locomotive.model.name }}" data-series="{{ locomotive.series.name if locomotive.series else '' }}" data-power_type="{{ locomotive.power_type.name if locomotive.power_type else '' }}" data-brand="{{ locomotive.brand.name }}" data-depot="{{ locomotive.depot.name if locomotive.depot else '' }}" data-scale="{{ locomotive.scale }}" data-number="{{ locomotive.locomotive_number or '' }}" data-decoder="{{ locomotive.decoder_number or '' }}" data-chip_interface="{{ locomotive.chip_interface.name if locomotive.chip_interface else '' }}" data-chip_model="{{ locomotive.chip_model.name if locomotive.chip_model else '' }}" data-item_number="{{ locomotive.item_number or '' }}" data-price="{{ locomotive.total_price or 0 }}" data-search_url="{{ locomotive.brand.search_url or '' }}" data-item_number_value="{{ locomotive.item_number or '' }}" data-product_url="{{ locomotive.product_url or '' }}">
+      <tr data-model="{{ locomotive.model.name }}" data-model_id="{{ locomotive.model_id }}" data-series="{{ locomotive.series.name if locomotive.series else '' }}" data-series_id="{{ locomotive.series_id or '' }}" data-power_type="{{ locomotive.power_type.name if locomotive.power_type else '' }}" data-power_type_id="{{ locomotive.power_type_id or '' }}" data-brand="{{ locomotive.brand.name }}" data-brand_id="{{ locomotive.brand_id }}" data-depot="{{ locomotive.depot.name if locomotive.depot else '' }}" data-depot_id="{{ locomotive.depot_id or '' }}" data-scale="{{ locomotive.scale }}" data-locomotive_number="{{ locomotive.locomotive_number or '' }}" data-decoder_number="{{ locomotive.decoder_number or '' }}" data-plaque="{{ locomotive.plaque or '' }}" data-chip_interface="{{ locomotive.chip_interface.name if locomotive.chip_interface else '' }}" data-chip_interface_id="{{ locomotive.chip_interface_id or '' }}" data-chip_model="{{ locomotive.chip_model.name if locomotive.chip_model else '' }}" data-chip_model_id="{{ locomotive.chip_model_id or '' }}" data-color="{{ locomotive.color or '' }}" data-price="{{ locomotive.price or '' }}" data-merchant="{{ locomotive.merchant.name if locomotive.merchant else '' }}" data-merchant_id="{{ locomotive.merchant_id or '' }}" data-item_number="{{ locomotive.item_number or '' }}" data-product_url="{{ locomotive.product_url or '' }}" data-purchase_date="{{ locomotive.purchase_date or '' }}">
         <td>{{ locomotive.model.name }}</td>
         <td>{{ relation_name(locomotive.series) }}</td>
         <td>{{ relation_name(locomotive.power_type) }}</td>
@@ -88,6 +88,7 @@
           {% else %}
           <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
           {% endif %}
+          <button type="button" class="btn-copy" onclick="copyLocomotive(this)" title="复制此行数据到表单">复制</button>
           <a href="{{ url_for('locomotive.edit_locomotive', id=locomotive.id) }}" class="btn-edit">编辑</a>
           <form action="{{ url_for('locomotive.delete_locomotive', id=locomotive.id) }}" method="POST" onsubmit="return confirm('确定删除？')">
             <button type="submit" class="btn-danger">删除</button>

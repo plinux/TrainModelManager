@@ -55,6 +55,126 @@ class TestPageRoutes:
         assert '重新初始化数据库' in response.data.decode('utf-8')
 
 
+class TestCopyButtons:
+    """复制按钮测试 - 验证各模型页面都有复制按钮"""
+
+    def test_locomotive_copy_button(self, client, sample_data):
+        """测试机车页面有复制按钮"""
+        from models import db, Locomotive
+
+        with client.application.app_context():
+            loco = Locomotive(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                locomotive_number='COPY001'
+            )
+            db.session.add(loco)
+            db.session.commit()
+
+        response = client.get('/locomotive')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert '复制' in html
+        assert 'copyLocomotive' in html
+
+    def test_trainset_copy_button(self, client, sample_data):
+        """测试动车组页面有复制按钮"""
+        from models import db, Trainset
+
+        with client.application.app_context():
+            trainset = Trainset(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                trainset_number='COPY001'
+            )
+            db.session.add(trainset)
+            db.session.commit()
+
+        response = client.get('/trainset')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert '复制' in html
+        assert 'copyTrainset' in html
+
+    def test_locomotive_head_copy_button(self, client, sample_data):
+        """测试先头车页面有复制按钮"""
+        from models import db, LocomotiveHead
+
+        with client.application.app_context():
+            head = LocomotiveHead(
+                model_id=1,
+                brand_id=1,
+                scale='HO'
+            )
+            db.session.add(head)
+            db.session.commit()
+
+        response = client.get('/locomotive-head')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert '复制' in html
+        assert 'copyLocomotiveHead' in html
+
+    def test_carriage_copy_button(self, client, sample_data):
+        """测试车厢页面有复制按钮"""
+        from models import db, CarriageSet
+
+        with client.application.app_context():
+            carriage = CarriageSet(
+                brand_id=1,
+                series_id=1,
+                scale='HO',
+                train_number='COPY001'
+            )
+            db.session.add(carriage)
+            db.session.commit()
+
+        response = client.get('/carriage')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        assert '复制' in html
+        assert 'copyCarriage' in html
+
+    def test_locomotive_copy_data_attributes(self, client, sample_data):
+        """测试机车表格行包含复制所需的 data 属性"""
+        from models import db, Locomotive
+
+        with client.application.app_context():
+            loco = Locomotive(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                locomotive_number='DATA001',
+                decoder_number='01',
+                plaque='测试挂牌',
+                price='100',
+                item_number='ITEM001'
+            )
+            db.session.add(loco)
+            db.session.commit()
+
+        response = client.get('/locomotive')
+        assert response.status_code == 200
+        html = response.data.decode('utf-8')
+        # 验证关键 data 属性存在（ID 和名称属性）
+        assert 'data-model_id=' in html
+        assert 'data-model=' in html
+        assert 'data-series_id=' in html
+        assert 'data-series=' in html
+        assert 'data-brand_id=' in html
+        assert 'data-brand=' in html
+        assert 'data-item_number=' in html
+        assert 'data-purchase_date=' in html
+
+
 class TestLocomotiveHeadRoutes:
     """先头车路由测试 - 验证 depot 已被移除"""
 
