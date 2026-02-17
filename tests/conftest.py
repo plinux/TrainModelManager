@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import create_app
+from config import TestConfig
 from models import db, Locomotive, CarriageSet, Trainset, LocomotiveHead
 from models import Brand, Depot, Merchant, ChipInterface, ChipModel
 from models import LocomotiveSeries, LocomotiveModel, CarriageSeries, CarriageModel
@@ -19,10 +20,8 @@ from models import TrainsetSeries, TrainsetModel, PowerType
 @pytest.fixture
 def app():
     """创建测试用的 Flask 应用"""
-    app = create_app()
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    app.config['WTF_CSRF_ENABLED'] = False
+    # 使用 TestConfig 确保在 db.init_app() 之前设置正确的数据库 URI
+    app = create_app(TestConfig)
 
     with app.app_context():
         db.create_all()
