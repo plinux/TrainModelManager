@@ -17,8 +17,16 @@
   const btnCancel = document.getElementById('btn-cancel');
   const btnConfirm = document.getElementById('btn-confirm');
 
+  // 冲突对话框元素
+  const conflictDialog = document.getElementById('conflict-dialog');
+  const conflictMessage = document.getElementById('conflict-message');
+  const btnConflictSkip = document.getElementById('btn-conflict-skip');
+  const btnConflictOverwrite = document.getElementById('btn-conflict-overwrite');
+
   // 当前待确认的操作
   let pendingAction = null;
+  // 冲突对话框相关
+  let pendingConflictFile = null;
 
   /**
    * 显示消息提示
@@ -96,14 +104,16 @@
   }
 
   /**
-   * 从 Excel 导入数据（自适应导入）
+   * 从 Excel 导入数据（带预检查）
    */
   function importFromExcel(file) {
     btnImport.disabled = true;
-    btnImport.textContent = '导入中...';
+    btnImport.textContent = '检查中...';
 
-    const formData = new FormData();
+    // 先进行预检查
+    var formData = new FormData();
     formData.append('file', file);
+    formData.append('mode', 'preview');
 
     fetch('/api/import/excel', {
       method: 'POST',
@@ -114,10 +124,89 @@
       })
       .then(function(data) {
         if (data.success) {
-          let message = '导入成功！';
+          if (data.has_conflicts) {
+            // 有冲突，显示确认对话框
+            showConflictDialog(file, data.conflicts, data.sheets);
+          } else {
+            // 无冲突，直接导入
+            doImport(file, 'skip');
+          }
+        } else {
+          throw new Error(data.error || '预检查失败');
+        }
+      })
+      .catch(function(error) {
+        showMessage(error.message, true);
+        btnImport.disabled = false;
+        btnImport.textContent = '从 Excel 导入数据';
+        importFile.value = '';
+        importFilename.textContent = '';
+      });
+  }
+
+  /**
+   * 显示冲突确认对话框
+   */
+  function showConflictDialog(file, conflicts, sheets) {
+    // 存储待处理的文件
+    pendingConflictFile = file;
+
+    // 构建冲突列表显示
+    var conflictList = conflicts.slice(0, 10).map(function(c) {
+      return c.message;
+    }).join('\n');
+    if (conflicts.length > 10) {
+      conflictList += '\n... 还有 ' + (conflicts.length - 10) + ' 条冲突';
+    }
+
+    // 构建消息内容
+    var message = '发现 ' + conflicts.length + ' 条数据冲突：\n' + conflictList;
+    message += '\n\n请选择处理方式：';
+
+    // 使用 textContent 安全设置文本内容
+    var preElement = document.createElement('pre');
+    preElement.textContent = message;
+
+    // 清空并添加内容
+    conflictMessage.innerHTML = '';
+    conflictMessage.appendChild(preElement);
+
+    // 显示自定义对话框
+    conflictDialog.style.display = 'flex';
+  }
+
+  /**
+   * 隐藏冲突对话框
+   */
+  function hideConflictDialog() {
+    conflictDialog.style.display = 'none';
+    pendingConflictFile = null;
+  }
+
+  /**
+   * 执行实际导入
+   */
+  function doImport(file, mode) {
+    btnImport.disabled = true;
+    btnImport.textContent = '导入中...';
+
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('mode', mode);
+
+    fetch('/api/import/excel', {
+      method: 'POST',
+      body: formData
+    })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        if (data.success) {
+          var message = '导入成功！';
           if (data.summary && Object.keys(data.summary).length > 0) {
-            const parts = [];
-            for (const key in data.summary) {
+            var parts = [];
+            for (var key in data.summary) {
               parts.push(key + ': ' + data.summary[key] + ' 条');
             }
             message += '\n' + parts.join('，');
@@ -216,6 +305,28 @@
   confirmDialog.addEventListener('click', function(e) {
     if (e.target === confirmDialog) {
       hideConfirmDialog();
+    }
+  });
+
+  // 冲突对话框事件绑定
+  btnConflictSkip.addEventListener('click', function() {
+    if (pendingConflictFile) {
+      doImport(pendingConflictFile, 'skip');
+    }
+    hideConflictDialog();
+  });
+
+  btnConflictOverwrite.addEventListener('click', function() {
+    if (pendingConflictFile) {
+      doImport(pendingConflictFile, 'overwrite');
+    }
+    hideConflictDialog();
+  });
+
+  // 点击遮罩层关闭冲突对话框
+  conflictDialog.addEventListener('click', function(e) {
+    if (e.target === conflictDialog) {
+      hideConflictDialog();
     }
   });
 })();

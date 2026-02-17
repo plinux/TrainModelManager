@@ -74,7 +74,7 @@ def validate_required(value, field_name):
 
 @api_bp.route('/api/import/excel', methods=['POST'])
 def import_from_excel():
-  """从 Excel 文件导入数据 - 自适应导入，根据 sheet 名称判断导入类型"""
+  """从 Excel 文件导入数据 - 支持 preview、skip、overwrite 模式"""
   try:
     if 'file' not in request.files:
       return jsonify({'success': False, 'error': '未选择文件'}), 400
@@ -86,40 +86,17 @@ def import_from_excel():
     if not (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
       return jsonify({'success': False, 'error': '文件格式错误，请上传Excel文件'}), 400
 
+    # 获取模式参数：preview（只检查）、skip（跳过冲突）、overwrite（覆盖冲突）
+    # 默认为 skip（向后兼容），前端显式传 preview 进行预检查
+    mode = request.form.get('mode', 'skip')
+
     workbook = openpyxl.load_workbook(file)
-    summary = {}
-    errors = []
+    all_data = {}  # 存储 all sheet 数据
 
-    # 模型数据 sheet 名称映射
-    model_sheets = {
-      '机车': ('机车模型', import_locomotive_data),
-      '车厢': ('车厢模型', import_carriage_data),
-      '动车组': ('动车组模型', import_trainset_data),
-      '先头车': ('先头车模型', import_locomotive_head_data)
-    }
-
-    # 系统信息 sheet 名称映射
-    system_sheets = {
-      '品牌': ('品牌', import_brand_data),
-      '机务段': ('机务段', import_depot_data),
-      '车辆段': ('机务段', import_depot_data),  # 别名
-      '商家': ('商家', import_merchant_data),
-      '动力类型': ('动力类型', import_power_type_data),
-      '芯片接口': ('芯片接口', import_chip_interface_data),
-      '芯片型号': ('芯片型号', import_chip_model_data),
-      '机车系列': ('机车系列', import_locomotive_series_data),
-      '机关系列': ('机车系列', import_locomotive_series_data),  # 兼容旧名称
-      '车厢系列': ('车厢系列', import_carriage_series_data),
-      '动车组系列': ('动车组系列', import_trainset_series_data),
-      '机车车型': ('机车车型', import_locomotive_model_data),
-      '车厢车型': ('车厢车型', import_carriage_model_data),
-      '动车组车型': ('动车组车型', import_trainset_model_data)
-    }
-
+    # 读取所有 sheet 数据
     for sheet_name in workbook.sheetnames:
       sheet = workbook[sheet_name]
       data = []
-
       headers = None
       for row_idx, row in enumerate(sheet.iter_rows(values_only=True), 1):
         if row_idx == 1:
@@ -127,20 +104,64 @@ def import_from_excel():
         else:
           if any(cell is not None for cell in row):
             data.append(dict(zip(headers, row)))
+      if data:
+        all_data[sheet_name] = data
 
-      if not data:
-        continue
+    if not all_data:
+      return jsonify({'success': True, 'summary': {}, 'message': '没有找到可导入的数据'})
 
+    # 预检查冲突
+    conflicts = check_import_conflicts(all_data)
+
+    if mode == 'preview':
+      # 只返回预检查结果
+      return jsonify({
+        'success': True,
+        'preview': True,
+        'conflicts': conflicts,
+        'has_conflicts': len(conflicts) > 0,
+        'sheets': list(all_data.keys())
+      })
+
+    # 执行导入
+    summary = {}
+    errors = []
+
+    # 模型数据 sheet 名称映射
+    model_sheets = {
+      '机车': ('机车模型', import_locomotive_data_with_mode),
+      '车厢': ('车厢模型', import_carriage_data_with_mode),
+      '动车组': ('动车组模型', import_trainset_data_with_mode),
+      '先头车': ('先头车模型', import_locomotive_head_data_with_mode)
+    }
+
+    # 系统信息 sheet 名称映射
+    system_sheets = {
+      '品牌': ('品牌', import_brand_data_with_mode),
+      '机务段': ('机务段', import_depot_data_with_mode),
+      '车辆段': ('机务段', import_depot_data_with_mode),
+      '商家': ('商家', import_merchant_data_with_mode),
+      '动力类型': ('动力类型', import_power_type_data_with_mode),
+      '芯片接口': ('芯片接口', import_chip_interface_data_with_mode),
+      '芯片型号': ('芯片型号', import_chip_model_data_with_mode),
+      '机车系列': ('机车系列', import_locomotive_series_data_with_mode),
+      '机关系列': ('机车系列', import_locomotive_series_data_with_mode),
+      '车厢系列': ('车厢系列', import_carriage_series_data_with_mode),
+      '动车组系列': ('动车组系列', import_trainset_series_data_with_mode),
+      '机车车型': ('机车车型', import_locomotive_model_data_with_mode),
+      '车厢车型': ('车厢车型', import_carriage_model_data_with_mode),
+      '动车组车型': ('动车组车型', import_trainset_model_data_with_mode)
+    }
+
+    for sheet_name, data in all_data.items():
       try:
-        # 检查是否是模型数据
         if sheet_name in model_sheets:
           display_name, import_func = model_sheets[sheet_name]
-          count = import_func(data)
+          count = import_func(data, mode)
           summary[display_name] = count
-        # 检查是否是系统信息
         elif sheet_name in system_sheets:
           display_name, import_func = system_sheets[sheet_name]
-          count = import_func(data)
+          count = import_func(data, mode)
           summary[display_name] = count
         else:
           logger.warning(f"Unknown sheet name: {sheet_name}")
@@ -152,7 +173,7 @@ def import_from_excel():
     if errors:
       return jsonify({'success': False, 'error': '部分导入失败: ' + '; '.join(errors)}), 400
 
-    logger.info(f"Excel import completed: {summary}")
+    logger.info(f"Excel import completed: {summary}, mode={mode}")
     return jsonify({'success': True, 'summary': summary})
 
   except Exception as e:
@@ -161,11 +182,88 @@ def import_from_excel():
     return jsonify({'success': False, 'error': str(e)}), 500
 
 
-def import_locomotive_data(data):
-  """导入机车模型数据"""
+def check_import_conflicts(all_data):
+  """检查导入数据中的冲突"""
+  conflicts = []
+
+  # 检查系统信息名称冲突
+  system_name_checks = [
+    ('品牌', '品牌', Brand, 'name'),
+    ('商家', '商家', Merchant, 'name'),
+    ('动力类型', '动力类型', PowerType, 'name'),
+    ('机务段', '机务段', Depot, 'name'),
+    ('车辆段', '机务段', Depot, 'name'),
+    ('芯片接口', '芯片接口', ChipInterface, 'name'),
+    ('芯片型号', '芯片型号', ChipModel, 'name'),
+    ('机车系列', '机车系列', LocomotiveSeries, 'name'),
+    ('车厢系列', '车厢系列', CarriageSeries, 'name'),
+    ('动车组系列', '动车组系列', TrainsetSeries, 'name'),
+  ]
+
+  for sheet_name, display_name, model, field in system_name_checks:
+    if sheet_name in all_data:
+      for row in all_data[sheet_name]:
+        name = row.get('名称') or row.get(field) or row.get(display_name)
+        if name:
+          existing = model.query.filter_by(name=name).first()
+          if existing:
+            conflicts.append({
+              'type': display_name,
+              'field': '名称',
+              'value': name,
+              'message': f"{display_name} '{name}' 已存在"
+            })
+
+  # 检查机车冲突：同一比例内机车号或编号唯一
+  if '机车' in all_data:
+    for row in all_data['机车']:
+      scale = row.get('比例')
+      locomotive_number = row.get('机车号')
+      decoder_number = row.get('编号')
+
+      if scale and locomotive_number:
+        existing = Locomotive.query.filter_by(scale=scale, locomotive_number=locomotive_number).first()
+        if existing:
+          conflicts.append({
+            'type': '机车模型',
+            'field': '机车号',
+            'value': f'{scale} 比例 - {locomotive_number}',
+            'message': f"机车号 '{locomotive_number}' 在比例 '{scale}' 中已存在"
+          })
+
+      if scale and decoder_number:
+        existing = Locomotive.query.filter_by(scale=scale, decoder_number=decoder_number).first()
+        if existing:
+          conflicts.append({
+            'type': '机车模型',
+            'field': '编号',
+            'value': f'{scale} 比例 - {decoder_number}',
+            'message': f"编号 '{decoder_number}' 在比例 '{scale}' 中已存在"
+          })
+
+  # 检查动车组冲突：同一比例内动车号唯一
+  if '动车组' in all_data:
+    for row in all_data['动车组']:
+      scale = row.get('比例')
+      trainset_number = row.get('动车号')
+
+      if scale and trainset_number:
+        existing = Trainset.query.filter_by(scale=scale, trainset_number=trainset_number).first()
+        if existing:
+          conflicts.append({
+            'type': '动车组模型',
+            'field': '动车号',
+            'value': f'{scale} 比例 - {trainset_number}',
+            'message': f"动车号 '{trainset_number}' 在比例 '{scale}' 中已存在"
+          })
+
+  return conflicts
+
+
+def import_locomotive_data_with_mode(data, mode='skip'):
+  """导入机车模型数据，支持 skip/overwrite 模式"""
   count = 0
   for row in data:
-    # 验证必填字段
     brand_name = row.get('品牌')
     scale = row.get('比例')
     if not brand_name or not scale:
@@ -182,6 +280,40 @@ def import_locomotive_data(data):
     model_id = find_id_by_name(LocomotiveModel, row.get('车型'),
       lambda q: q.filter_by(name=row.get('车型'), series_id=series_id, power_type_id=power_type_id).first())
 
+    locomotive_number = row.get('机车号') or None
+    decoder_number = row.get('编号') or None
+
+    # 检查冲突
+    existing = None
+    if scale and locomotive_number:
+      existing = Locomotive.query.filter_by(scale=scale, locomotive_number=locomotive_number).first()
+    if not existing and scale and decoder_number:
+      existing = Locomotive.query.filter_by(scale=scale, decoder_number=decoder_number).first()
+
+    if existing:
+      if mode == 'skip':
+        logger.info(f"跳过机车：冲突数据 比例={scale}, 机车号={locomotive_number}, 编号={decoder_number}")
+        continue
+      elif mode == 'overwrite':
+        # 更新现有记录
+        existing.series_id = series_id
+        existing.power_type_id = power_type_id
+        existing.model_id = model_id
+        existing.brand_id = brand_id
+        existing.depot_id = find_id_by_name(Depot, row.get('机务段'))
+        existing.plaque = row.get('挂牌') or None
+        existing.color = row.get('颜色') or None
+        existing.decoder_number = decoder_number
+        existing.chip_interface_id = find_id_by_name(ChipInterface, row.get('芯片接口'))
+        existing.chip_model_id = find_id_by_name(ChipModel, row.get('芯片型号'))
+        existing.price = row.get('价格') or None
+        existing.total_price = calculate_price(row.get('价格')) if row.get('价格') else 0
+        existing.item_number = row.get('货号') or None
+        existing.purchase_date = parse_purchase_date(row.get('购买日期'))
+        existing.merchant_id = find_id_by_name(Merchant, row.get('购买商家'))
+        count += 1
+        continue
+
     locomotive = Locomotive(
       series_id=series_id,
       power_type_id=power_type_id,
@@ -191,8 +323,8 @@ def import_locomotive_data(data):
       plaque=row.get('挂牌') or None,
       color=row.get('颜色') or None,
       scale=scale,
-      locomotive_number=row.get('机车号') or None,
-      decoder_number=row.get('编号') or None,
+      locomotive_number=locomotive_number,
+      decoder_number=decoder_number,
       chip_interface_id=find_id_by_name(ChipInterface, row.get('芯片接口')),
       chip_model_id=find_id_by_name(ChipModel, row.get('芯片型号')),
       price=row.get('价格') or None,
@@ -208,8 +340,8 @@ def import_locomotive_data(data):
   return count
 
 
-def import_carriage_data(data):
-  """导入车厢模型数据 - 按套装分组处理"""
+def import_carriage_data_with_mode(data, mode='skip'):
+  """导入车厢模型数据 - 按套装分组处理，车厢没有唯一性约束，直接导入"""
   count = 0
   current_set_data = None
   current_items = []
@@ -220,7 +352,6 @@ def import_carriage_data(data):
     if not current_set_data:
       return
 
-    # 验证必填字段
     brand_id = current_set_data.get('brand_id')
     scale = current_set_data.get('scale')
     if not brand_id or not scale:
@@ -240,9 +371,8 @@ def import_carriage_data(data):
       merchant_id=current_set_data.get('merchant_id')
     )
     db.session.add(carriage_set)
-    db.session.flush()  # 获取 ID
+    db.session.flush()
 
-    # 添加车厢项
     for item_data in current_items:
       if item_data.get('model_id'):
         item = CarriageItem(
@@ -259,15 +389,10 @@ def import_carriage_data(data):
   for row in data:
     brand_name = row.get('品牌')
     scale = row.get('比例')
-
-    # 检查是否是新的套装（有品牌和比例数据）
     is_new_set = brand_name and scale
 
     if is_new_set:
-      # 保存之前的套装
       save_carriage_set()
-
-      # 开始新套装
       brand_id = find_id_by_name(Brand, brand_name)
       current_set_data = {
         'brand_id': brand_id,
@@ -283,7 +408,6 @@ def import_carriage_data(data):
       }
       current_items = []
 
-    # 添加车厢项（如果有车型数据）
     model_name = row.get('车型')
     if model_name and current_set_data:
       model_id = find_id_by_name(CarriageModel, model_name)
@@ -294,18 +418,15 @@ def import_carriage_data(data):
         'lighting': row.get('灯光') or None
       })
 
-  # 保存最后一个套装
   save_carriage_set()
-
   db.session.commit()
   return count
 
 
-def import_trainset_data(data):
-  """导入动车组模型数据"""
+def import_trainset_data_with_mode(data, mode='skip'):
+  """导入动车组模型数据，支持 skip/overwrite 模式"""
   count = 0
   for row in data:
-    # 验证必填字段
     brand_name = row.get('品牌')
     scale = row.get('比例')
     if not brand_name or not scale:
@@ -322,6 +443,39 @@ def import_trainset_data(data):
     model_id = find_id_by_name(TrainsetModel, row.get('车型'),
       lambda q: q.filter_by(name=row.get('车型'), series_id=series_id, power_type_id=power_type_id).first())
 
+    trainset_number = row.get('动车号') or None
+
+    # 检查冲突
+    existing = None
+    if scale and trainset_number:
+      existing = Trainset.query.filter_by(scale=scale, trainset_number=trainset_number).first()
+
+    if existing:
+      if mode == 'skip':
+        logger.info(f"跳过动车组：冲突数据 比例={scale}, 动车号={trainset_number}")
+        continue
+      elif mode == 'overwrite':
+        existing.series_id = series_id
+        existing.power_type_id = power_type_id
+        existing.model_id = model_id
+        existing.brand_id = brand_id
+        existing.depot_id = find_id_by_name(Depot, row.get('动车段'))
+        existing.plaque = row.get('挂牌') or None
+        existing.color = row.get('颜色') or None
+        existing.formation = safe_int(row.get('编组'))
+        existing.decoder_number = row.get('编号') or None
+        existing.head_light = parse_boolean(row.get('头车灯')) or False
+        existing.interior_light = row.get('室内灯') or None
+        existing.chip_interface_id = find_id_by_name(ChipInterface, row.get('芯片接口'))
+        existing.chip_model_id = find_id_by_name(ChipModel, row.get('芯片型号'))
+        existing.price = row.get('价格') or None
+        existing.total_price = calculate_price(row.get('价格')) if row.get('价格') else 0
+        existing.item_number = row.get('货号') or None
+        existing.purchase_date = parse_purchase_date(row.get('购买日期'))
+        existing.merchant_id = find_id_by_name(Merchant, row.get('购买商家'))
+        count += 1
+        continue
+
     trainset = Trainset(
       series_id=series_id,
       power_type_id=power_type_id,
@@ -332,7 +486,7 @@ def import_trainset_data(data):
       color=row.get('颜色') or None,
       scale=scale,
       formation=safe_int(row.get('编组')),
-      trainset_number=row.get('动车号') or None,
+      trainset_number=trainset_number,
       decoder_number=row.get('编号') or None,
       head_light=parse_boolean(row.get('头车灯')) or False,
       interior_light=row.get('室内灯') or None,
@@ -351,11 +505,10 @@ def import_trainset_data(data):
   return count
 
 
-def import_locomotive_head_data(data):
-  """导入先头车模型数据"""
+def import_locomotive_head_data_with_mode(data, mode='skip'):
+  """导入先头车模型数据，先头车没有唯一性约束，直接导入"""
   count = 0
   for row in data:
-    # 验证必填字段
     brand_name = row.get('品牌')
     scale = row.get('比例')
     if not brand_name or not scale:
@@ -389,199 +542,227 @@ def import_locomotive_head_data(data):
   return count
 
 
-# 系统信息导入函数
-def import_brand_data(data):
+# 系统信息导入函数（支持 skip/overwrite 模式）
+def import_brand_data_with_mode(data, mode='skip'):
   """导入品牌数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('品牌')
     if not name:
       continue
-    # 检查是否已存在
-    if not Brand.query.filter_by(name=name).first():
-      brand = Brand(
-        name=name,
-        search_url=row.get('搜索地址') or row.get('search_url') or None
-      )
-      db.session.add(brand)
-      count += 1
+    existing = Brand.query.filter_by(name=name).first()
+    if existing:
+      if mode == 'skip':
+        continue
+      elif mode == 'overwrite':
+        existing.search_url = row.get('搜索地址') or row.get('search_url') or existing.search_url
+        count += 1
+        continue
+    brand = Brand(
+      name=name,
+      search_url=row.get('搜索地址') or row.get('search_url') or None
+    )
+    db.session.add(brand)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_depot_data(data):
+def import_depot_data_with_mode(data, mode='skip'):
   """导入机务段/车辆段数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('机务段') or row.get('车辆段')
     if not name:
       continue
-    if not Depot.query.filter_by(name=name).first():
-      depot = Depot(name=name)
-      db.session.add(depot)
-      count += 1
+    if Depot.query.filter_by(name=name).first():
+      if mode == 'skip':
+        continue
+      # overwrite 模式下无需更新，因为只有 name 字段
+      continue
+    depot = Depot(name=name)
+    db.session.add(depot)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_merchant_data(data):
+def import_merchant_data_with_mode(data, mode='skip'):
   """导入商家数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('商家')
     if not name:
       continue
-    if not Merchant.query.filter_by(name=name).first():
-      merchant = Merchant(name=name)
-      db.session.add(merchant)
-      count += 1
+    if Merchant.query.filter_by(name=name).first():
+      if mode == 'skip':
+        continue
+      continue
+    merchant = Merchant(name=name)
+    db.session.add(merchant)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_power_type_data(data):
+def import_power_type_data_with_mode(data, mode='skip'):
   """导入动力类型数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('动力类型')
     if not name:
       continue
-    if not PowerType.query.filter_by(name=name).first():
-      power_type = PowerType(name=name)
-      db.session.add(power_type)
-      count += 1
+    if PowerType.query.filter_by(name=name).first():
+      if mode == 'skip':
+        continue
+      continue
+    power_type = PowerType(name=name)
+    db.session.add(power_type)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_chip_interface_data(data):
+def import_chip_interface_data_with_mode(data, mode='skip'):
   """导入芯片接口数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('芯片接口')
     if not name:
       continue
-    if not ChipInterface.query.filter_by(name=name).first():
-      chip_interface = ChipInterface(name=name)
-      db.session.add(chip_interface)
-      count += 1
+    if ChipInterface.query.filter_by(name=name).first():
+      if mode == 'skip':
+        continue
+      continue
+    chip_interface = ChipInterface(name=name)
+    db.session.add(chip_interface)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_chip_model_data(data):
+def import_chip_model_data_with_mode(data, mode='skip'):
   """导入芯片型号数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('芯片型号')
     if not name:
       continue
-    if not ChipModel.query.filter_by(name=name).first():
-      chip_model = ChipModel(name=name)
-      db.session.add(chip_model)
-      count += 1
+    if ChipModel.query.filter_by(name=name).first():
+      if mode == 'skip':
+        continue
+      continue
+    chip_model = ChipModel(name=name)
+    db.session.add(chip_model)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_locomotive_series_data(data):
+def import_locomotive_series_data_with_mode(data, mode='skip'):
   """导入机车系列数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('系列')
     if not name:
       continue
-    if not LocomotiveSeries.query.filter_by(name=name).first():
-      series = LocomotiveSeries(name=name)
-      db.session.add(series)
-      count += 1
+    if LocomotiveSeries.query.filter_by(name=name).first():
+      if mode == 'skip':
+        continue
+      continue
+    series = LocomotiveSeries(name=name)
+    db.session.add(series)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_carriage_series_data(data):
+def import_carriage_series_data_with_mode(data, mode='skip'):
   """导入车厢系列数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('系列')
     if not name:
       continue
-    if not CarriageSeries.query.filter_by(name=name).first():
-      series = CarriageSeries(name=name)
-      db.session.add(series)
-      count += 1
+    if CarriageSeries.query.filter_by(name=name).first():
+      if mode == 'skip':
+        continue
+      continue
+    series = CarriageSeries(name=name)
+    db.session.add(series)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_trainset_series_data(data):
+def import_trainset_series_data_with_mode(data, mode='skip'):
   """导入动车组系列数据"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('系列')
     if not name:
       continue
-    if not TrainsetSeries.query.filter_by(name=name).first():
-      series = TrainsetSeries(name=name)
-      db.session.add(series)
-      count += 1
+    if TrainsetSeries.query.filter_by(name=name).first():
+      if mode == 'skip':
+        continue
+      continue
+    series = TrainsetSeries(name=name)
+    db.session.add(series)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_locomotive_model_data(data):
-  """导入机车车型数据"""
+def import_locomotive_model_data_with_mode(data, mode='skip'):
+  """导入机车车型数据，车型没有唯一名称约束，直接导入"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('车型')
     if not name:
       continue
-    if not LocomotiveModel.query.filter_by(name=name).first():
-      model = LocomotiveModel(
-        name=name,
-        series_id=find_id_by_name(LocomotiveSeries, row.get('系列')),
-        power_type_id=find_id_by_name(PowerType, row.get('动力类型'))
-      )
-      db.session.add(model)
-      count += 1
+    model = LocomotiveModel(
+      name=name,
+      series_id=find_id_by_name(LocomotiveSeries, row.get('系列')),
+      power_type_id=find_id_by_name(PowerType, row.get('动力类型'))
+    )
+    db.session.add(model)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_carriage_model_data(data):
-  """导入车厢车型数据"""
+def import_carriage_model_data_with_mode(data, mode='skip'):
+  """导入车厢车型数据，车型没有唯一名称约束，直接导入"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('车型')
     if not name:
       continue
-    if not CarriageModel.query.filter_by(name=name).first():
-      model = CarriageModel(
-        name=name,
-        series_id=find_id_by_name(CarriageSeries, row.get('系列')),
-        type=row.get('类型') or '客车'
-      )
-      db.session.add(model)
-      count += 1
+    model = CarriageModel(
+      name=name,
+      series_id=find_id_by_name(CarriageSeries, row.get('系列')),
+      type=row.get('类型') or '客车'
+    )
+    db.session.add(model)
+    count += 1
   db.session.commit()
   return count
 
 
-def import_trainset_model_data(data):
-  """导入动车组车型数据"""
+def import_trainset_model_data_with_mode(data, mode='skip'):
+  """导入动车组车型数据，车型没有唯一名称约束，直接导入"""
   count = 0
   for row in data:
     name = row.get('名称') or row.get('车型')
     if not name:
       continue
-    if not TrainsetModel.query.filter_by(name=name).first():
-      model = TrainsetModel(
-        name=name,
-        series_id=find_id_by_name(TrainsetSeries, row.get('系列')),
-        power_type_id=find_id_by_name(PowerType, row.get('动力类型'))
-      )
-      db.session.add(model)
-      count += 1
+    model = TrainsetModel(
+      name=name,
+      series_id=find_id_by_name(TrainsetSeries, row.get('系列')),
+      power_type_id=find_id_by_name(PowerType, row.get('动力类型'))
+    )
+    db.session.add(model)
+    count += 1
   db.session.commit()
   return count
 

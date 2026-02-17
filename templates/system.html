@@ -76,6 +76,18 @@
   </div>
 </div>
 
+<!-- 冲突对话框 -->
+<div id="conflict-dialog" class="modal-overlay" style="display: none;">
+  <div class="modal-dialog conflict-dialog">
+    <h3>数据冲突</h3>
+    <p id="conflict-message"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="btn-conflict-skip">跳过冲突</button>
+      <button type="button" class="btn btn-primary" id="btn-conflict-overwrite">导入（覆盖）</button>
+    </div>
+  </div>
+</div>
+
 <style>
 .system-page {
   max-width: 800px;
@@ -225,8 +237,23 @@
   width: 90%;
 }
 
+.modal-dialog.conflict-dialog {
+  max-width: 500px;
+}
+
 .modal-dialog h3 {
   margin: 0 0 1rem 0;
+}
+
+.modal-dialog pre {
+  background: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .modal-actions {
