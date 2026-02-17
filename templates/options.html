@@ -21,7 +21,7 @@
   <div class="option-group">
     <h3>铁路信息</h3>
     <div class="tab-group">
-      <button onclick="showTab('power_types')" class="tab-btn active">动力</button>
+      <button onclick="showTab('power_types')" class="tab-btn">动力</button>
       <button onclick="showTab('depots')" class="tab-btn">局段</button>
     </div>
   </div>
@@ -65,7 +65,7 @@
 
 <div class="tabs-container">
 
-<div id="power_types" class="tab-content">
+<div id="power_types" class="tab-content" style="display:none;">
   <h2>动力</h2>
   <form method="POST" class="inline-form">
     <input type="text" name="name" placeholder="新增动力" required>
