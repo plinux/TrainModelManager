@@ -489,7 +489,7 @@ def index():
 
 @app.route('/options')
 def options():
-    """选项维护页面"""
+    """信息维护页面"""
     return render_template('options.html')
 
 if __name__ == '__main__':
@@ -530,7 +530,7 @@ git commit -m "feat: add Flask application structure"
             <li><a href="{{ url_for('carriage') }}">车厢模型</a></li>
             <li><a href="{{ url_for('trainset') }}">动车组模型</a></li>
             <li><a href="{{ url_for('locomotive_head') }}">先头车模型</a></li>
-            <li><a href="{{ url_for('options') }}">选项维护</a></li>
+            <li><a href="{{ url_for('options') }}">信息维护</a></li>
         </ul>
     </nav>
 
@@ -1148,7 +1148,7 @@ git commit -m "feat: add auto-fill API endpoints"
 
 ---
 
-### Task 12-15: 创建车厢、动车组、先头车和选项维护页面
+### Task 12-15: 创建车厢、动车组、先头车和信息维护页面
 
 （由于篇幅原因，这些任务的详细步骤与机车模型页面类似，遵循相同的模式）
 
@@ -1174,7 +1174,7 @@ git commit -m "feat: add auto-fill API endpoints"
 - 价格表达式：支持 "288+538" 形式的价格计算
 - 车厢套装：支持动态添加/删除车厢
 - 统计汇总：展示各类型的花费统计
-- 选项维护：集中管理所有下拉选项
+- 信息维护：集中管理所有下拉选项
 
 ## 技术栈
 

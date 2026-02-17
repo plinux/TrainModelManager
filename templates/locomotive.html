@@ -145,12 +145,5 @@
   function handleLocomotiveSeriesChange() {
     // 系列变化时的处理
   }
-
-  // 搜索产品
-  function searchProduct(btn, searchUrl, itemNumber) {
-    if (!searchUrl || !itemNumber) return;
-    var url = searchUrl.replace('{query}', encodeURIComponent(itemNumber));
-    window.open(url, '_blank');
-  }
 </script>
 {% endblock %}

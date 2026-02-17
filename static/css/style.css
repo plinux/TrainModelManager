@@ -197,17 +197,17 @@ button:hover,
 }
 
 .btn-search {
-  background-color: #17a2b8;
+  background-color: var(--color-info);
   color: white;
   margin-right: var(--spacing-xs);
 }
 
 .btn-search:hover {
-  background-color: #138496;
+  background-color: var(--color-info-dark);
 }
 
 .btn-search:disabled {
-  background-color: #ccc;
+  background-color: var(--color-secondary);
   cursor: not-allowed;
 }
 
@@ -221,13 +221,13 @@ button:hover,
 }
 
 .btn-copy {
-  background-color: #6c757d;
+  background-color: var(--color-secondary);
   color: white;
   margin-right: var(--spacing-xs);
 }
 
 .btn-copy:hover {
-  background-color: #5a6268;
+  background-color: var(--color-secondary-dark);
 }
 
 .btn-save {
@@ -957,4 +957,284 @@ td form {
 
 .autocomplete-wrapper.no-match .autocomplete-hint {
   display: block;
+}
+
+/* ========== 信息维护页面样式 ========== */
+.options-page .tabs {
+  margin-bottom: 1rem;
+}
+
+.options-page .option-groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.options-page .option-group {
+  flex: 1;
+  margin-bottom: 0;
+  padding: 0.75rem;
+  background-color: transparent;
+  border: none;
+}
+
+.options-page .option-group h3 {
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem;
+  color: #333;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.options-page .tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.options-page .tabs-container {
+  margin-top: 2rem;
+}
+
+.options-page .tab-btn {
+  padding: 0.05rem 0.2rem;
+  margin-right: 0.2rem;
+  border: 2px solid #e9ecef;
+  background-color: #f8f9fa;
+  color: #495057;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.options-page .tab-btn:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.options-page .tab-btn.active {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.options-page .tab-content {
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  background-color: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.options-page .tab-content h2 {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.options-page .tab-content form {
+  margin-bottom: 1.5rem;
+}
+
+.options-page .tab-content table {
+  margin-top: 1rem;
+}
+
+/* ========== 系统维护页面样式 ========== */
+.system-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.system-page h1 {
+  margin-bottom: 2rem;
+  color: var(--color-primary);
+}
+
+.system-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.system-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+}
+
+.system-section h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: var(--color-primary);
+}
+
+.section-desc {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.export-options {
+  color: #666;
+  margin: 0 0 1rem 1.5rem;
+  line-height: 1.8;
+}
+
+.export-options li {
+  margin-bottom: 0.25rem;
+}
+
+.import-info {
+  background: var(--bg-table-header);
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.import-info p {
+  margin: 0.25rem 0;
+  color: #666;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.export-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.system-section.danger-zone {
+  border-color: var(--color-danger);
+  background: #fff5f5;
+}
+
+.filename {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* 系统页面按钮样式 */
+.btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-dark);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: var(--color-danger-dark);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 系统页面模态对话框 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-dialog {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  max-width: 400px;
+  width: 90%;
+}
+
+.modal-dialog.conflict-dialog {
+  max-width: 500px;
+}
+
+.modal-dialog h3 {
+  margin: 0 0 1rem 0;
+}
+
+.modal-dialog pre {
+  background: var(--bg-table-header);
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* ========== 响应式设计补充 ========== */
+@media (max-width: 768px) {
+  .options-page .option-groups {
+    gap: 0.75rem;
+  }
+
+  .options-page .option-group {
+    min-width: 100%;
+  }
+
+  .options-page .tab-btn {
+    text-align: center;
+  }
+
+  .options-page .tabs-container {
+    margin-top: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .options-page .tab-btn {
+    padding: 0.05rem 0.2rem;
+  }
 }

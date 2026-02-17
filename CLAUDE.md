@@ -200,6 +200,7 @@ FormFiller      // 表单填充（copyFromRow、fillField）
 - `filterLocomotiveModelsBySeries`、`handleLocomotiveSeriesChange`、`autoFillLocomotive`
 - `filterTrainsetModelsBySeries`、`handleTrainsetSeriesChange`、`autoFillTrainset`
 - `addCarriageRow`、`submitFormAjax`、`initTableSortFilter`
+- `searchProduct` - 在官网搜索指定货号
 
 ## CSS 样式规范
 
@@ -319,9 +320,22 @@ pytest -k "locomotive"    # 运行名称匹配的测试
 |-------|------|
 | 简化 app.js | 页面初始化逻辑可合并到 utils.js |
 | 清理兼容函数 | utils.js 全局函数层可精简 |
-| 内联样式外置 | options.html、system.html 内联样式移至 CSS 文件 |
 
 ## 代码优化记录
+
+### 第四次优化内容（v0.6.0）
+1. **JavaScript 函数提取**
+   - `searchProduct` 函数从 4 个模板文件提取到 utils.js
+   - 减少约 28 行重复代码
+
+2. **CSS 变量统一**
+   - `btn-search` 使用 `--color-info` 替代硬编码颜色
+   - `btn-copy` 使用 `--color-secondary` 替代硬编码颜色
+
+3. **内联样式外置**
+   - options.html 内联样式移至 style.css
+   - system.html 内联样式移至 style.css
+   - 统一页面样式管理
 
 ### 第三次优化内容（v0.5.0）
 1. **复制按钮功能**
@@ -359,7 +373,7 @@ pytest -k "locomotive"    # 运行名称匹配的测试
 ### 第一次优化内容
 1. **Blueprint 模块化重构**
 2. **公共辅助函数提取**（utils/ 目录）
-3. **选项维护工厂函数**
+3. **信息维护工厂函数**
 4. **JavaScript 模块化**（utils.js）
 5. **Jinja2 宏提取**（macros/ 目录）
 6. **CSS 变量统一**

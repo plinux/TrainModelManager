@@ -461,6 +461,7 @@ CarriageManager // 车厢项管理（addRow、removeRow、handleSeriesChange）
 ModelForm       // 模型表单（handleLocomotiveSeriesChange、autoFillLocomotive）
 TableManager    // 表格管理（init、handleSort、handleFilter、applySortAndFilter）
 FormFiller      // 表单填充（copyFromRow、fillField）
+searchProduct   // 产品搜索（在官网搜索指定货号）
 ```
 
 ### app.js - 页面初始化
@@ -486,9 +487,18 @@ FormFiller      // 表单填充（copyFromRow、fillField）
 ### CSS 变量
 
 ```css
+/* 颜色 */
 --color-primary: #007bff;
+--color-primary-dark: #0056b3;
 --color-success: #28a745;
+--color-success-dark: #218838;
 --color-danger: #dc3545;
+--color-danger-dark: #c82333;
+--color-warning: #ffc107;
+--color-secondary: #6c757d;
+--color-info: #0d6efd;
+
+/* 边框和间距 */
 --border-radius: 4px;
 --spacing-md: 1rem;
 ```

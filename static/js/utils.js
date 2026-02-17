@@ -1176,3 +1176,15 @@ function copyLocomotiveHead(button) {
 function copyCarriage(button) {
   FormFiller.copyCarriage(button);
 }
+
+/**
+ * 搜索产品（打开品牌搜索链接）
+ * @param {HTMLElement} btn - 触发的按钮元素（未使用，但保留以便于调用）
+ * @param {string} searchUrl - 搜索URL模板，{query}为占位符
+ * @param {string} itemNumber - 货号/搜索关键词
+ */
+function searchProduct(btn, searchUrl, itemNumber) {
+  if (!searchUrl || !itemNumber) return;
+  var url = searchUrl.replace('{query}', encodeURIComponent(itemNumber));
+  window.open(url, '_blank');
+}
