@@ -44,6 +44,9 @@
         <button type="button" class="btn btn-primary" id="btn-import">
           从 Excel 导入数据
         </button>
+        <button type="button" class="btn btn-secondary" id="btn-custom-import">
+          自定义导入向导
+        </button>
         <span id="import-filename" class="filename"></span>
       </div>
     </section>
@@ -87,8 +90,145 @@
     </div>
   </div>
 </div>
+
+<!-- 自定义导入向导模态框 -->
+<div id="custom-import-modal" class="custom-import-overlay" style="display: none;">
+  <div class="custom-import-container">
+    <!-- 模态框头部 -->
+    <div class="custom-import-header">
+      <h2>自定义导入向导</h2>
+      <button type="button" class="modal-close" id="btn-custom-import-close" aria-label="关闭">&times;</button>
+    </div>
+
+    <!-- 步骤指示器 -->
+    <div class="custom-import-steps">
+      <div class="step-indicator" data-step="1">
+        <span class="step-number">1</span>
+        <span class="step-label">选择模板</span>
+      </div>
+      <div class="step-indicator" data-step="2">
+        <span class="step-number">2</span>
+        <span class="step-label">选择文件</span>
+      </div>
+      <div class="step-indicator" data-step="3">
+        <span class="step-number">3</span>
+        <span class="step-label">工作表映射</span>
+      </div>
+      <div class="step-indicator" data-step="4">
+        <span class="step-number">4</span>
+        <span class="step-label">列映射</span>
+      </div>
+      <div class="step-indicator" data-step="5">
+        <span class="step-number">5</span>
+        <span class="step-label">确认导入</span>
+      </div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="custom-import-content">
+      <!-- 步骤1: 选择模板 -->
+      <div class="import-step" id="step-1-template">
+        <h3>选择导入模板</h3>
+        <p class="step-desc">模板可以保存常用的映射配置，方便下次快速导入。</p>
+        <div class="template-list" id="template-list">
+          <!-- 模板列表将由 JavaScript 动态生成 -->
+          <p class="no-templates" id="no-templates-msg">暂无保存的模板，请手动配置映射。</p>
+        </div>
+      </div>
+
+      <!-- 步骤2: 选择文件 -->
+      <div class="import-step" id="step-2-file" style="display: none;">
+        <h3>选择要导入的Excel文件</h3>
+        <div class="file-upload-area">
+          <input type="file" id="custom-import-file" accept=".xlsx,.xls">
+          <p class="file-hint">支持 .xlsx 和 .xls 格式</p>
+        </div>
+        <div id="file-preview" class="file-preview" style="display: none;">
+          <p><strong>已选择文件：</strong><span id="selected-filename"></span></p>
+          <p><strong>工作表数量：</strong><span id="sheet-count"></span></p>
+        </div>
+      </div>
+
+      <!-- 步骤3: 工作表映射 -->
+      <div class="import-step" id="step-3-sheet" style="display: none;">
+        <h3>映射Excel工作表到数据类型</h3>
+        <p class="step-desc">请将Excel中的工作表映射到系统支持的数据类型。</p>
+        <div class="sheet-mapping-container" id="sheet-mapping-container">
+          <!-- 工作表映射表格将由 JavaScript 动态生成 -->
+        </div>
+      </div>
+
+      <!-- 步骤4: 列映射 -->
+      <div class="import-step" id="step-4-column" style="display: none;">
+        <h3>映射Excel列到系统字段</h3>
+        <p class="step-desc">请为每个数据类型配置列映射关系。</p>
+        <div class="column-mapping-tabs" id="column-mapping-tabs">
+          <!-- 列映射标签页将由 JavaScript 动态生成 -->
+        </div>
+        <div class="column-mapping-container" id="column-mapping-container">
+          <!-- 列映射表格将由 JavaScript 动态生成 -->
+        </div>
+      </div>
+
+      <!-- 步骤5: 确认导入 -->
+      <div class="import-step" id="step-5-confirm" style="display: none;">
+        <h3>确认导入设置</h3>
+        <div class="import-summary-tabs" id="import-summary-tabs">
+          <!-- 预览标签页将由 JavaScript 动态生成 -->
+        </div>
+        <div class="import-summary" id="import-summary">
+          <!-- 导入摘要将由 JavaScript 动态生成 -->
+        </div>
+        <div class="save-template-option">
+          <h4>保存模板（可选）</h4>
+          <label class="radio-label">
+            <input type="radio" name="save-template-mode" value="none" checked>
+            <span>不保存模板</span>
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="save-template-mode" value="new">
+            <span>保存为新模板</span>
+          </label>
+          <div id="new-template-name-container" style="display: none; margin-left: var(--spacing-lg); margin-top: var(--spacing-xs);">
+            <input type="text" id="new-template-name" placeholder="输入新模板名称">
+          </div>
+          <label class="radio-label">
+            <input type="radio" name="save-template-mode" value="update">
+            <span>更新现有模板</span>
+          </label>
+          <div id="update-template-select-container" style="display: none; margin-left: var(--spacing-lg); margin-top: var(--spacing-xs);">
+            <select id="update-template-select">
+              <option value="">-- 选择模板 --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部导航按钮 -->
+    <div class="custom-import-footer">
+      <div class="footer-left">
+        <button type="button" class="btn btn-secondary" id="btn-custom-import-cancel">
+          取消
+        </button>
+      </div>
+      <div class="footer-right">
+        <button type="button" class="btn btn-secondary" id="btn-custom-import-prev" style="display: none;">
+          上一步
+        </button>
+        <button type="button" class="btn btn-primary" id="btn-custom-import-next">
+          下一步
+        </button>
+        <button type="button" class="btn btn-success" id="btn-custom-import-finish" style="display: none;">
+          开始导入
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/system.js') }}"></script>
+<script src="{{ url_for('static', filename='js/custom-import.js') }}"></script>
 {% endblock %}

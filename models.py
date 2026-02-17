@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Integer, Float, Boolean, Date, ForeignKey
+from sqlalchemy import String, Integer, Float, Boolean, Date, ForeignKey, JSON, DateTime
 from sqlalchemy.orm import relationship
-from datetime import date
+from datetime import date, datetime
 
 db = SQLAlchemy()
 
@@ -292,3 +292,16 @@ class LocomotiveHead(db.Model):
 
   def __repr__(self):
     return f'<LocomotiveHead {self.id}: {self.model.name} {self.scale}>'
+
+class ImportTemplate(db.Model):
+  """自定义导入模板"""
+  __tablename__ = 'import_template'
+
+  id = db.Column(Integer, primary_key=True, comment='主键')
+  name = db.Column(String(100), nullable=False, comment='模板名称')
+  config = db.Column(JSON, nullable=False, comment='映射配置')
+  created_at = db.Column(DateTime, default=datetime.utcnow, comment='创建时间')
+  updated_at = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment='更新时间')
+
+  def __repr__(self):
+    return f'<ImportTemplate {self.id}: {self.name}>'
