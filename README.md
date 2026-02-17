@@ -12,12 +12,25 @@
 - **唯一性验证**：同一比例内的机车号、编号、动车号唯一性检查
 - **价格表达式计算**：支持 "288+538" 形式的价格自动计算
 - **车厢套装管理**：支持动态添加/删除车厢项
-- **统计汇总**：展示各类型和维度的花费统计
-- **选项维护**：集中管理所有下拉选项（品牌、商家、系列、车型等）
+- **统计汇总**：展示各类型和维度的花费统计（支持表格和饼图）
+- **信息维护**：集中管理所有下拉选项（品牌、商家、系列、车型等）
+
+### 数据导入导出
+- **多模式导出**：
+  - 模型数据：机车、车厢、动车组、先头车等模型记录
+  - 系统信息：品牌、系列、车型等选项数据
+  - 全部数据：导出系统中的所有数据
+- **智能导入**：
+  - 自动识别 Excel 工作表类型
+  - 冲突检测：预检查导入数据是否违反唯一性约束
+  - 冲突处理：可选择跳过冲突数据或覆盖现有数据
+- **导出格式**：Excel 文件，标题行加粗，文件名包含日期时间
 
 ### 用户体验优化
+- **快速复制**：模型列表页支持复制按钮，快速填充表单
+- **表格排序筛选**：点击列头排序，下拉框筛选
 - **AJAX 表单提交**：添加模型时不刷新页面，验证失败保留已填写内容
-- **行内编辑**：选项维护页面支持行内编辑，无需跳转
+- **行内编辑**：信息维护页面支持行内编辑，无需跳转
 - **错误提示**：输入框标签显示红色错误气泡
 - **响应式设计**：支持 PC 和移动端
 
@@ -25,17 +38,19 @@
 
 ### 后端
 - **Python 3.10+** - 主要编程语言
-- **Flask 3.0+** - Web 框架
+- **Flask 3.0+** - Web 框架（Blueprint 模块化架构）
 - **SQLAlchemy 3.1+** - ORM 框架
 - **SQLite** - 开发环境数据库
 - **MySQL** - 生产环境数据库（可选）
 - **Jinja2** - 模板引擎（Flask 内置）
+- **openpyxl** - Excel 文件处理
 - **AST** - Abstract Syntax Tree 用于安全的价格表达式计算
 
 ### 前端
 - **HTML5** - 页面结构
-- **CSS3** - 样式（无预处理器）
-- **JavaScript** - 交互逻辑（无构建工具，如 Webpack/Vite）
+- **CSS3** - 样式（使用 CSS 变量，无预处理器）
+- **JavaScript** - 交互逻辑（模块化设计，无构建工具）
+- **Chart.js 4.x** - 图表展示（CDN 引入）
 
 ## 快速开始
 
@@ -85,10 +100,15 @@
    浏览器打开：http://localhost:5000
    ```
 
+### 退出虚拟环境
+```bash
+deactivate
+```
+
 ## 数据库配置
 
 ### 默认配置（SQLite）
-无需额外配置，直接使用即可。
+无需额外配置，直接使用即可。数据库文件为 `train_model.db`。
 
 ### MySQL 配置
 
@@ -107,35 +127,62 @@ export MYSQL_DATABASE=train_model_manager
 
 ```
 TrainModelManager/
-├── app.py                    # Flask 主应用
+├── app.py                    # Flask 主应用（应用工厂模式）
 ├── models.py                 # SQLAlchemy 数据模型定义
 ├── config.py                 # 配置文件
 ├── init_db.py               # 数据库初始化脚本
 ├── requirements.txt          # Python 依赖
+├── routes/                  # Blueprint 路由模块
+│   ├── main.py              # 首页和统计
+│   ├── locomotive.py        # 机车模型
+│   ├── carriage.py          # 车厢模型
+│   ├── trainset.py          # 动车组模型
+│   ├── locomotive_head.py   # 先头车模型
+│   ├── options.py           # 信息维护
+│   └── api.py               # API 端点（导入导出、自动填充）
+├── utils/                   # 公共辅助函数
+│   ├── helpers.py           # 通用辅助函数
+│   ├── validators.py        # 验证函数
+│   └── price_calculator.py  # 价格计算
 ├── static/                  # 静态资源
 │   ├── css/
 │   │   └── style.css       # 全局样式
 │   └── js/
-│       ├── app.js           # 主页 JavaScript
-│       └── options.js      # 选项维护页面 JavaScript
+│       ├── utils.js         # 核心 JS 模块
+│       ├── app.js           # 页面初始化
+│       ├── options.js       # 信息维护页面
+│       └── system.js        # 系统维护页面
 ├── templates/              # Jinja2 模板
 │   ├── base.html           # 基础模板
 │   ├── index.html          # 汇总页面
-│   ├── locomotive.html     # 机车模型
+│   ├── locomotive.html     # 机车模型列表
 │   ├── locomotive_edit.html
-│   ├── carriage.html       # 车厢模型
+│   ├── carriage.html       # 车厢模型列表
 │   ├── carriage_edit.html
-│   ├── trainset.html       # 动车组模型
+│   ├── trainset.html       # 动车组模型列表
 │   ├── trainset_edit.html
-│   ├── locomotive_head.html # 先头车模型
+│   ├── locomotive_head.html # 先头车模型列表
 │   ├── locomotive_head_edit.html
-│   └── options.html       # 选项维护页面
-├── docs/                  # 文档目录
-│   ├── architecture.md     # 架构文档
-│   └── plans/            # 设计和实现计划
-├── 系统描述.txt           # 功能需求文档
-├── 数据库初始化要求.txt    # 预置数据清单
-└── CLAUDE.md             # AI 助手指导文档
+│   ├── options.html        # 信息维护页面
+│   ├── system.html         # 系统维护页面
+│   └── macros/             # Jinja2 宏
+├── tests/                  # 测试文件
+│   ├── conftest.py         # 测试配置和 fixtures
+│   ├── test_api.py         # API 测试
+│   ├── test_crud.py        # CRUD 测试
+│   ├── test_integration.py # 集成测试
+│   ├── test_labels.py      # 标签测试
+│   ├── test_models.py      # 模型测试
+│   ├── test_options.py     # 选项测试
+│   ├── test_routes.py      # 路由测试
+│   └── test_validation.py  # 验证测试
+└── docs/                   # 文档目录
+    ├── design/             # 设计文档
+    │   ├── Train-Model-Manager-Design.md
+    │   └── Train-Model-Manager-Implementation.md
+    └── plans/              # 需求文档
+        ├── SystemDescription.txt
+        └── DatabaseInitDescription.txt
 ```
 
 ## 数据模型
@@ -155,7 +202,7 @@ TrainModelManager/
 | trainset_model | 动车组车型 |
 | trainset_series | 动车组系列 |
 | locomotive_head | 先头车模型 |
-| power_type | 动力类型 |
+| power_type | 动力 |
 | brand | 品牌 |
 | depot | 车辆段/机务段 |
 | chip_interface | 芯片接口 |
@@ -173,12 +220,10 @@ TrainModelManager/
 **响应示例**：
 ```json
 {
-  "locomotive": {
-    "count": 10,
-    "total": 15800.0,
-    "by_scale": {"HO": 6, "N": 4},
-    "by_brand": {"百万城": 7, "长鸣": 3}
-  }
+  "type_stats": {...},
+  "scale_stats": {...},
+  "brand_stats": {...},
+  "merchant_stats": {...}
 }
 ```
 
@@ -195,6 +240,10 @@ TrainModelManager/
   "power_type_id": 2
 }
 ```
+
+**GET /api/auto-fill/trainset/<int:model_id>**
+
+获取动车组系列的关联数据。
 
 ### 添加模型 API
 
@@ -233,6 +282,33 @@ AJAX 添加机车模型。
 }
 ```
 
+### Excel 导入导出 API
+
+**GET /api/export/excel?mode=\<mode\>**
+
+导出数据到 Excel 文件。
+
+| mode | 说明 |
+|------|------|
+| models | 仅导出模型数据（机车、车厢、动车组、先头车）|
+| system | 仅导出系统信息（品牌、系列、车型等）|
+| all | 导出全部数据 |
+
+**POST /api/import/excel**
+
+从 Excel 导入数据。支持预检查和冲突处理。
+
+**请求参数**（FormData）：
+- `file`: Excel 文件
+- `mode`: 导入模式
+  - `preview`: 预检查模式，返回冲突信息
+  - `skip`: 跳过冲突数据
+  - `overwrite`: 覆盖现有数据
+
+**支持的工作表**：
+- 模型数据：机车、车厢、动车组、先头车
+- 系统信息：动力、品牌、机务段/车辆段、商家、动力类型、芯片接口、芯片型号、机车系列、车厢系列、动车组系列、机车车型、车厢车型、动车组车型
+
 ## 验证规则
 
 ### 数字格式验证
@@ -247,12 +323,29 @@ AJAX 添加机车模型。
 ### 唯一性验证
 
 - 同一比例内，机车号、编号、动车号必须唯一
+- 品牌名称必须唯一
 - 编辑时排除当前记录
 
 ### 价格表达式验证
 
 - 只允许数字和基本运算符：`+ - * / ( )`
 - 示例：`288+538`、`288*2 + 500`
+
+## 测试
+
+### 运行测试
+
+```bash
+# 激活虚拟环境后执行
+pytest                           # 运行所有测试
+pytest -v                        # 详细输出
+pytest tests/test_api.py         # 运行特定测试文件
+pytest -k "locomotive"           # 运行名称包含 locomotive 的测试
+```
+
+### 测试数据库隔离
+
+测试使用独立的数据库配置（TestConfig），不会影响开发数据库。
 
 ## 开发规范
 
@@ -265,8 +358,8 @@ AJAX 添加机车模型。
 ### Git 提交规范
 - 使用 rebase 而不是 merge
 - Commit message 用英文
-- 格式：`type: subject`
-- 类型：`feat`（新功能）、`fix`（修复）、`style`（样式）、`refactor`（重构）、`docs`（文档）
+- 格式：`[Type] subject`
+- 类型：`Feature`（新功能）、`Bugfix`（修复）、`Style`（样式）、`Refactor`（重构）、`Docs`（文档）
 
 ### 错误处理
 - 充分的错误处理，不吞掉异常
@@ -280,6 +373,8 @@ Flask==3.0.0
 Flask-SQLAlchemy==3.1.1
 PyMySQL==1.1.0
 cryptography==41.0.7
+openpyxl==3.1.5
+pytest==8.0.0
 ```
 
 ## 部署建议
@@ -324,14 +419,30 @@ server {
 ### 3. 页面刷新数据丢失
 添加模型时使用 AJAX 提交，数据不会丢失。
 
+### 4. 导入数据冲突
+导入时系统会检测唯一性约束冲突，可选择跳过冲突数据或覆盖现有数据。
+
+### 5. 测试失败
+确保使用独立的测试数据库配置，测试不会影响开发数据。
+
 ## 文档
 
-- [架构文档](docs/architecture.md) - 详细的系统架构说明
+- [设计文档](docs/design/Train-Model-Manager-Design.md) - 系统架构和整体设计
+- [实现计划](docs/design/Train-Model-Manager-Implementation.md) - 详细实现计划
 - [CLAUDE.md](CLAUDE.md) - AI 助手指导文档
-- [系统描述.txt](系统描述.txt) - 功能需求文档
-- [数据库初始化要求.txt](数据库初始化要求.txt) - 预置数据清单
+- [系统描述](docs/plans/SystemDescription.txt) - 功能需求文档
+- [数据库初始化要求](docs/plans/DatabaseInitDescription.txt) - 预置数据清单
 
 ## 版本历史
+
+- **v0.5.0**
+  - 添加模型列表复制按钮功能
+  - Excel 导入冲突检测和处理（预检查、跳过、覆盖）
+  - 多模式导出（模型数据、系统信息、全部）
+  - 智能导入（自动识别工作表类型）
+  - 导出文件标题行加粗
+  - "选项维护"更名为"信息维护"
+  - 修复测试数据库隔离问题
 
 - **v0.4.0**
   - 添加 AJAX 表单提交
@@ -341,11 +452,13 @@ server {
 
 - **v0.3.0**
   - 添加系列筛选车型功能
-  - 优化选项维护页面布局
+  - 优化信息维护页面布局
+  - Blueprint 模块化重构
 
 - **v0.2.0**
   - 添加自动填充功能
   - 添加唯一性验证
+  - 首页多维度统计
 
 - **v0.1.0**
   - 初始版本
@@ -353,8 +466,8 @@ server {
 
 ## 许可证
 
-[待定]
+[Apache License 2.0](LICENSE)
 
 ## 联系方式
 
-[待定]
+penglixun@gmail.com
