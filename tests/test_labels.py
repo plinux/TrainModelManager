@@ -68,10 +68,10 @@ class TestFormLabels:
 
 
 class TestOptionsLabels:
-    """选项维护页面标签测试"""
+    """信息维护页面标签测试"""
 
     def test_options_page_labels(self, client):
-        """测试选项维护页面标签"""
+        """测试信息维护页面标签"""
         response = client.get('/options')
         assert response.status_code == 200
 

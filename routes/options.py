@@ -1,5 +1,5 @@
 """
-选项维护路由 Blueprint
+信息维护路由 Blueprint
 使用工厂函数简化 CRUD 操作
 """
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
@@ -101,7 +101,7 @@ OPTION_CONFIG = {
 
 @options_bp.route('/options')
 def options():
-  """选项维护页面"""
+  """信息维护页面"""
   return render_template('options.html',
     power_types=PowerType.query.all(),
     brands=Brand.query.all(),

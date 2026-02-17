@@ -1,5 +1,5 @@
 /**
- * 选项维护页面 JavaScript 模块
+ * 信息维护页面 JavaScript 模块
  */
 
 // 选项编辑管理

@@ -39,10 +39,10 @@ class TestPageRoutes:
         assert '车厢模型' in response.data.decode('utf-8')
 
     def test_options_page(self, client):
-        """测试选项维护页面"""
+        """测试信息维护页面"""
         response = client.get('/options')
         assert response.status_code == 200
-        assert '选项维护' in response.data.decode('utf-8')
+        assert '信息维护' in response.data.decode('utf-8')
 
     def test_system_page(self, client):
         """测试系统维护页面"""

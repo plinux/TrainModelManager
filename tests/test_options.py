@@ -1,6 +1,6 @@
 """
-选项维护测试
-验证选项维护页面的 CRUD 操作
+信息维护测试
+验证信息维护页面的 CRUD 操作
 """
 import pytest
 from models import db, Brand, Depot, Merchant, ChipInterface, ChipModel

@@ -675,7 +675,7 @@ const AutocompleteManager = {
     if (!hint && wrapper) {
       hint = document.createElement('div');
       hint.className = 'autocomplete-hint';
-      hint.textContent = '该选项不存在，请先到选项维护页面添加';
+      hint.textContent = '该选项不存在，请先到信息维护页面添加';
       wrapper.appendChild(hint);
     }
     instance.hint = hint;
