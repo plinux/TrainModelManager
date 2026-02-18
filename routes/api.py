@@ -1170,7 +1170,7 @@ def get_import_template(template_id):
     }
   """
   try:
-    template = ImportTemplate.query.get(template_id)
+    template = db.session.get(ImportTemplate, template_id)
     if not template:
       return jsonify({'success': False, 'error': '模板不存在'}), 404
 
@@ -1211,7 +1211,7 @@ def update_import_template(template_id):
     }
   """
   try:
-    template = ImportTemplate.query.get(template_id)
+    template = db.session.get(ImportTemplate, template_id)
     if not template:
       return jsonify({'success': False, 'error': '模板不存在'}), 404
 
@@ -1259,7 +1259,7 @@ def delete_import_template(template_id):
     JSON: {'success': True, 'message': '删除成功'}
   """
   try:
-    template = ImportTemplate.query.get(template_id)
+    template = db.session.get(ImportTemplate, template_id)
     if not template:
       return jsonify({'success': False, 'error': '模板不存在'}), 404
 

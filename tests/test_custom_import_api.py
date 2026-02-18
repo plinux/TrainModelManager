@@ -1102,7 +1102,7 @@ class TestCustomImportExecuteAPI:
     assert data['summary']['locomotive'] == 1
 
     # 验证数据被更新
-    loco = Locomotive.query.get(original_id)
+    loco = db.session.get(Locomotive, original_id)
     assert loco.color == '新颜色'
     assert loco.brand.name == '新品牌'
 

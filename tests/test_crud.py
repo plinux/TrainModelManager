@@ -70,12 +70,12 @@ class TestLocomotiveCRUD:
             loco_id = loco.id
 
             # 更新
-            saved = Locomotive.query.get(loco_id)
+            saved = db.session.get(Locomotive,loco_id)
             saved.price = '200'
             saved.locomotive_number = 'UPDATED'
             db.session.commit()
 
-            updated = Locomotive.query.get(loco_id)
+            updated = db.session.get(Locomotive,loco_id)
             assert updated.price == '200'
             assert updated.locomotive_number == 'UPDATED'
 
@@ -95,12 +95,12 @@ class TestLocomotiveCRUD:
             loco_id = loco.id
 
             # 删除
-            saved = Locomotive.query.get(loco_id)
+            saved = db.session.get(Locomotive,loco_id)
             db.session.delete(saved)
             db.session.commit()
 
             # 验证已删除
-            deleted = Locomotive.query.get(loco_id)
+            deleted = db.session.get(Locomotive,loco_id)
             assert deleted is None
 
     def test_locomotive_delete_via_api(self, client, sample_data):
@@ -170,12 +170,12 @@ class TestTrainsetCRUD:
             ts_id = trainset.id
 
             # 更新编组
-            saved = Trainset.query.get(ts_id)
+            saved = db.session.get(Trainset,ts_id)
             saved.formation = 16
             saved.color = '绿色'
             db.session.commit()
 
-            updated = Trainset.query.get(ts_id)
+            updated = db.session.get(Trainset,ts_id)
             assert updated.formation == 16
             assert updated.color == '绿色'
 
@@ -194,11 +194,11 @@ class TestTrainsetCRUD:
             db.session.commit()
             ts_id = trainset.id
 
-            saved = Trainset.query.get(ts_id)
+            saved = db.session.get(Trainset,ts_id)
             db.session.delete(saved)
             db.session.commit()
 
-            deleted = Trainset.query.get(ts_id)
+            deleted = db.session.get(Trainset,ts_id)
             assert deleted is None
 
     def test_trainset_delete_via_api(self, client, sample_data):
@@ -260,11 +260,11 @@ class TestLocomotiveHeadCRUD:
             db.session.commit()
             head_id = head.id
 
-            saved = LocomotiveHead.query.get(head_id)
+            saved = db.session.get(LocomotiveHead,head_id)
             saved.special_color = '蓝色'
             db.session.commit()
 
-            updated = LocomotiveHead.query.get(head_id)
+            updated = db.session.get(LocomotiveHead,head_id)
             assert updated.special_color == '蓝色'
 
     def test_locomotive_head_delete(self, client, sample_data):
@@ -279,11 +279,11 @@ class TestLocomotiveHeadCRUD:
             db.session.commit()
             head_id = head.id
 
-            saved = LocomotiveHead.query.get(head_id)
+            saved = db.session.get(LocomotiveHead,head_id)
             db.session.delete(saved)
             db.session.commit()
 
-            deleted = LocomotiveHead.query.get(head_id)
+            deleted = db.session.get(LocomotiveHead,head_id)
             assert deleted is None
 
     def test_locomotive_head_delete_via_api(self, client, sample_data):
@@ -343,12 +343,12 @@ class TestCarriageCRUD:
             db.session.commit()
             c_id = carriage.id
 
-            saved = CarriageSet.query.get(c_id)
+            saved = db.session.get(CarriageSet,c_id)
             saved.total_price = 600
             saved.train_number = 'T2'
             db.session.commit()
 
-            updated = CarriageSet.query.get(c_id)
+            updated = db.session.get(CarriageSet,c_id)
             assert updated.total_price == 600
             assert updated.train_number == 'T2'
 
@@ -365,11 +365,11 @@ class TestCarriageCRUD:
             db.session.commit()
             c_id = carriage.id
 
-            saved = CarriageSet.query.get(c_id)
+            saved = db.session.get(CarriageSet,c_id)
             db.session.delete(saved)
             db.session.commit()
 
-            deleted = CarriageSet.query.get(c_id)
+            deleted = db.session.get(CarriageSet,c_id)
             assert deleted is None
 
     def test_carriage_set_delete_via_api(self, client, sample_data):
