@@ -24,6 +24,12 @@
   - 自动识别 Excel 工作表类型
   - 冲突检测：预检查导入数据是否违反唯一性约束
   - 冲突处理：可选择跳过冲突数据或覆盖现有数据
+- **自定义导入向导**（v0.7.0 新增）：
+  - 5 步向导流程：选择文件 → 管理模板 → 配置映射 → 预览确认 → 执行导入
+  - 导入模板管理：保存常用映射配置，支持加载、更新、重命名、删除
+  - 灵活的列映射：Excel 列与系统表字段自由映射
+  - 车厢合并单元格检测：智能识别车厢套装的合并单元格结构
+  - 冲突预览：导入前预览所有数据冲突
 - **导出格式**：Excel 文件，标题行加粗，文件名包含日期时间
 
 ### 用户体验优化
@@ -143,7 +149,8 @@ TrainModelManager/
 ├── utils/                   # 公共辅助函数
 │   ├── helpers.py           # 通用辅助函数
 │   ├── validators.py        # 验证函数
-│   └── price_calculator.py  # 价格计算
+│   ├── price_calculator.py  # 价格计算
+│   └── system_tables.py     # 系统表配置（自定义导入）
 ├── static/                  # 静态资源
 │   ├── css/
 │   │   └── style.css       # 全局样式
@@ -151,7 +158,8 @@ TrainModelManager/
 │       ├── utils.js         # 核心 JS 模块
 │       ├── app.js           # 页面初始化
 │       ├── options.js       # 信息维护页面
-│       └── system.js        # 系统维护页面
+│       ├── system.js        # 系统维护页面
+│       └── custom-import.js # 自定义导入向导
 ├── templates/              # Jinja2 模板
 │   ├── base.html           # 基础模板
 │   ├── index.html          # 汇总页面
@@ -309,6 +317,134 @@ AJAX 添加机车模型。
 - 模型数据：机车、车厢、动车组、先头车
 - 系统信息：动力、品牌、机务段/车辆段、商家、动力类型、芯片接口、芯片型号、机车系列、车厢系列、动车组系列、机车车型、车厢车型、动车组车型
 
+### 自定义导入 API（v0.7.0 新增）
+
+**GET /api/import-templates**
+
+获取所有导入模板列表。
+
+**POST /api/import-templates**
+
+创建新的导入模板。
+
+**请求体**：
+```json
+{
+  "name": "我的机车导入模板",
+  "target_table": "locomotive",
+  "column_mapping": {
+    "A": "model_id",
+    "B": "brand_id",
+    "C": "scale"
+  }
+}
+```
+
+**GET /api/import-templates/\<id\>**
+
+获取指定模板详情。
+
+**PUT /api/import-templates/\<id\>**
+
+更新模板配置。
+
+**DELETE /api/import-templates/\<id\>**
+
+删除模板。
+
+**GET /api/custom-import/tables**
+
+获取可导入的系统表配置（表名、字段、唯一键等）。
+
+**响应示例**：
+```json
+{
+  "tables": {
+    "locomotive": {
+      "display_name": "机车",
+      "fields": [...],
+      "unique_keys": [...],
+      "foreign_keys": [...]
+    },
+    ...
+  }
+}
+```
+
+**POST /api/custom-import/parse**
+
+解析 Excel 文件，获取工作表和列信息。
+
+**请求参数**（FormData）：
+- `file`: Excel 文件
+
+**响应示例**：
+```json
+{
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "columns": ["A", "B", "C", "D"],
+      "headers": ["车型", "品牌", "比例", "价格"],
+      "row_count": 100
+    }
+  ]
+}
+```
+
+**POST /api/custom-import/preview**
+
+预览导入数据，包含冲突检测。
+
+**请求体**：
+```json
+{
+  "file_path": "/tmp/xxx.xlsx",
+  "sheet_name": "Sheet1",
+  "target_table": "locomotive",
+  "column_mapping": {"A": "model_id", "B": "brand_id"},
+  "conflict_mode": "skip"
+}
+```
+
+**响应示例**：
+```json
+{
+  "total_rows": 100,
+  "valid_rows": 95,
+  "conflict_rows": 5,
+  "conflicts": [
+    {"row": 3, "message": "机车号已存在"}
+  ],
+  "preview_data": [...]
+}
+```
+
+**POST /api/custom-import/execute**
+
+执行导入操作。
+
+**请求体**：
+```json
+{
+  "file_path": "/tmp/xxx.xlsx",
+  "sheet_name": "Sheet1",
+  "target_table": "locomotive",
+  "column_mapping": {"A": "model_id", "B": "brand_id"},
+  "conflict_mode": "skip"
+}
+```
+
+**响应示例**：
+```json
+{
+  "success": true,
+  "imported_count": 95,
+  "skipped_count": 5,
+  "message": "导入完成：成功 95 条，跳过 5 条"
+}
+```
+
 ## 验证规则
 
 ### 数字格式验证
@@ -434,6 +570,14 @@ server {
 - [数据库初始化要求](docs/plans/DatabaseInitDescription.txt) - 预置数据清单
 
 ## 版本历史
+
+- **v0.7.0**
+  - 自定义 Excel 导入向导（5 步向导流程）
+  - 导入模板管理（保存、加载、更新、重命名、删除）
+  - 灵活的列映射配置
+  - 车厢合并单元格检测
+  - 导入预览和冲突检测
+  - ImportTemplate 数据模型
 
 - **v0.5.0**
   - 添加模型列表复制按钮功能

@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 模型列表表格支持排序和筛选
 - 模型列表复制按钮（快速填充表单）
 - Excel 数据导入导出（多模式导出、智能导入、冲突检测）
+- 自定义 Excel 导入向导（5 步向导、模板管理、列映射、冲突检测）
 - 信息维护功能（原名"选项维护"）
 
 ## 技术栈
@@ -43,6 +44,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `static/js/app.js` - 页面初始化
 - `static/js/options.js` - 信息维护页面专用
 - `static/js/system.js` - 系统维护页面专用
+- `static/js/custom-import.js` - 自定义导入向导模块（CustomImportWizard）
 - `static/css/style.css` - 主样式文件（使用 CSS 变量）
 - Chart.js 通过 CDN 引入
 
@@ -161,6 +163,7 @@ pytest -v                  # 运行测试（详细输出）
 ### 系统维护页
 - 数据导出：三种模式按钮
 - 数据导入：选择文件后自动预检查，有冲突时显示对话框
+- 自定义导入向导：5 步向导（选择文件 → 管理模板 → 配置映射 → 预览确认 → 执行导入）
 - 数据库重新初始化：确认对话框
 
 ## API 路由
@@ -182,6 +185,17 @@ pytest -v                  # 运行测试（详细输出）
 - `GET /api/export/excel?mode=<models|system|all>` - 导出
 - `POST /api/import/excel` - 导入（FormData: file, mode）
 
+### 自定义导入 API
+- `GET /api/import-templates` - 获取导入模板列表
+- `POST /api/import-templates` - 创建导入模板
+- `GET /api/import-templates/<id>` - 获取指定模板
+- `PUT /api/import-templates/<id>` - 更新模板
+- `DELETE /api/import-templates/<id>` - 删除模板
+- `GET /api/custom-import/tables` - 获取系统表配置
+- `POST /api/custom-import/parse` - 解析 Excel 文件（获取工作表和列信息）
+- `POST /api/custom-import/preview` - 预览导入数据（含冲突检测）
+- `POST /api/custom-import/execute` - 执行导入
+
 ## 前端 JavaScript 模块
 
 ### utils.js 核心对象
@@ -193,6 +207,11 @@ CarriageManager // 车厢项管理（addRow、removeRow、handleSeriesChange）
 ModelForm       // 模型表单（handleLocomotiveSeriesChange、autoFillLocomotive）
 TableManager    // 表格管理（init、handleSort、handleFilter、applySortAndFilter）
 FormFiller      // 表单填充（copyFromRow、fillField）
+```
+
+### custom-import.js 核心对象
+```javascript
+CustomImportWizard  // 自定义导入向导（5 步向导管理、模板管理、列映射、预览、执行）
 ```
 
 ### 全局函数（兼容层）
@@ -238,14 +257,16 @@ TrainModelManager/
 ├── utils/              # 公共辅助函数
 │   ├── helpers.py      # 通用辅助函数
 │   ├── validators.py   # 验证函数
-│   └── price_calculator.py  # 价格计算
+│   ├── price_calculator.py  # 价格计算
+│   └── system_tables.py # 系统表配置（自定义导入）
 ├── static/
 │   ├── css/style.css   # 主样式文件
 │   └── js/
 │       ├── utils.js    # 核心 JS 模块
 │       ├── app.js      # 页面初始化
 │       ├── options.js  # 信息维护专用
-│       └── system.js   # 系统维护专用
+│       ├── system.js   # 系统维护专用
+│       └── custom-import.js  # 自定义导入向导
 ├── templates/          # Jinja2 模板
 │   ├── base.html       # 基础模板
 │   ├── index.html      # 首页统计
@@ -322,6 +343,32 @@ pytest -k "locomotive"    # 运行名称匹配的测试
 | 清理兼容函数 | utils.js 全局函数层可精简 |
 
 ## 代码优化记录
+
+### 第五次优化内容（v0.7.0）
+1. **自定义 Excel 导入向导**
+   - 5 步向导：选择文件 → 管理模板 → 配置映射 → 预览确认 → 执行导入
+   - 导入模板管理：保存、加载、更新、重命名、删除
+   - 灵活的列映射：Excel 列到系统表字段的自定义映射
+   - 冲突检测：预览时检测唯一性约束冲突
+   - 冲突处理：支持跳过或覆盖模式
+   - 车厢合并单元格检测：智能检测并处理车厢套装的合并单元格
+
+2. **新增数据模型**
+   - `ImportTemplate` 模型：存储导入模板配置（名称、目标表、列映射）
+
+3. **新增 API 端点**
+   - 导入模板 CRUD API：`/api/import-templates`
+   - 自定义导入 API：`/api/custom-import/tables`、`/api/custom-import/parse`、`/api/custom-import/preview`、`/api/custom-import/execute`
+
+4. **新增前端模块**
+   - `static/js/custom-import.js`：CustomImportWizard 类，封装向导逻辑
+
+5. **新增工具模块**
+   - `utils/system_tables.py`：系统表配置（表名、字段、唯一键、外键）
+
+6. **测试覆盖**
+   - 148 个测试全部通过
+   - 新增自定义导入相关测试用例
 
 ### 第四次优化内容（v0.6.0）
 1. **JavaScript 函数提取**
