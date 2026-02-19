@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from models import db, LocomotiveHead, TrainsetModel, Brand, Merchant
 from utils.helpers import parse_purchase_date, safe_int, parse_boolean, api_success, api_error
 from utils.price_calculator import calculate_price
+from utils.file_sync import rename_model_folder, update_file_records_in_db
 import logging
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,26 @@ def api_edit_locomotive_head(id):
     locomotive_head = LocomotiveHead.query.get_or_404(id)
     data = request.get_json()
 
+    # 保存旧的品牌和货号（用于重命名文件夹）
+    old_brand = Brand.query.get(locomotive_head.brand_id)
+    old_brand_name = old_brand.name if old_brand else ''
+    old_item_number = locomotive_head.item_number or ''
+
+    # 更新模型
     update_locomotive_head_from_form(locomotive_head, data)
+
+    # 获取新的品牌和货号
+    new_brand = Brand.query.get(locomotive_head.brand_id)
+    new_brand_name = new_brand.name if new_brand else ''
+    new_item_number = locomotive_head.item_number or ''
+
+    # 如果品牌或货号变化，重命名文件夹
+    if old_brand_name != new_brand_name or old_item_number != new_item_number:
+      rename_model_folder('locomotive_head', old_brand_name, old_item_number,
+                          new_brand_name, new_item_number)
+      update_file_records_in_db('locomotive_head', id, old_brand_name, old_item_number,
+                                new_brand_name, new_item_number)
+
     db.session.commit()
     logger.info(f"Locomotive head updated: ID={id}")
 
@@ -86,7 +106,7 @@ def api_add_locomotive_head():
     db.session.commit()
     logger.info(f"Locomotive head added: ID={locomotive_head.id}")
 
-    return jsonify(api_success('先头车模型添加成功'))
+    return jsonify(api_success('先头车模型添加成功', data={'id': locomotive_head.id}))
   except Exception as e:
     db.session.rollback()
     logger.error(f"Error adding locomotive head: {e}")

@@ -8,6 +8,7 @@
   const btnExportModels = document.getElementById('btn-export-models');
   const btnExportSystem = document.getElementById('btn-export-system');
   const btnExportAll = document.getElementById('btn-export-all');
+  const btnExportFiles = document.getElementById('btn-export-files');
   const btnImport = document.getElementById('btn-import');
   const importFile = document.getElementById('import-file');
   const importFilename = document.getElementById('import-filename');
@@ -93,6 +94,56 @@
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         showMessage('导出成功！');
+      })
+      .catch(function(error) {
+        showMessage(error.message, true);
+      })
+      .finally(function() {
+        button.disabled = false;
+        button.textContent = originalText;
+      });
+  }
+
+  /**
+   * 导出所有模型文件为 ZIP
+   * @param {HTMLElement} button - 触发的按钮元素
+   */
+  function exportAllFiles(button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = '打包中...';
+
+    fetch('/api/files/export-all')
+      .then(function(response) {
+        if (!response.ok) {
+          return response.json().then(function(data) {
+            throw new Error(data.error || '导出失败');
+          });
+        }
+        // 从响应头获取文件名
+        var contentDisposition = response.headers.get('Content-Disposition');
+        var filename = 'model_files.zip';
+        if (contentDisposition) {
+          var filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-\d['"]*)?([^'";\s]+)['"]?;?/i);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = decodeURIComponent(filenameMatch[1]);
+          }
+        }
+        return response.blob().then(function(blob) {
+          return { blob: blob, filename: filename };
+        });
+      })
+      .then(function(result) {
+        // 创建下载链接
+        var url = window.URL.createObjectURL(result.blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = result.filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        showMessage('文件导出成功！');
       })
       .catch(function(error) {
         showMessage(error.message, true);
@@ -270,6 +321,13 @@
   btnExportAll.addEventListener('click', function() {
     exportToExcel('all', btnExportAll);
   });
+
+  // 事件绑定 - 文件导出
+  if (btnExportFiles) {
+    btnExportFiles.addEventListener('click', function() {
+      exportAllFiles(btnExportFiles);
+    });
+  }
 
   // 事件绑定 - 导入
   btnImport.addEventListener('click', function() {

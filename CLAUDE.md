@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Excel 数据导入导出（多模式导出、智能导入、冲突检测）
 - 自定义 Excel 导入向导（5 步向导、模板管理、列映射、冲突检测）
 - 信息维护功能（原名"选项维护"）
+- 模型文件管理（图片、说明书、数码功能表的上传、下载、预览、删除）
 
 ## 技术栈
 - Python 3.10+
@@ -38,9 +39,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `routes/locomotive_head.py` - 先头车模型路由
 - `routes/options.py` - 信息维护（使用工厂函数）
 - `routes/api.py` - 自动填充 API、Excel 导入导出、统计 API
+- `routes/files.py` - 文件管理 API（上传、下载、预览、删除、导出）
 
 ### 前端架构
-- `static/js/utils.js` - 核心工具模块（Utils、Api、FormHelper、CarriageManager、ModelForm、TableManager、FormFiller）
+- `static/js/utils.js` - 核心工具模块（Utils、Api、FormHelper、CarriageManager、ModelForm、TableManager、FormFiller、FileManager）
 - `static/js/app.js` - 页面初始化
 - `static/js/options.js` - 信息维护页面专用
 - `static/js/system.js` - 系统维护页面专用
@@ -100,6 +102,7 @@ pytest -v                  # 运行测试（详细输出）
 | locomotive_series/model | 机车系列和型号 |
 | carriage_series/model | 车厢系列和型号 |
 | trainset_series/model | 动车组系列和型号 |
+| model_file | 模型文件跟踪（图片、说明书、数码功能表）|
 
 ## 核心业务逻辑
 
@@ -253,12 +256,14 @@ TrainModelManager/
 │   ├── trainset.py     # 动车组模型
 │   ├── locomotive_head.py  # 先头车模型
 │   ├── options.py      # 信息维护
-│   └── api.py          # API 端点
+│   ├── api.py          # API 端点
+│   └── files.py        # 文件管理 API
 ├── utils/              # 公共辅助函数
 │   ├── helpers.py      # 通用辅助函数
 │   ├── validators.py   # 验证函数
 │   ├── price_calculator.py  # 价格计算
-│   └── system_tables.py # 系统表配置（自定义导入）
+│   ├── system_tables.py # 系统表配置（自定义导入）
+│   └── file_sync.py    # 文件同步工具
 ├── static/
 │   ├── css/style.css   # 主样式文件
 │   └── js/
@@ -292,7 +297,8 @@ TrainModelManager/
 │   ├── test_models.py  # 模型测试
 │   ├── test_options.py # 选项测试
 │   ├── test_routes.py  # 路由测试
-│   └── test_validation.py  # 验证测试
+│   ├── test_validation.py  # 验证测试
+│   └── test_files.py   # 文件功能测试
 └── docs/               # 文档目录
     ├── design/          # 设计文档
     │   ├── Train-Model-Manager-Design.md
@@ -325,6 +331,10 @@ pytest -k "locomotive"    # 运行名称匹配的测试
 - 复制按钮使用 data-* 属性存储模型数据
 - 使用 textContent 而非 innerHTML 防止 XSS
 - 页面名称"信息维护"而非"选项维护"
+- 文件存储在 DATA_DIR 配置的目录下（默认 data/）
+- 先头车模型不能上传数码功能表
+- 图片和功能表每个模型只能有一个，上传会覆盖旧文件
+- 说明书可以有多个
 
 ## 优化机会（待执行）
 
@@ -343,6 +353,45 @@ pytest -k "locomotive"    # 运行名称匹配的测试
 | 清理兼容函数 | utils.js 全局函数层可精简 |
 
 ## 代码优化记录
+
+### 第六次优化内容（v0.8.0）
+1. **模型文件管理功能**
+   - 文件上传：支持图片、说明书、数码功能表
+   - 文件下载和预览：在浏览器中打开或下载
+   - 文件删除：删除单个文件
+   - ZIP 导出：一键导出所有模型文件
+   - 文件同步：启动时自动同步 data 目录到数据库
+
+2. **文件存储结构**
+   - 按 "模型类型/品牌_货号/" 结构组织
+   - 图片命名：`品牌_货号.{ext}`
+   - 功能表命名：`品牌_货号_FunctionKey.{ext}`
+   - 说明书命名：`品牌_货号_Manual_{原始文件名}.{ext}`
+
+3. **新增数据模型**
+   - `ModelFile` 模型：跟踪文件元数据（类型、路径、大小、MIME类型）
+
+4. **新增 API 端点**
+   - 文件上传：`POST /api/files/upload`
+   - 文件下载：`GET /api/files/download/<id>`
+   - 文件预览：`GET /api/files/view/<id>`
+   - 文件删除：`DELETE /api/files/delete/<id>`
+   - 文件列表：`GET /api/files/list/<type>/<id>`
+   - 导出所有文件：`GET /api/files/export-all`
+   - 模型详情：`GET /api/files/model/<type>/<id>`
+
+5. **前端增强**
+   - `FileManager` 模块：文件管理功能封装
+   - 模型详情模态框：显示属性和文件
+   - 表格新增图片、功能表、说明书列
+   - 缩略图预览和状态指示器
+
+6. **新增工具模块**
+   - `utils/file_sync.py`：目录同步工具
+
+7. **测试覆盖**
+   - 164 个测试全部通过
+   - 新增文件功能测试用例
 
 ### 第五次优化内容（v0.7.0）
 1. **自定义 Excel 导入向导**

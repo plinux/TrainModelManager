@@ -13,6 +13,7 @@ from config import Config
 from models import db
 from routes import register_blueprints
 import logging
+import os
 
 # 配置日志
 logging.basicConfig(
@@ -39,6 +40,17 @@ def create_app(config_class=Config):
 
   # 注册错误处理器
   register_error_handlers(app)
+
+  # 创建数据目录（如果不存在）
+  data_dir = app.config.get('DATA_DIR', 'data')
+  if not os.path.exists(data_dir):
+    os.makedirs(data_dir, exist_ok=True)
+    logger.info(f"Created data directory: {data_dir}")
+
+  # 启动时同步文件
+  with app.app_context():
+    from utils.file_sync import sync_data_directory
+    sync_data_directory()
 
   logger.info("Application initialized successfully")
   return app

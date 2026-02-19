@@ -214,3 +214,6 @@ myenv
 node_modules/
 package-lock.json
 package.json
+
+# Model data files (images, manuals, etc.)
+data/

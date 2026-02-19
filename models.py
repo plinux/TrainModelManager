@@ -305,3 +305,39 @@ class ImportTemplate(db.Model):
 
   def __repr__(self):
     return f'<ImportTemplate {self.id}: {self.name}>'
+
+
+class ModelFile(db.Model):
+  """模型文件跟踪表"""
+  __tablename__ = 'model_file'
+
+  id = db.Column(Integer, primary_key=True, comment='主键')
+  model_type = db.Column(String(20), nullable=False, comment='模型类型：locomotive/carriage/trainset/locomotive_head')
+  model_id = db.Column(Integer, nullable=False, comment='关联模型ID')
+  file_type = db.Column(String(20), nullable=False, comment='文件类型：image/manual/function_table')
+  file_path = db.Column(String(255), nullable=False, comment='相对路径（相对于 DATA_DIR）')
+  original_filename = db.Column(String(255), nullable=False, comment='原始文件名')
+  file_size = db.Column(Integer, comment='文件大小（字节）')
+  mime_type = db.Column(String(100), comment='MIME 类型')
+  uploaded_at = db.Column(DateTime, default=datetime.utcnow, comment='上传时间')
+
+  def __repr__(self):
+    return f'<ModelFile {self.id}: {self.model_type}/{self.model_id} - {self.file_type}>'
+
+  def to_dict(self):
+    """转换为字典"""
+    import os
+    # 从 file_path 中提取实际存储的文件名
+    stored_filename = os.path.basename(self.file_path) if self.file_path else self.original_filename
+    return {
+      'id': self.id,
+      'model_type': self.model_type,
+      'model_id': self.model_id,
+      'file_type': self.file_type,
+      'file_path': self.file_path,
+      'original_filename': self.original_filename,
+      'stored_filename': stored_filename,
+      'file_size': self.file_size,
+      'mime_type': self.mime_type,
+      'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None
+    }

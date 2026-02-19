@@ -1270,7 +1270,7 @@ const FileManager = {
     'series': '系列',
     'model': '型号',
     'power_type': '动力',
-    'depot': '机务段/动车段/车辆段',
+    'depot': '配属',
     'scale': '比例',
     'locomotive_number': '机车号',
     'trainset_number': '动车号',
@@ -1286,7 +1286,6 @@ const FileManager = {
     'price': '价格',
     'total_price': '总价',
     'item_number': '货号',
-    'product_url': '产品地址',
     'purchase_date': '购买日期',
     'merchant': '购买商家',
     'train_number': '车次'
@@ -1335,9 +1334,13 @@ const FileManager = {
     if (hasFunctionTable) {
       this.renderFunctionTable(model.files.function_table);
     } else {
+      // 先头车没有数码功能表，隐藏该区域
       const container = document.getElementById('function-table-container');
       if (container) {
-        container.closest('.file-section').style.display = 'none';
+        const section = container.closest('.model-file-section');
+        if (section) {
+          section.style.display = 'none';
+        }
       }
     }
 
@@ -1380,11 +1383,12 @@ const FileManager = {
       tbody.removeChild(tbody.firstChild);
     }
 
+    // purchase_date 放最后，不包含 product_url（作为货号链接处理）
     const displayOrder = ['brand', 'series', 'model', 'power_type', 'scale',
       'locomotive_number', 'trainset_number', 'decoder_number', 'depot',
       'plaque', 'color', 'special_color', 'formation', 'head_light',
       'interior_light', 'chip_interface', 'chip_model', 'price', 'total_price',
-      'item_number', 'product_url', 'purchase_date', 'merchant', 'train_number'];
+      'item_number', 'merchant', 'train_number', 'purchase_date'];
 
     displayOrder.forEach(key => {
       if (attributes[key] !== undefined && attributes[key] !== null && attributes[key] !== '') {
@@ -1396,17 +1400,37 @@ const FileManager = {
 
         let value = attributes[key];
         // 处理布尔值
-        if (key === 'head_light') {
+        if (key === 'head_light' || key === 'interior_light') {
           value = value === true || value === 'true' ? '有' : '无';
+          td.textContent = value;
         }
-        // 处理 URL
-        if (key === 'product_url' && value) {
-          const link = document.createElement('a');
-          link.href = value;
-          link.target = '_blank';
-          link.textContent = value;
-          td.appendChild(link);
-        } else {
+        // 处理财号：如果有产品地址，显示为链接
+        else if (key === 'item_number') {
+          const productUrl = attributes['product_url'];
+          if (productUrl) {
+            const link = document.createElement('a');
+            link.href = productUrl;
+            link.target = '_blank';
+            link.textContent = value;
+            td.appendChild(link);
+          } else {
+            td.textContent = value;
+          }
+        }
+        // 处理购买日期：只显示日期部分
+        else if (key === 'purchase_date') {
+          // 格式可能是：YYYY-MM-DD 或 YYYY-MM-DDTHH:MM:SS 或 YYYY-MM-DD HH:MM:SS
+          if (value) {
+            // 处理 ISO 格式 (T 分隔) 或空格分隔
+            if (value.includes('T')) {
+              value = value.split('T')[0];
+            } else if (value.includes(' ')) {
+              value = value.split(' ')[0];
+            }
+          }
+          td.textContent = value;
+        }
+        else {
           td.textContent = value;
         }
 
@@ -1422,34 +1446,47 @@ const FileManager = {
    * @param {Object} functionTable - 功能表文件信息
    */
   renderFunctionTable(functionTable) {
-    const container = document.getElementById('function-table-container');
-    if (!container) return;
+    const statusContainer = document.getElementById('function-table-status');
+    const btnView = document.getElementById('btn-view-function-table');
+    const btnDownload = document.getElementById('btn-download-function-table');
+    const btnDelete = document.getElementById('btn-delete-function-table');
+
+    if (!statusContainer) return;
 
     // 显示功能表区域（先头车可能隐藏了）
-    container.closest('.file-section').style.display = 'block';
-
-    // 保存上传控件引用
-    const uploadInput = container.querySelector('input[type="file"]');
-    const uploadBtn = container.querySelector('button');
-
-    // 清空容器
-    while (container.firstChild) {
-      container.removeChild(container.firstChild);
+    const section = statusContainer.closest('.model-file-section');
+    if (section) {
+      section.style.display = 'block';
     }
 
+    // 保存文件引用
+    this.currentModel.files.function_table = functionTable;
+
+    // 更新状态显示
+    statusContainer.innerHTML = '';
     if (functionTable) {
-      const fileItem = this.createFileItem(functionTable);
-      container.appendChild(fileItem);
+      const status = document.createElement('span');
+      status.className = 'file-status file-status-exists';
+      const displayName = functionTable.stored_filename || functionTable.original_filename;
+      status.textContent = displayName;
+      status.title = displayName;
+      statusContainer.appendChild(status);
+
+      // 显示操作按钮
+      if (btnView) btnView.style.display = 'inline-block';
+      if (btnDownload) btnDownload.style.display = 'inline-block';
+      if (btnDelete) btnDelete.style.display = 'inline-block';
     } else {
       const status = document.createElement('span');
       status.className = 'file-status file-status-none';
       status.textContent = '未上传';
-      container.appendChild(status);
-    }
+      statusContainer.appendChild(status);
 
-    // 重新添加上传控件
-    if (uploadInput) container.appendChild(uploadInput);
-    if (uploadBtn) container.appendChild(uploadBtn);
+      // 隐藏操作按钮
+      if (btnView) btnView.style.display = 'none';
+      if (btnDownload) btnDownload.style.display = 'none';
+      if (btnDelete) btnDelete.style.display = 'none';
+    }
   },
 
   /**
@@ -1485,12 +1522,9 @@ const FileManager = {
 
     const name = document.createElement('span');
     name.className = 'file-name';
-    name.textContent = file.original_filename;
-    name.title = file.original_filename;
-
-    const size = document.createElement('span');
-    size.className = 'file-size';
-    size.textContent = this.formatFileSize(file.file_size);
+    const displayName = file.stored_filename || file.original_filename;
+    name.textContent = displayName;
+    name.title = displayName;  // hover 显示完整文件名
 
     const actions = document.createElement('div');
     actions.className = 'file-actions';
@@ -1518,7 +1552,6 @@ const FileManager = {
     actions.appendChild(btnDelete);
 
     div.appendChild(name);
-    div.appendChild(size);
     div.appendChild(actions);
 
     return div;
@@ -1583,9 +1616,20 @@ const FileManager = {
    * @param {string} fileType - 文件类型
    */
   viewFile(fileType) {
-    const file = this.currentModel.files[fileType === 'image' ? 'image' : 'function_table'];
+    const file = this.currentModel.files[fileType];
     if (file) {
       window.open(`/api/files/view/${file.id}`, '_blank');
+    }
+  },
+
+  /**
+   * 下载文件
+   * @param {string} fileType - 文件类型 (image/function_table)
+   */
+  downloadFile(fileType) {
+    const file = this.currentModel.files[fileType];
+    if (file) {
+      window.location.href = `/api/files/download/${file.id}`;
     }
   },
 
@@ -1594,8 +1638,8 @@ const FileManager = {
    * @param {string} fileType - 文件类型
    */
   deleteFile(fileType) {
-    const file = this.currentModel.files[fileType === 'image' ? 'image' : 'function_table'];
-    if (file && confirm('确定删除此文件？')) {
+    const file = this.currentModel.files[fileType];
+    if (file) {
       this.deleteFileById(file.id);
     }
   },

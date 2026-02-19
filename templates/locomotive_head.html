@@ -106,6 +106,24 @@
           {{ text_field('item_number', '货号') }}
           {{ text_field('product_url', '产品地址', field_class='col-2') }}
         </div>
+
+        <h4 class="form-section-title">文件上传（可选）</h4>
+        <div class="form-grid-3 file-upload-row">
+          <div class="form-group">
+            <label>模型图片</label>
+            <input type="file" id="locomotive-head-image-file" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('locomotive-head-image-file').click()">
+              <span id="locomotive-head-image-name">选择文件</span>
+            </button>
+          </div>
+          <div class="form-group">
+            <label>说明书（可多选）</label>
+            <input type="file" id="locomotive-head-manual-file" accept=".pdf,.doc,.docx,.zip" multiple style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('locomotive-head-manual-file').click()">
+              <span id="locomotive-head-manual-name">选择文件</span>
+            </button>
+          </div>
+        </div>
       </form>
     </div>
     <div class="modal-form-actions">
@@ -124,40 +142,41 @@
     </div>
     <div class="modal-body">
       <div class="model-detail-content">
-        <!-- 图片区域 -->
-        <div class="model-image-section">
-          <div class="model-image-preview">
-            <img id="model-detail-image" src="" alt="模型图片" style="display: none;">
-            <div id="model-detail-image-placeholder" class="thumbnail-large">
-              <span>暂无图片</span>
+        <!-- 左侧：图片和文件上传区域 -->
+        <div class="model-left-section">
+          <!-- 图片区域 -->
+          <div class="model-image-section">
+            <div class="model-image-preview">
+              <img id="model-detail-image" src="" alt="模型图片" style="display: none;">
+              <div id="model-detail-image-placeholder" class="thumbnail-large">
+                <span>暂无图片</span>
+              </div>
+            </div>
+            <div class="model-image-actions">
+              <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
+              <button type="button" class="btn btn-sm" onclick="FileManager.triggerUpload('image')">上传图片</button>
+              <button type="button" class="btn btn-sm btn-secondary" id="btn-view-image" style="display: none;" onclick="FileManager.viewFile('image')">查看原图</button>
+              <button type="button" class="btn btn-sm btn-danger" id="btn-delete-image" style="display: none;" onclick="FileManager.deleteFile('image')">删除图片</button>
             </div>
           </div>
-          <div class="model-image-actions">
-            <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
-            <button type="button" class="btn btn-sm" onclick="FileManager.triggerUpload('image')">上传图片</button>
-            <button type="button" class="btn btn-sm btn-secondary" id="btn-view-image" style="display: none;" onclick="FileManager.viewFile('image')">查看原图</button>
-            <button type="button" class="btn btn-sm btn-danger" id="btn-delete-image" style="display: none;" onclick="FileManager.deleteFile('image')">删除图片</button>
+
+          <!-- 说明书 -->
+          <div class="model-file-section">
+            <h4>说明书 <span id="manual-count">(0)</span></h4>
+            <div id="manual-list" class="file-list"></div>
+            <div class="file-upload-row">
+              <input type="file" id="manual-upload-input" accept=".pdf,.doc,.docx,.zip" multiple style="display: none;">
+              <button type="button" class="btn btn-sm" onclick="FileManager.triggerUpload('manual')">添加说明书</button>
+            </div>
           </div>
         </div>
 
-        <!-- 属性区域 -->
+        <!-- 右侧：属性区域 -->
         <div class="model-attributes-section">
           <h4>基本信息</h4>
           <table class="model-attributes-table" id="model-attributes-table">
             <tbody></tbody>
           </table>
-        </div>
-
-        <!-- 文件区域（先头车无数码功能表） -->
-        <div class="model-files-section">
-          <div class="file-section">
-            <h4>说明书 <span id="manual-count">(0)</span></h4>
-            <div id="manual-list" class="file-list"></div>
-            <div class="file-upload-row">
-              <input type="file" id="manual-upload-input" accept=".pdf,.doc,.docx,.zip" style="display: none;">
-              <button type="button" class="btn btn-sm" onclick="FileManager.triggerUpload('manual')">添加说明书</button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -208,6 +227,12 @@
       var hidden = document.getElementById(input.id.replace('_text', ''));
       if (hidden) hidden.value = '';
     });
+
+    // 清空文件选择
+    document.getElementById('locomotive-head-image-file').value = '';
+    document.getElementById('locomotive-head-manual-file').value = '';
+    document.getElementById('locomotive-head-image-name').textContent = '选择文件';
+    document.getElementById('locomotive-head-manual-name').textContent = '选择文件';
 
     if (editId) {
       // 编辑模式
@@ -277,7 +302,112 @@
     var editId = document.getElementById('locomotive-head-edit-id').value;
     var apiUrl = editId ? '/api/locomotive-head/edit/' + editId : '/api/locomotive-head/add';
 
-    FormHelper.submitAjax(form, apiUrl, 'locomotive-head-modal');
+    // 收集表单数据
+    var formData = new FormData(form);
+    var formDataObj = {};
+    formData.forEach(function(value, key) {
+      formDataObj[key] = value;
+    });
+
+    FormHelper.clearErrors(form);
+    FormHelper.clearErrorSummary(form);
+
+    // 先提交表单数据
+    Api.post(apiUrl, formDataObj).then(function(data) {
+      if (data.success) {
+        // 表单提交成功后，上传文件
+        var modelId = editId || data.id;
+        uploadLocomotiveHeadFiles(modelId, function() {
+          FormHelper.showSuccess(form, data.message || '保存成功');
+          setTimeout(function() {
+            ModalManager.close('locomotive-head-modal');
+            location.reload();
+          }, 1000);
+        });
+      } else {
+        if (data.errors && data.errors.length > 0) {
+          FormHelper.showErrors(form, data.errors);
+        } else if (data.error) {
+          FormHelper.showErrorSummary(form, data.error);
+        }
+      }
+    }).catch(function(error) {
+      console.error('Submit error:', error);
+      if (error.errors && error.errors.length > 0) {
+        FormHelper.showErrors(form, error.errors);
+      } else {
+        var errorMsg = error.error || error.message || '提交失败，请重试';
+        FormHelper.showErrorSummary(form, errorMsg);
+      }
+    });
   }
+
+  // 上传先头车文件
+  function uploadLocomotiveHeadFiles(modelId, callback) {
+    var imageFile = document.getElementById('locomotive-head-image-file').files[0];
+    var manualFiles = document.getElementById('locomotive-head-manual-file').files;
+
+    var uploadPromises = [];
+
+    if (imageFile) {
+      uploadPromises.push(uploadFile('locomotive_head', modelId, 'image', imageFile));
+    }
+    // 说明书支持多文件上传
+    for (var i = 0; i < manualFiles.length; i++) {
+      uploadPromises.push(uploadFile('locomotive_head', modelId, 'manual', manualFiles[i]));
+    }
+
+    if (uploadPromises.length > 0) {
+      Promise.all(uploadPromises).then(function() {
+        if (callback) callback();
+      }).catch(function(error) {
+        alert('文件上传失败: ' + error.message);
+        if (callback) callback();
+      });
+    } else {
+      if (callback) callback();
+    }
+  }
+
+  // 通用文件上传函数
+  function uploadFile(modelType, modelId, fileType, file) {
+    return new Promise(function(resolve, reject) {
+      var formData = new FormData();
+      formData.append('model_type', modelType);
+      formData.append('model_id', modelId);
+      formData.append('file_type', fileType);
+      formData.append('file', file);
+
+      fetch('/api/files/upload', {
+        method: 'POST',
+        body: formData
+      }).then(function(response) {
+        return response.json();
+      }).then(function(data) {
+        if (data.success) {
+          resolve(data);
+        } else {
+          reject(new Error(data.error || '上传失败'));
+        }
+      }).catch(reject);
+    });
+  }
+
+  // 文件选择显示文件名
+  document.getElementById('locomotive-head-image-file').addEventListener('change', function(e) {
+    var nameSpan = document.getElementById('locomotive-head-image-name');
+    nameSpan.textContent = e.target.files[0] ? e.target.files[0].name : '选择文件';
+  });
+  document.getElementById('locomotive-head-manual-file').addEventListener('change', function(e) {
+    var nameSpan = document.getElementById('locomotive-head-manual-name');
+    var count = e.target.files.length;
+    if (count === 0) {
+      nameSpan.textContent = '选择文件';
+    } else if (count === 1) {
+      nameSpan.textContent = e.target.files[0].name;
+    } else {
+      nameSpan.textContent = '已选择 ' + count + ' 个文件';
+    }
+  });
 </script>
 {% endblock %}

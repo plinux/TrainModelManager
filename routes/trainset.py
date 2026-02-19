@@ -6,6 +6,7 @@ from models import db, Trainset, TrainsetModel, TrainsetSeries, PowerType, Brand
 from utils.helpers import parse_purchase_date, safe_int, validate_unique, parse_boolean, api_success, api_error
 from utils.validators import validate_trainset_number, validate_decoder_number
 from utils.price_calculator import calculate_price
+from utils.file_sync import rename_model_folder, update_file_records_in_db
 import logging
 
 logger = logging.getLogger(__name__)
@@ -115,7 +116,26 @@ def api_edit_trainset(id):
     if errors:
       return jsonify(api_error('验证失败', errors=errors)), 400
 
+    # 保存旧的品牌和货号（用于重命名文件夹）
+    old_brand = Brand.query.get(trainset.brand_id)
+    old_brand_name = old_brand.name if old_brand else ''
+    old_item_number = trainset.item_number or ''
+
+    # 更新模型
     update_trainset_from_form(trainset, data)
+
+    # 获取新的品牌和货号
+    new_brand = Brand.query.get(trainset.brand_id)
+    new_brand_name = new_brand.name if new_brand else ''
+    new_item_number = trainset.item_number or ''
+
+    # 如果品牌或货号变化，重命名文件夹
+    if old_brand_name != new_brand_name or old_item_number != new_item_number:
+      rename_model_folder('trainset', old_brand_name, old_item_number,
+                          new_brand_name, new_item_number)
+      update_file_records_in_db('trainset', id, old_brand_name, old_item_number,
+                                new_brand_name, new_item_number)
+
     db.session.commit()
     logger.info(f"Trainset updated: ID={id}")
 
@@ -141,11 +161,11 @@ def api_add_trainset():
 
     trainset = create_trainset_from_form(data, is_json=True)
 
-    db.session.add(trainset)
+    db.session.add(trainset);
     db.session.commit()
     logger.info(f"Trainset added: ID={trainset.id}")
 
-    return jsonify(api_success('动车组模型添加成功'))
+    return jsonify(api_success('动车组模型添加成功', data={'id': trainset.id}))
   except Exception as e:
     db.session.rollback()
     logger.error(f"Error adding trainset: {e}")

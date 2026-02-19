@@ -359,12 +359,15 @@ td form {
   padding: 0;
 }
 
-/* 操作列使用 flexbox 确保按钮对齐 */
+/* 操作列样式 */
 .action-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.action-cell button,
+.action-cell form {
+  vertical-align: middle;
+  margin: 0 2px;
 }
 
 .action-cell form {
@@ -1908,6 +1911,37 @@ td form {
   grid-column: span 3;
 }
 
+/* 表单分区标题 */
+.form-section-title {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 1rem 0 0.5rem 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #eee;
+}
+
+/* 文件上传行 */
+.file-upload-row .form-group {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.file-upload-row .form-group label {
+  margin-bottom: 0.25rem;
+}
+
+.file-upload-row .btn {
+  width: 100%;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-upload-row .btn span {
+  color: #666;
+}
+
 /* 模态框底部操作区 */
 .modal-form-actions {
   display: flex;
@@ -2141,9 +2175,16 @@ td form {
 /* 模型详情内容布局 */
 .model-detail-content {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 320px auto;
   gap: var(--spacing-lg);
   padding: var(--spacing-lg);
+}
+
+/* 左侧区域：图片和文件上传 */
+.model-left-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
 /* 图片区域 */
@@ -2155,7 +2196,7 @@ td form {
 
 .model-image-preview {
   width: 100%;
-  height: 250px;
+  min-height: 150px;
   background-color: #f8f9fa;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -2166,14 +2207,14 @@ td form {
 }
 
 .model-image-preview img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 .thumbnail-large {
   width: 100%;
-  height: 100%;
+  min-height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2217,7 +2258,7 @@ td form {
 }
 
 .model-attributes-table th {
-  width: 120px;
+  width: 100px;
   font-weight: 600;
   color: #666;
   background-color: #fafafa;
@@ -2237,35 +2278,41 @@ td form {
   text-decoration: underline;
 }
 
-/* 文件区域 */
-.model-files-section {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-md);
-  padding-top: var(--spacing-lg);
-  border-top: 1px solid var(--border-color);
-}
-
-.file-section {
+/* 文件上传区域（左侧） */
+.model-file-section {
   background: #f8f9fa;
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   border-radius: var(--border-radius);
 }
 
-.file-section h4 {
-  margin: 0 0 var(--spacing-sm) 0;
-  font-size: 0.95rem;
+.model-file-section h4 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: 0.9rem;
   color: #333;
 }
 
-/* 功能表容器 */
-#function-table-container {
+/* 功能表状态显示 */
+#function-table-status {
+  margin-bottom: var(--spacing-xs);
+}
+
+/* 模型详情页中的文件状态显示（覆盖列表页的绿色背景） */
+#function-table-status .file-status-exists {
+  background-color: transparent;
+  color: #333;
+  font-size: var(--font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  padding: 0;
+}
+
+/* 文件操作按钮行 */
+.model-file-actions {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
   flex-wrap: wrap;
+  gap: var(--spacing-xs);
 }
 
 /* 说明书列表 */
@@ -2279,8 +2326,8 @@ td form {
 .file-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
-  padding: var(--spacing-sm);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: white;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -2288,7 +2335,7 @@ td form {
 
 .file-name {
   flex: 1;
-  font-size: var(--font-size-base);
+  font-size: var(--font-size-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2302,7 +2349,13 @@ td form {
 
 .file-actions {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: 4px;
+}
+
+/* 说明书按钮缩小样式 */
+.file-actions .btn-sm {
+  padding: 2px 6px;
+  font-size: 0.75rem;
 }
 
 .file-upload-row {
@@ -2313,6 +2366,14 @@ td form {
 @media (max-width: 768px) {
   .model-detail-content {
     grid-template-columns: 1fr;
+  }
+
+  .model-left-section {
+    order: 1;
+  }
+
+  .model-attributes-section {
+    order: 2;
   }
 
   .model-image-preview {
