@@ -5,36 +5,18 @@
 {% block title %}先头车模型 - 火车模型管理系统{% endblock %}
 
 {% block content %}
-<h1>先头车模型</h1>
-
-<form id="locomotive-head-form" onsubmit="event.preventDefault(); submitFormAjax(this, '/api/locomotive-head/add');">
-  <div class="form-grid-5">
-    {{ autocomplete_field('model_id', '型号', trainset_models, required=true) }}
-    {{ scale_select() }}
-    {{ text_field('special_color', '涂装') }}
-    {{ boolean_select('head_light', '头车灯', default=true) }}
-    {{ text_field('interior_light', '室内灯') }}
+<div class="page-header-row">
+  <h1>先头车模型</h1>
+  <div class="page-header-actions">
+    <button type="button" class="btn btn-primary" id="btn-add-locomotive-head">添加先头车</button>
   </div>
-
-  <div class="form-grid-5">
-    {{ price_field(field_class='col-2') }}
-    {{ autocomplete_field('merchant_id', '购买商家', merchants, field_class='col-2') }}
-    {{ date_field('purchase_date', '购买日期') }}
-  </div>
-
-  <div class="form-grid-5">
-    {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
-    {{ text_field('item_number', '货号') }}
-    {{ text_field('product_url', '产品地址', field_class='col-3') }}
-  </div>
-
-  <button type="submit">添加</button>
-</form>
+</div>
 
 <div class="table-wrapper">
   <table id="locomotive-head-table" class="sortable-filterable">
     <thead>
       <tr>
+        <th>图片</th>
         <th data-sort="model" data-filter="model">型号</th>
         <th data-sort="brand" data-filter="brand">品牌</th>
         <th data-sort="scale" data-filter="scale">比例</th>
@@ -43,12 +25,18 @@
         <th data-sort="interior_light" data-filter="interior_light">室内灯</th>
         <th data-sort="item_number" data-filter="item_number">货号</th>
         <th data-sort="price">总价</th>
+        <th>说明书</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for head in locomotive_heads %}
-      <tr data-model="{{ head.model.name }}" data-model_id="{{ head.model_id }}" data-brand="{{ head.brand.name }}" data-brand_id="{{ head.brand_id }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-head_light="{{ 'true' if head.head_light else 'false' }}" data-interior_light="{{ head.interior_light or '' }}" data-item_number="{{ head.item_number or '' }}" data-price="{{ head.price or '' }}" data-merchant="{{ head.merchant.name if head.merchant else '' }}" data-merchant_id="{{ head.merchant_id or '' }}" data-product_url="{{ head.product_url or '' }}" data-purchase_date="{{ head.purchase_date or '' }}">
+      <tr data-model_type="locomotive_head" data-model_id="{{ head.id }}" data-model="{{ head.model.name }}" data-model_id_field="{{ head.model_id }}" data-brand="{{ head.brand.name }}" data-brand_id="{{ head.brand_id }}" data-scale="{{ head.scale }}" data-special_color="{{ head.special_color or '' }}" data-head_light="{{ 'true' if head.head_light else 'false' }}" data-interior_light="{{ head.interior_light or '' }}" data-item_number="{{ head.item_number or '' }}" data-price="{{ head.price or '' }}" data-merchant="{{ head.merchant.name if head.merchant else '' }}" data-merchant_id="{{ head.merchant_id or '' }}" data-product_url="{{ head.product_url or '' }}" data-purchase_date="{{ head.purchase_date or '' }}">
+        <td class="image-cell" data-file-type="image">
+          <div class="thumbnail-placeholder" onclick="FileManager.showModelDetail('locomotive_head', {{ head.id }})" title="点击查看详情">
+            <span>+</span>
+          </div>
+        </td>
         <td>{{ head.model.name }}</td>
         <td>{{ head.brand.name }}</td>
         <td>{{ head.scale }}</td>
@@ -63,6 +51,9 @@
           {% endif %}
         </td>
         <td>{{ head.total_price }}</td>
+        <td class="file-status-cell" data-file-type="manual">
+          <span class="file-status file-status-none" onclick="FileManager.showModelDetail('locomotive_head', {{ head.id }})" title="点击查看/上传说明书">0</span>
+        </td>
         <td class="action-cell">
           {% set search_url = head.brand.search_url %}
           {% set item_number = head.item_number %}
@@ -72,7 +63,7 @@
           <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
           {% endif %}
           <button type="button" class="btn-copy" onclick="copyLocomotiveHead(this)" title="复制此行数据到表单">复制</button>
-          <a href="{{ url_for('locomotive_head.edit_locomotive_head', id=head.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-edit" onclick="editLocomotiveHead(this)" title="编辑此先头车">编辑</button>
           <form action="{{ url_for('locomotive_head.delete_locomotive_head', id=head.id) }}" method="POST" onsubmit="return confirm('确定删除？')">
             <button type="submit" class="btn-danger">删除</button>
           </form>
@@ -82,10 +73,211 @@
     </tbody>
   </table>
 </div>
+
+<!-- 添加/编辑先头车模态框 -->
+<div id="locomotive-head-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-dialog modal-form">
+    <div class="modal-header">
+      <h3 id="locomotive-head-modal-title">添加先头车模型</h3>
+      <button type="button" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="locomotive-head-form">
+        <input type="hidden" id="locomotive-head-edit-id" name="edit_id" value="">
+        <div class="form-grid-3">
+          {{ autocomplete_field('model_id', '型号', trainset_models, required=true) }}
+          {{ scale_select() }}
+          {{ text_field('special_color', '涂装') }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ boolean_select('head_light', '头车灯', default=true) }}
+          {{ text_field('interior_light', '室内灯') }}
+          {{ price_field() }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
+          {{ autocomplete_field('merchant_id', '购买商家', merchants) }}
+          {{ date_field('purchase_date', '购买日期') }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ text_field('item_number', '货号') }}
+          {{ text_field('product_url', '产品地址', field_class='col-2') }}
+        </div>
+      </form>
+    </div>
+    <div class="modal-form-actions">
+      <button type="button" class="btn btn-secondary" onclick="ModalManager.close('locomotive-head-modal')">取消</button>
+      <button type="button" class="btn btn-primary" onclick="submitLocomotiveHeadForm()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 模型详情模态框（先头车无数码功能表） -->
+<div id="model-detail-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-dialog modal-large">
+    <div class="modal-header">
+      <h3>模型详情</h3>
+      <button type="button" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="model-detail-content">
+        <!-- 图片区域 -->
+        <div class="model-image-section">
+          <div class="model-image-preview">
+            <img id="model-detail-image" src="" alt="模型图片" style="display: none;">
+            <div id="model-detail-image-placeholder" class="thumbnail-large">
+              <span>暂无图片</span>
+            </div>
+          </div>
+          <div class="model-image-actions">
+            <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="FileManager.triggerUpload('image')">上传图片</button>
+            <button type="button" class="btn btn-sm btn-secondary" id="btn-view-image" style="display: none;" onclick="FileManager.viewFile('image')">查看原图</button>
+            <button type="button" class="btn btn-sm btn-danger" id="btn-delete-image" style="display: none;" onclick="FileManager.deleteFile('image')">删除图片</button>
+          </div>
+        </div>
+
+        <!-- 属性区域 -->
+        <div class="model-attributes-section">
+          <h4>基本信息</h4>
+          <table class="model-attributes-table" id="model-attributes-table">
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- 文件区域（先头车无数码功能表） -->
+        <div class="model-files-section">
+          <div class="file-section">
+            <h4>说明书 <span id="manual-count">(0)</span></h4>
+            <div id="manual-list" class="file-list"></div>
+            <div class="file-upload-row">
+              <input type="file" id="manual-upload-input" accept=".pdf,.doc,.docx,.zip" style="display: none;">
+              <button type="button" class="btn btn-sm" onclick="FileManager.triggerUpload('manual')">添加说明书</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="ModalManager.close('model-detail-modal')">关闭</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
   initTableSortFilter('locomotive-head-table');
+
+  // 添加按钮 - 打开添加模态框
+  document.getElementById('btn-add-locomotive-head').addEventListener('click', function() {
+    openLocomotiveHeadModal();
+  });
+
+  // 模态框关闭按钮
+  document.querySelector('#locomotive-head-modal .modal-close').addEventListener('click', function() {
+    ModalManager.close('locomotive-head-modal');
+  });
+
+  // 点击遮罩关闭
+  document.getElementById('locomotive-head-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      ModalManager.close('locomotive-head-modal');
+    }
+  });
+
+  // 打开先头车模态框（添加或编辑模式）
+  function openLocomotiveHeadModal(editId) {
+    var modal = document.getElementById('locomotive-head-modal');
+    var title = document.getElementById('locomotive-head-modal-title');
+    var editIdInput = document.getElementById('locomotive-head-edit-id');
+    var form = document.getElementById('locomotive-head-form');
+
+    // 重置表单
+    form.reset();
+    FormHelper.clearErrors(form);
+    FormHelper.clearErrorSummary(form);
+
+    // 清空自动完成字段
+    var autocompleteInputs = form.querySelectorAll('input[type="text"][id$="_text"]');
+    autocompleteInputs.forEach(function(input) {
+      input.value = '';
+      var hidden = document.getElementById(input.id.replace('_text', ''));
+      if (hidden) hidden.value = '';
+    });
+
+    if (editId) {
+      // 编辑模式
+      title.textContent = '编辑先头车模型';
+      editIdInput.value = editId;
+    } else {
+      // 添加模式
+      title.textContent = '添加先头车模型';
+      editIdInput.value = '';
+    }
+
+    ModalManager.open('locomotive-head-modal');
+  }
+
+  // 编辑先头车
+  function editLocomotiveHead(button) {
+    var row = button.closest('tr');
+    var editId = row.dataset.model_id;
+
+    // 打开模态框
+    openLocomotiveHeadModal(editId);
+
+    // 填充表单数据
+    var fieldMappings = {
+      'model_id': row.dataset.model_id_field,
+      'scale': row.dataset.scale,
+      'special_color': row.dataset.special_color,
+      'head_light': row.dataset.head_light,
+      'interior_light': row.dataset.interior_light,
+      'price': row.dataset.price,
+      'merchant_id': row.dataset.merchant_id,
+      'brand_id': row.dataset.brand_id,
+      'item_number': row.dataset.item_number,
+      'product_url': row.dataset.product_url,
+      'purchase_date': row.dataset.purchase_date
+    };
+
+    Object.entries(fieldMappings).forEach(function(entry) {
+      var fieldId = entry[0];
+      var value = entry[1];
+      var element = document.getElementById(fieldId);
+
+      if (!element) return;
+
+      var wrapper = element.closest('.autocomplete-wrapper');
+      if (wrapper) {
+        // 自动完成字段
+        var inputId = wrapper.querySelector('input[type="text"]')?.id;
+        if (inputId) {
+          var nameAttr = fieldId.replace('_id', '');
+          var nameValue = row.dataset[nameAttr] || value;
+          AutocompleteManager.setValue(inputId, value || '', nameValue || '');
+        }
+      } else if (element.type === 'checkbox') {
+        // 复选框字段
+        element.checked = value === 'true';
+      } else {
+        // 普通表单字段
+        element.value = value || '';
+      }
+    });
+  }
+
+  // 提交先头车表单
+  function submitLocomotiveHeadForm() {
+    var form = document.getElementById('locomotive-head-form');
+    var editId = document.getElementById('locomotive-head-edit-id').value;
+    var apiUrl = editId ? '/api/locomotive-head/edit/' + editId : '/api/locomotive-head/add';
+
+    FormHelper.submitAjax(form, apiUrl, 'locomotive-head-modal');
+  }
 </script>
 {% endblock %}

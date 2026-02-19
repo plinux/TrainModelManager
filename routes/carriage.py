@@ -79,6 +79,46 @@ def create_carriage_items(carriage_set_id, form_data, is_json=False):
 
 
 # API 路由
+@carriage_bp.route('/api/carriage/edit/<int:id>', methods=['POST'])
+def api_edit_carriage(id):
+  """AJAX 编辑车厢套装"""
+  try:
+    carriage_set = CarriageSet.query.get_or_404(id)
+    data = request.get_json()
+
+    errors = validate_carriage_items(data, is_json=True)
+    if errors:
+      return jsonify(api_error('验证失败', errors=errors)), 400
+
+    # 更新套装信息
+    carriage_set.brand_id = safe_int(data.get('brand_id'))
+    carriage_set.series_id = safe_int(data.get('series_id'))
+    carriage_set.depot_id = safe_int(data.get('depot_id'))
+    carriage_set.train_number = data.get('train_number')
+    carriage_set.plaque = data.get('plaque')
+    carriage_set.item_number = data.get('item_number')
+    carriage_set.scale = data.get('scale')
+    carriage_set.total_price = safe_float(data.get('total_price'))
+    carriage_set.product_url = data.get('product_url')
+    carriage_set.purchase_date = parse_purchase_date(data.get('purchase_date'))
+    carriage_set.merchant_id = safe_int(data.get('merchant_id'))
+
+    # 删除旧的车厢项并添加新的
+    CarriageItem.query.filter_by(set_id=id).delete()
+    items = create_carriage_items(carriage_set.id, data, is_json=True)
+    for item in items:
+      db.session.add(item)
+
+    db.session.commit()
+    logger.info(f"Carriage set updated: ID={id}")
+
+    return jsonify(api_success('车厢套装更新成功'))
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Error updating carriage: {e}")
+    return jsonify(api_error(str(e))), 500
+
+
 @carriage_bp.route('/api/carriage/add', methods=['POST'])
 def api_add_carriage():
   """AJAX 添加车厢模型"""

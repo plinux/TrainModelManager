@@ -120,6 +120,31 @@ def api_add_locomotive():
     return jsonify(api_error(str(e))), 500
 
 
+@locomotive_bp.route('/api/locomotive/edit/<int:id>', methods=['POST'])
+def api_edit_locomotive(id):
+  """AJAX 编辑机车模型"""
+  try:
+    locomotive = Locomotive.query.get_or_404(id)
+    data = request.get_json()
+    scale = data.get('scale')
+    locomotive_number = data.get('locomotive_number')
+    decoder_number = data.get('decoder_number')
+
+    errors = validate_locomotive_data(locomotive_number, decoder_number, scale, exclude_id=id)
+    if errors:
+      return jsonify(api_error('验证失败', errors=errors)), 400
+
+    update_locomotive_from_form(locomotive, data)
+    db.session.commit()
+    logger.info(f"Locomotive updated: ID={id}")
+
+    return jsonify(api_success('机车模型更新成功'))
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Error updating locomotive: {e}")
+    return jsonify(api_error(str(e))), 500
+
+
 # 页面路由
 @locomotive_bp.route('/locomotive', methods=['GET', 'POST'])
 def locomotive():

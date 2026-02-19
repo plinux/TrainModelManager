@@ -57,6 +57,24 @@ def update_locomotive_head_from_form(locomotive_head, form_data):
 
 
 # API 路由
+@locomotive_head_bp.route('/api/locomotive-head/edit/<int:id>', methods=['POST'])
+def api_edit_locomotive_head(id):
+  """AJAX 编辑先头车模型"""
+  try:
+    locomotive_head = LocomotiveHead.query.get_or_404(id)
+    data = request.get_json()
+
+    update_locomotive_head_from_form(locomotive_head, data)
+    db.session.commit()
+    logger.info(f"Locomotive head updated: ID={id}")
+
+    return jsonify(api_success('先头车模型更新成功'))
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Error updating locomotive head: {e}")
+    return jsonify(api_error(str(e))), 500
+
+
 @locomotive_head_bp.route('/api/locomotive-head/add', methods=['POST'])
 def api_add_locomotive_head():
   """AJAX 添加先头车模型"""

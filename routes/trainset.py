@@ -101,6 +101,31 @@ def update_trainset_from_form(trainset, form_data):
 
 
 # API 路由
+@trainset_bp.route('/api/trainset/edit/<int:id>', methods=['POST'])
+def api_edit_trainset(id):
+  """AJAX 编辑动车组模型"""
+  try:
+    trainset = Trainset.query.get_or_404(id)
+    data = request.get_json()
+    scale = data.get('scale')
+    trainset_number = data.get('trainset_number')
+    decoder_number = data.get('decoder_number')
+
+    errors = validate_trainset_data(trainset_number, decoder_number, scale, exclude_id=id)
+    if errors:
+      return jsonify(api_error('验证失败', errors=errors)), 400
+
+    update_trainset_from_form(trainset, data)
+    db.session.commit()
+    logger.info(f"Trainset updated: ID={id}")
+
+    return jsonify(api_success('动车组模型更新成功'))
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Error updating trainset: {e}")
+    return jsonify(api_error(str(e))), 500
+
+
 @trainset_bp.route('/api/trainset/add', methods=['POST'])
 def api_add_trainset():
   """AJAX 添加动车组模型"""

@@ -3,6 +3,78 @@
  * 包含通用的工具函数和 AJAX 处理
  */
 
+// 模态框管理器
+const ModalManager = {
+  /**
+   * 打开模态框
+   * @param {string} modalId - 模态框元素ID
+   */
+  open(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    // 重置表单
+    const form = modal.querySelector('form');
+    if (form) {
+      form.reset();
+      FormHelper.clearErrors(form);
+      FormHelper.clearErrorSummary(form);
+    }
+  },
+
+  /**
+   * 关闭模态框
+   * @param {string} modalId - 模态框元素ID
+   */
+  close(modalId) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  },
+
+  /**
+   * 初始化模态框事件
+   * @param {string} modalId - 模态框元素ID
+   * @param {string} openBtnId - 打开按钮元素ID
+   */
+  init(modalId, openBtnId) {
+    const modal = document.getElementById(modalId);
+    const openBtn = document.getElementById(openBtnId);
+
+    if (!modal) return;
+
+    // 打开按钮点击事件
+    if (openBtn) {
+      openBtn.addEventListener('click', () => this.open(modalId));
+    }
+
+    // 关闭按钮点击事件
+    const closeBtn = modal.querySelector('.modal-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.close(modalId));
+    }
+
+    // 点击遮罩关闭
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.close(modalId);
+      }
+    });
+
+    // ESC 键关闭
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.style.display === 'flex') {
+        this.close(modalId);
+      }
+    });
+  }
+};
+
 // 通用工具对象
 const Utils = {
   /**
@@ -230,9 +302,10 @@ const FormHelper = {
    * AJAX 提交表单
    * @param {HTMLFormElement} form - 表单元素
    * @param {string} apiUrl - API URL
+   * @param {string} modalId - 可选，模态框ID，成功后关闭模态框
    * @returns {Promise}
    */
-  submitAjax(form, apiUrl) {
+  submitAjax(form, apiUrl, modalId) {
     const formData = new FormData(form);
     const formDataObj = {};
 
@@ -247,7 +320,12 @@ const FormHelper = {
       .then(data => {
         if (data.success) {
           this.showSuccess(form, data.message || '添加成功');
-          setTimeout(() => location.reload(), 1000);
+          setTimeout(() => {
+            if (modalId) {
+              ModalManager.close(modalId);
+            }
+            location.reload();
+          }, 1000);
         } else {
           if (data.errors && data.errors.length > 0) {
             this.showErrors(form, data.errors);
@@ -306,33 +384,18 @@ const CarriageManager = {
     const mainSeriesId = document.getElementById('series_id')?.value;
 
     const newItem = document.createElement('div');
-    newItem.className = 'carriage-item form-row';
+    newItem.className = 'carriage-item-compact';
     newItem.innerHTML = `
-      <div class="form-group">
-        <label>系列</label>
-        <select name="series_${this.itemCount}" id="series_${this.itemCount}" onchange="CarriageManager.handleSeriesChange(this)">
-          ${this.generateSeriesOptions()}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>车型</label>
-        <select name="model_${this.itemCount}" id="model_${this.itemCount}">
-          <option value="">请选择</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>车辆号</label>
-        <input type="text" name="car_number_${this.itemCount}">
-      </div>
-      <div class="form-group">
-        <label>颜色</label>
-        <input type="text" name="color_${this.itemCount}">
-      </div>
-      <div class="form-group">
-        <label>灯光</label>
-        <input type="text" name="lighting_${this.itemCount}">
-      </div>
-      <button type="button" onclick="CarriageManager.removeRow(this)">删除</button>
+      <select name="series_${this.itemCount}" id="series_${this.itemCount}" onchange="CarriageManager.handleSeriesChange(this)" title="系列">
+        ${this.generateSeriesOptions()}
+      </select>
+      <select name="model_${this.itemCount}" id="model_${this.itemCount}" title="车型">
+        <option value="">车型</option>
+      </select>
+      <input type="text" name="car_number_${this.itemCount}" placeholder="车辆号" title="车辆号">
+      <input type="text" name="color_${this.itemCount}" placeholder="颜色" title="颜色">
+      <input type="text" name="lighting_${this.itemCount}" placeholder="灯光" title="灯光">
+      <button type="button" class="btn-delete-compact" onclick="CarriageManager.removeRow(this)" title="删除">×</button>
     `;
     container.appendChild(newItem);
 
@@ -352,7 +415,7 @@ const CarriageManager = {
    * @param {HTMLSelectElement} seriesSelect - 系列选择框
    */
   handleSeriesChange(seriesSelect) {
-    const row = seriesSelect.closest('.carriage-item');
+    const row = seriesSelect.closest('.carriage-item-compact');
     const modelSelect = row.querySelector('select[name^="model_"]');
     Utils.filterModelsBySeries(seriesSelect.value, modelSelect.id, window.carriageModelData);
   },
@@ -363,7 +426,7 @@ const CarriageManager = {
    */
   removeRow(button) {
     const container = document.getElementById('carriage-items');
-    if (container && container.children.length > 1) {
+    if (container && container.children.length > 0) {
       container.removeChild(button.parentElement);
     }
   }
@@ -960,8 +1023,14 @@ const FormFiller = {
    * @param {Object} fieldMappings - 字段映射 { dataAttr: 'formFieldId' }
    *   对于自动完成字段，dataAttr 应该是存储 ID 的属性名（如 model_id）
    *   会自动查找对应的名称属性（如 data-model）来获取显示名称
+   * @param {string} modalId - 可选，模态框ID，复制前先打开模态框
    */
-  copyFromRow(button, fieldMappings) {
+  copyFromRow(button, fieldMappings, modalId) {
+    // 如果指定了模态框ID，先打开模态框
+    if (modalId) {
+      ModalManager.open(modalId);
+    }
+
     const row = button.closest('tr');
     if (!row) return;
 
@@ -989,12 +1058,6 @@ const FormFiller = {
         element.value = value || '';
       }
     });
-
-    // 滚动到表单顶部
-    const form = document.querySelector('form');
-    if (form) {
-      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   },
 
   /**
@@ -1019,7 +1082,7 @@ const FormFiller = {
       item_number: 'item_number',
       product_url: 'product_url',
       purchase_date: 'purchase_date'
-    });
+    }, 'locomotive-add-modal');
   },
 
   /**
@@ -1046,7 +1109,7 @@ const FormFiller = {
       item_number: 'item_number',
       product_url: 'product_url',
       purchase_date: 'purchase_date'
-    });
+    }, 'trainset-add-modal');
   },
 
   /**
@@ -1065,7 +1128,7 @@ const FormFiller = {
       item_number: 'item_number',
       product_url: 'product_url',
       purchase_date: 'purchase_date'
-    });
+    }, 'locomotive-head-add-modal');
   },
 
   /**
@@ -1084,7 +1147,7 @@ const FormFiller = {
       brand_id: 'brand_id',
       product_url: 'product_url',
       purchase_date: 'purchase_date'
-    });
+    }, 'carriage-add-modal');
   }
 };
 
@@ -1188,3 +1251,492 @@ function searchProduct(btn, searchUrl, itemNumber) {
   var url = searchUrl.replace('{query}', encodeURIComponent(itemNumber));
   window.open(url, '_blank');
 }
+
+/**
+ * 文件管理器
+ * 处理模型文件的上传、下载、预览、删除等功能
+ */
+const FileManager = {
+  // 当前模型信息
+  currentModel: {
+    type: null,
+    id: null,
+    files: null
+  },
+
+  // 属性名称映射（中文显示名）
+  attributeNames: {
+    'brand': '品牌',
+    'series': '系列',
+    'model': '型号',
+    'power_type': '动力',
+    'depot': '机务段/动车段/车辆段',
+    'scale': '比例',
+    'locomotive_number': '机车号',
+    'trainset_number': '动车号',
+    'decoder_number': '编号',
+    'plaque': '挂牌',
+    'color': '颜色',
+    'special_color': '涂装',
+    'chip_interface': '芯片接口',
+    'chip_model': '芯片型号',
+    'head_light': '头车灯',
+    'interior_light': '室内灯',
+    'formation': '编组',
+    'price': '价格',
+    'total_price': '总价',
+    'item_number': '货号',
+    'product_url': '产品地址',
+    'purchase_date': '购买日期',
+    'merchant': '购买商家',
+    'train_number': '车次'
+  },
+
+  /**
+   * 显示模型详情
+   * @param {string} modelType - 模型类型
+   * @param {number} modelId - 模型ID
+   */
+  showModelDetail(modelType, modelId) {
+    this.currentModel.type = modelType;
+    this.currentModel.id = modelId;
+
+    fetch(`/api/files/model/${modelType}/${modelId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          this.currentModel.files = data.model.files;
+          this.renderModelDetail(data.model);
+          ModalManager.open('model-detail-modal');
+        } else {
+          alert('获取模型详情失败: ' + (data.error || '未知错误'));
+        }
+      })
+      .catch(error => {
+        console.error('获取模型详情失败:', error);
+        alert('获取模型详情失败');
+      });
+  },
+
+  /**
+   * 渲染模型详情
+   * @param {Object} model - 模型数据
+   */
+  renderModelDetail(model) {
+    const hasFunctionTable = model.type !== 'locomotive_head';
+
+    // 渲染图片
+    this.renderImage(model.files.image);
+
+    // 渲染属性表
+    this.renderAttributes(model.attributes);
+
+    // 渲染功能表（先头车无）
+    if (hasFunctionTable) {
+      this.renderFunctionTable(model.files.function_table);
+    } else {
+      const container = document.getElementById('function-table-container');
+      if (container) {
+        container.closest('.file-section').style.display = 'none';
+      }
+    }
+
+    // 渲染说明书列表
+    this.renderManuals(model.files.manual);
+  },
+
+  /**
+   * 渲染图片
+   * @param {Object} imageFile - 图片文件信息
+   */
+  renderImage(imageFile) {
+    const img = document.getElementById('model-detail-image');
+    const placeholder = document.getElementById('model-detail-image-placeholder');
+    const btnView = document.getElementById('btn-view-image');
+    const btnDelete = document.getElementById('btn-delete-image');
+
+    if (imageFile) {
+      img.src = `/api/files/view/${imageFile.id}`;
+      img.style.display = 'block';
+      placeholder.style.display = 'none';
+      btnView.style.display = 'inline-block';
+      btnDelete.style.display = 'inline-block';
+    } else {
+      img.src = '';
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+      btnView.style.display = 'none';
+      btnDelete.style.display = 'none';
+    }
+  },
+
+  /**
+   * 渲染属性表
+   * @param {Object} attributes - 属性对象
+   */
+  renderAttributes(attributes) {
+    const tbody = document.querySelector('#model-attributes-table tbody');
+    while (tbody.firstChild) {
+      tbody.removeChild(tbody.firstChild);
+    }
+
+    const displayOrder = ['brand', 'series', 'model', 'power_type', 'scale',
+      'locomotive_number', 'trainset_number', 'decoder_number', 'depot',
+      'plaque', 'color', 'special_color', 'formation', 'head_light',
+      'interior_light', 'chip_interface', 'chip_model', 'price', 'total_price',
+      'item_number', 'product_url', 'purchase_date', 'merchant', 'train_number'];
+
+    displayOrder.forEach(key => {
+      if (attributes[key] !== undefined && attributes[key] !== null && attributes[key] !== '') {
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        const td = document.createElement('td');
+
+        th.textContent = this.attributeNames[key] || key;
+
+        let value = attributes[key];
+        // 处理布尔值
+        if (key === 'head_light') {
+          value = value === true || value === 'true' ? '有' : '无';
+        }
+        // 处理 URL
+        if (key === 'product_url' && value) {
+          const link = document.createElement('a');
+          link.href = value;
+          link.target = '_blank';
+          link.textContent = value;
+          td.appendChild(link);
+        } else {
+          td.textContent = value;
+        }
+
+        tr.appendChild(th);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
+    });
+  },
+
+  /**
+   * 渲染功能表
+   * @param {Object} functionTable - 功能表文件信息
+   */
+  renderFunctionTable(functionTable) {
+    const container = document.getElementById('function-table-container');
+    if (!container) return;
+
+    // 显示功能表区域（先头车可能隐藏了）
+    container.closest('.file-section').style.display = 'block';
+
+    // 保存上传控件引用
+    const uploadInput = container.querySelector('input[type="file"]');
+    const uploadBtn = container.querySelector('button');
+
+    // 清空容器
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    if (functionTable) {
+      const fileItem = this.createFileItem(functionTable);
+      container.appendChild(fileItem);
+    } else {
+      const status = document.createElement('span');
+      status.className = 'file-status file-status-none';
+      status.textContent = '未上传';
+      container.appendChild(status);
+    }
+
+    // 重新添加上传控件
+    if (uploadInput) container.appendChild(uploadInput);
+    if (uploadBtn) container.appendChild(uploadBtn);
+  },
+
+  /**
+   * 渲染说明书列表
+   * @param {Array} manuals - 说明书文件数组
+   */
+  renderManuals(manuals) {
+    const container = document.getElementById('manual-list');
+    const countSpan = document.getElementById('manual-count');
+
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+    countSpan.textContent = `(${manuals ? manuals.length : 0})`;
+
+    if (manuals && manuals.length > 0) {
+      manuals.forEach(manual => {
+        const fileItem = this.createFileItem(manual);
+        container.appendChild(fileItem);
+      });
+    }
+  },
+
+  /**
+   * 创建文件项元素
+   * @param {Object} file - 文件信息
+   * @returns {HTMLElement}
+   */
+  createFileItem(file) {
+    const div = document.createElement('div');
+    div.className = 'file-item';
+    div.dataset.fileId = file.id;
+
+    const name = document.createElement('span');
+    name.className = 'file-name';
+    name.textContent = file.original_filename;
+    name.title = file.original_filename;
+
+    const size = document.createElement('span');
+    size.className = 'file-size';
+    size.textContent = this.formatFileSize(file.file_size);
+
+    const actions = document.createElement('div');
+    actions.className = 'file-actions';
+
+    const btnView = document.createElement('button');
+    btnView.type = 'button';
+    btnView.className = 'btn btn-sm';
+    btnView.textContent = '查看';
+    btnView.onclick = () => window.open(`/api/files/view/${file.id}`, '_blank');
+
+    const btnDownload = document.createElement('button');
+    btnDownload.type = 'button';
+    btnDownload.className = 'btn btn-sm btn-secondary';
+    btnDownload.textContent = '下载';
+    btnDownload.onclick = () => window.location.href = `/api/files/download/${file.id}`;
+
+    const btnDelete = document.createElement('button');
+    btnDelete.type = 'button';
+    btnDelete.className = 'btn btn-sm btn-danger';
+    btnDelete.textContent = '删除';
+    btnDelete.onclick = () => this.deleteFileById(file.id, div);
+
+    actions.appendChild(btnView);
+    actions.appendChild(btnDownload);
+    actions.appendChild(btnDelete);
+
+    div.appendChild(name);
+    div.appendChild(size);
+    div.appendChild(actions);
+
+    return div;
+  },
+
+  /**
+   * 触发文件上传
+   * @param {string} fileType - 文件类型 (image/manual/function_table)
+   */
+  triggerUpload(fileType) {
+    const inputId = fileType === 'image' ? 'image-upload-input' :
+      fileType === 'function_table' ? 'function-table-upload-input' :
+        'manual-upload-input';
+
+    const input = document.getElementById(inputId);
+    if (input) {
+      input.onchange = (e) => this.handleFileSelect(e, fileType);
+      input.click();
+    }
+  },
+
+  /**
+   * 处理文件选择
+   * @param {Event} e - 文件选择事件
+   * @param {string} fileType - 文件类型
+   */
+  handleFileSelect(e, fileType) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('model_type', this.currentModel.type);
+    formData.append('model_id', this.currentModel.id);
+    formData.append('file_type', fileType);
+
+    fetch('/api/files/upload', {
+      method: 'POST',
+      body: formData
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // 刷新模型详情
+          this.showModelDetail(this.currentModel.type, this.currentModel.id);
+        } else {
+          alert('上传失败: ' + (data.error || '未知错误'));
+        }
+      })
+      .catch(error => {
+        console.error('上传失败:', error);
+        alert('上传失败');
+      })
+      .finally(() => {
+        // 清空文件输入
+        e.target.value = '';
+      });
+  },
+
+  /**
+   * 预览文件
+   * @param {string} fileType - 文件类型
+   */
+  viewFile(fileType) {
+    const file = this.currentModel.files[fileType === 'image' ? 'image' : 'function_table'];
+    if (file) {
+      window.open(`/api/files/view/${file.id}`, '_blank');
+    }
+  },
+
+  /**
+   * 删除文件
+   * @param {string} fileType - 文件类型
+   */
+  deleteFile(fileType) {
+    const file = this.currentModel.files[fileType === 'image' ? 'image' : 'function_table'];
+    if (file && confirm('确定删除此文件？')) {
+      this.deleteFileById(file.id);
+    }
+  },
+
+  /**
+   * 根据 ID 删除文件
+   * @param {number} fileId - 文件ID
+   * @param {HTMLElement} element - 可选，要移除的元素
+   */
+  deleteFileById(fileId, element) {
+    if (!confirm('确定删除此文件？')) return;
+
+    fetch(`/api/files/delete/${fileId}`, {
+      method: 'DELETE'
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          if (element) {
+            element.remove();
+          }
+          // 刷新模型详情
+          this.showModelDetail(this.currentModel.type, this.currentModel.id);
+        } else {
+          alert('删除失败: ' + (data.error || '未知错误'));
+        }
+      })
+      .catch(error => {
+        console.error('删除失败:', error);
+        alert('删除失败');
+      });
+  },
+
+  /**
+   * 格式化文件大小
+   * @param {number} bytes - 文件大小（字节）
+   * @returns {string}
+   */
+  formatFileSize(bytes) {
+    if (!bytes) return '0 B';
+
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let unitIndex = 0;
+    let size = bytes;
+
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+
+    return size.toFixed(unitIndex > 0 ? 1 : 0) + ' ' + units[unitIndex];
+  },
+
+  /**
+   * 加载表格中的文件状态
+   * 在页面加载时调用，更新表格中每一行的文件状态显示
+   */
+  loadTableFileStatus() {
+    const rows = document.querySelectorAll('tr[data-model_type][data-model_id]');
+
+    rows.forEach(row => {
+      const modelType = row.dataset.model_type;
+      const modelId = row.dataset.model_id;
+
+      fetch(`/api/files/list/${modelType}/${modelId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            this.updateRowFileStatus(row, data.files);
+          }
+        })
+        .catch(error => console.error('获取文件状态失败:', error));
+    });
+  },
+
+  /**
+   * 更新行文件状态显示
+   * @param {HTMLElement} row - 表格行
+   * @param {Object} files - 文件信息
+   */
+  updateRowFileStatus(row, files) {
+    // 更新图片
+    const imageCell = row.querySelector('.image-cell');
+    if (imageCell) {
+      if (files.image) {
+        // 使用安全的 DOM 方法创建图片元素
+        while (imageCell.firstChild) {
+          imageCell.removeChild(imageCell.firstChild);
+        }
+        const img = document.createElement('img');
+        img.src = `/api/files/view/${files.image.id}`;
+        img.className = 'thumbnail';
+        img.title = '点击查看详情';
+        img.onclick = () => this.showModelDetail(row.dataset.model_type, parseInt(row.dataset.model_id));
+        imageCell.appendChild(img);
+      }
+    }
+
+    // 更新功能表状态
+    const functionTableCell = row.querySelector('.file-status-cell[data-file-type="function_table"]');
+    if (functionTableCell) {
+      const status = functionTableCell.querySelector('.file-status');
+      if (files.function_table) {
+        status.className = 'file-status file-status-exists';
+        status.textContent = '\u2713'; // ✓
+        status.title = '已上传，点击查看';
+      }
+    }
+
+    // 更新说明书数量
+    const manualCell = row.querySelector('.file-status-cell[data-file-type="manual"]');
+    if (manualCell) {
+      const status = manualCell.querySelector('.file-status');
+      const count = files.manual ? files.manual.length : 0;
+      status.textContent = count;
+      if (count > 0) {
+        status.className = 'file-status file-status-exists';
+        status.title = count + '个文件，点击查看';
+      }
+    }
+  }
+};
+
+/**
+ * 初始化文件管理模态框
+ */
+function initFileManagerModal() {
+  const modal = document.getElementById('model-detail-modal');
+  if (modal) {
+    ModalManager.init('model-detail-modal', null);
+
+    // 页面加载时获取表格中的文件状态
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        FileManager.loadTableFileStatus();
+      });
+    } else {
+      FileManager.loadTableFileStatus();
+    }
+  }
+}
+
+// 自动初始化
+initFileManagerModal();
