@@ -7,14 +7,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 当前状态
 项目功能已完善，包含：
-- 四种模型类型的 CRUD 操作
+- 四种模型类型的 CRUD 操作（使用模态框表单）
 - 首页多维度统计（类型/比例/品牌/商家）支持表格和饼图展示
 - 模型列表表格支持排序和筛选
 - 模型列表复制按钮（快速填充表单）
+- 模型详情模态框（点击图片查看属性和文件）
 - Excel 数据导入导出（多模式导出、智能导入、冲突检测）
 - 自定义 Excel 导入向导（5 步向导、模板管理、列映射、冲突检测）
 - 信息维护功能（原名"选项维护"）
-- 模型文件管理（图片、说明书、数码功能表的上传、下载、预览、删除）
+- 模型文件管理（图片、说明书、数码功能表的上传、下载、预览、删除、ZIP 导出）
 
 ## 技术栈
 - Python 3.10+
@@ -53,10 +54,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### 模板结构
 - `base.html` - 基础布局模板
 - `index.html` - 首页统计（标签页切换 + 表格/饼图）
-- `locomotive.html` 等 - 模型列表页（表格排序筛选 + 复制按钮）
-- `locomotive_edit.html` 等 - 模型编辑页
+- `locomotive.html` 等 - 模型列表页（表格排序筛选 + 复制按钮 + 模态框表单 + 模型详情）
 - `options.html` - 信息维护（标签页 + 行内编辑）
-- `system.html` - 系统维护（导入导出 + 数据库初始化）
+- `system.html` - 系统维护（导入导出 + 自定义导入 + 数据库初始化）
 - `macros/` - Jinja2 宏（已定义但部分未使用）
 
 ## 虚拟环境
@@ -157,6 +157,10 @@ pytest -v                  # 运行测试（详细输出）
 - 表格支持列筛选（下拉选择）
 - 排序指示器和筛选下拉框
 - 复制按钮：点击后填充下方表单
+- 图片缩略图：点击查看模型详情
+- 文件状态：显示功能表和说明书状态
+- 添加/编辑使用模态框（无需跳转页面）
+- 模型详情：50/50 布局（图片 + 基本信息）
 
 ### 信息维护页（原"选项维护"）
 - 标签页切换不同选项类型
@@ -199,6 +203,15 @@ pytest -v                  # 运行测试（详细输出）
 - `POST /api/custom-import/preview` - 预览导入数据（含冲突检测）
 - `POST /api/custom-import/execute` - 执行导入
 
+### 文件管理 API
+- `POST /api/files/upload` - 上传文件（图片/说明书/数码功能表）
+- `GET /api/files/download/<id>` - 下载文件
+- `GET /api/files/view/<id>` - 在浏览器中预览文件
+- `DELETE /api/files/delete/<id>` - 删除文件
+- `GET /api/files/list/<type>/<id>` - 获取模型文件列表
+- `GET /api/files/export-all` - 导出所有模型文件为 ZIP
+- `GET /api/files/model/<type>/<id>` - 获取模型详情（含文件）
+
 ## 前端 JavaScript 模块
 
 ### utils.js 核心对象
@@ -210,6 +223,7 @@ CarriageManager // 车厢项管理（addRow、removeRow、handleSeriesChange）
 ModelForm       // 模型表单（handleLocomotiveSeriesChange、autoFillLocomotive）
 TableManager    // 表格管理（init、handleSort、handleFilter、applySortAndFilter）
 FormFiller      // 表单填充（copyFromRow、fillField）
+FileManager     // 文件管理（showModelDetail、uploadFile、deleteFile、downloadFile、viewFile）
 ```
 
 ### custom-import.js 核心对象
@@ -275,14 +289,10 @@ TrainModelManager/
 ├── templates/          # Jinja2 模板
 │   ├── base.html       # 基础模板
 │   ├── index.html      # 首页统计
-│   ├── locomotive.html # 机车列表
-│   ├── locomotive_edit.html
-│   ├── carriage.html
-│   ├── carriage_edit.html
-│   ├── trainset.html
-│   ├── trainset_edit.html
-│   ├── locomotive_head.html
-│   ├── locomotive_head_edit.html
+│   ├── locomotive.html # 机车列表（含模态框表单和详情）
+│   ├── carriage.html   # 车厢列表（含模态框表单和详情）
+│   ├── trainset.html   # 动车组列表（含模态框表单和详情）
+│   ├── locomotive_head.html  # 先头车列表（含模态框表单和详情）
 │   ├── options.html    # 信息维护
 │   ├── system.html     # 系统维护
 │   ├── macros/         # Jinja2 宏
@@ -342,7 +352,6 @@ pytest -k "locomotive"    # 运行名称匹配的测试
 | 优化项 | 说明 | 预计减少 |
 |-------|------|---------|
 | 使用 Jinja2 宏 | 模板中存在重复的表单字段 HTML | ~500 行 |
-| 合并添加/编辑页面 | 编辑页与添加页结构相同 | ~300 行 |
 | 删除未使用 CSS | `.stat-card`、`.empty-state`、`.tooltip` 等 | ~80 行 |
 | 提取后端 CRUD 公共逻辑 | 路由文件结构高度重复 | ~200 行 |
 
@@ -362,16 +371,22 @@ pytest -k "locomotive"    # 运行名称匹配的测试
    - ZIP 导出：一键导出所有模型文件
    - 文件同步：启动时自动同步 data 目录到数据库
 
-2. **文件存储结构**
+2. **模态框表单转换**
+   - 将四种模型的添加/编辑页面转换为模态框
+   - 删除独立的 `*_edit.html` 模板文件
+   - 模型详情模态框：50/50 布局（图片 + 基本信息）
+   - 缩略图预览和文件状态指示器
+
+3. **文件存储结构**
    - 按 "模型类型/品牌_货号/" 结构组织
    - 图片命名：`品牌_货号.{ext}`
    - 功能表命名：`品牌_货号_FunctionKey.{ext}`
    - 说明书命名：`品牌_货号_Manual_{原始文件名}.{ext}`
 
-3. **新增数据模型**
+4. **新增数据模型**
    - `ModelFile` 模型：跟踪文件元数据（类型、路径、大小、MIME类型）
 
-4. **新增 API 端点**
+5. **新增 API 端点**
    - 文件上传：`POST /api/files/upload`
    - 文件下载：`GET /api/files/download/<id>`
    - 文件预览：`GET /api/files/view/<id>`
@@ -379,17 +394,23 @@ pytest -k "locomotive"    # 运行名称匹配的测试
    - 文件列表：`GET /api/files/list/<type>/<id>`
    - 导出所有文件：`GET /api/files/export-all`
    - 模型详情：`GET /api/files/model/<type>/<id>`
+   - 编辑模型 API：`POST /api/{type}/edit/<id>`
 
-5. **前端增强**
+6. **前端增强**
    - `FileManager` 模块：文件管理功能封装
    - 模型详情模态框：显示属性和文件
    - 表格新增图片、功能表、说明书列
-   - 缩略图预览和状态指示器
+   - 图标按钮：使用简单符号替代 emoji
 
-6. **新增工具模块**
+7. **新增工具模块**
    - `utils/file_sync.py`：目录同步工具
 
-7. **测试覆盖**
+8. **代码现代化**
+   - 替换已弃用的 `datetime.utcnow()` 为 `datetime.now(timezone.utc)`
+   - 替换已弃用的 `Query.get()` 为 `db.session.get()`
+   - 替换已弃用的 `Query.get_or_404()` 为 `db.get_or_404()`
+
+9. **测试覆盖**
    - 164 个测试全部通过
    - 新增文件功能测试用例
 

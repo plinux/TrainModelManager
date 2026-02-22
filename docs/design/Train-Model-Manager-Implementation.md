@@ -1,1248 +1,941 @@
-# 火车模型管理系统实施计划
+# 火车模型管理系统 - 详细实现文档
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
-**Goal:** 构建一个完整的火车模型管理系统，支持四种模型类型的 CRUD、自动填充、唯一性验证和统计汇总。
-
-**Architecture:** 单体 Flask 应用，使用 SQLite/MySQL（可配置），SQLAlchemy ORM，纯 HTML + JavaScript 前端。
-
-**Tech Stack:** Python 3.x, Flask, SQLAlchemy, Jinja2, MySQL/SQLite
+**版本**: v0.8.0
+**最后更新**: 2026-02-23
 
 ---
 
-### Task 1: 创建项目基础结构和配置文件
+## 一、项目概述
 
-**Files:**
-- Create: `requirements.txt`
-- Create: `config.py`
+### 1.1 系统简介
 
-**Step 1: Create requirements.txt**
+火车模型管理系统是一个用于管理火车模型藏品、统计和展示的 Web 应用。支持四种模型类型的完整生命周期管理，包括数据录入、文件管理、统计分析和数据导入导出。
 
-```txt
-Flask==3.0.0
-Flask-SQLAlchemy==3.1.1
-PyMySQL==1.1.0
-cryptography==41.0.7
+### 1.2 功能特性
+
+| 功能模块 | 描述 |
+|---------|------|
+| 模型管理 | 四种模型类型（机车、车厢、动车组、先头车）的 CRUD 操作 |
+| 文件管理 | 模型图片、说明书、数码功能表的上传、下载、预览、删除 |
+| 数据统计 | 多维度统计（类型/比例/品牌/商家），支持表格和饼图展示 |
+| 数据导入导出 | Excel 导入导出，支持多种模式和冲突检测 |
+| 自定义导入 | 5 步向导式导入，支持模板管理和灵活列映射 |
+| 信息维护 | 集中管理所有参考数据（品牌、商家、芯片等） |
+
+### 1.3 技术栈
+
+| 技术 | 版本/说明 |
+|-----|----------|
+| Python | 3.10+ |
+| Flask | 3.0.0（Blueprint 模块化架构）|
+| SQLAlchemy | 3.1.1（ORM）|
+| 数据库 | SQLite（开发）/ MySQL（生产）|
+| 前端 | HTML5 + JavaScript（无构建工具）|
+| 图表 | Chart.js 4.x（CDN 引入）|
+| Excel | openpyxl |
+| 测试 | pytest |
+
+---
+
+## 二、架构设计
+
+### 2.1 目录结构
+
+```
+TrainModelManager/
+├── app.py                    # Flask 应用工厂
+├── models.py                 # SQLAlchemy 数据模型
+├── config.py                 # 配置类（含 TestConfig）
+├── init_db.py               # 数据库初始化脚本
+├── requirements.txt         # Python 依赖
+│
+├── routes/                  # Blueprint 路由模块
+│   ├── __init__.py
+│   ├── main.py              # 首页和统计
+│   ├── locomotive.py        # 机车模型路由
+│   ├── carriage.py          # 车厢模型路由
+│   ├── trainset.py          # 动车组模型路由
+│   ├── locomotive_head.py   # 先头车模型路由
+│   ├── options.py           # 信息维护（工厂函数）
+│   ├── api.py               # API 端点（自动填充、导入导出）
+│   └── files.py             # 文件管理 API
+│
+├── utils/                   # 公共辅助函数
+│   ├── __init__.py
+│   ├── helpers.py           # 通用辅助函数
+│   ├── validators.py        # 验证函数
+│   ├── price_calculator.py  # 价格计算（AST 安全解析）
+│   ├── system_tables.py     # 系统表配置（自定义导入）
+│   └── file_sync.py         # 文件同步工具
+│
+├── static/
+│   ├── css/style.css        # 主样式文件（CSS 变量）
+│   └── js/
+│       ├── utils.js         # 核心工具模块
+│       ├── app.js           # 页面初始化
+│       ├── options.js       # 信息维护专用
+│       ├── system.js        # 系统维护专用
+│       └── custom-import.js # 自定义导入向导
+│
+├── templates/               # Jinja2 模板
+│   ├── base.html            # 基础布局模板
+│   ├── index.html           # 首页统计
+│   ├── locomotive.html      # 机车列表（含模态框）
+│   ├── carriage.html        # 车厢列表（含模态框）
+│   ├── trainset.html        # 动车组列表（含模态框）
+│   ├── locomotive_head.html # 先头车列表（含模态框）
+│   ├── options.html         # 信息维护
+│   ├── system.html          # 系统维护
+│   ├── macros/              # Jinja2 宏
+│   │   ├── form.html        # 表单字段宏
+│   │   └── table.html       # 表格相关宏
+│   ├── 404.html
+│   └── 500.html
+│
+├── tests/                   # 测试文件
+│   ├── conftest.py          # 测试配置
+│   ├── test_api.py          # API 测试
+│   ├── test_crud.py         # CRUD 测试
+│   ├── test_files.py        # 文件功能测试
+│   └── ...
+│
+├── data/                    # 文件存储目录（默认）
+│   ├── locomotive/
+│   ├── carriage/
+│   ├── trainset/
+│   └── locomotive_head/
+│
+└── docs/                    # 文档
+    ├── design/              # 设计文档
+    └── plans/               # 需求文档
 ```
 
-**Step 2: Create config.py**
+### 2.2 后端架构
+
+采用 Flask Blueprint 模块化架构：
 
 ```python
-import os
+# app.py - 应用工厂模式
+from flask import Flask
+from config import Config
+from models import db
 
-class Config:
-    """应用配置类"""
-    # 数据库配置：支持 SQLite 和 MySQL
-    DB_TYPE = os.getenv('DB_TYPE', 'sqlite')
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    db.init_app(app)
 
-    if DB_TYPE == 'mysql':
-        MYSQL_HOST = os.getenv('MYSQL_HOST', 'localhost')
-        MYSQL_PORT = os.getenv('MYSQL_PORT', '3306')
-        MYSQL_USER = os.getenv('MYSQL_USER', 'root')
-        MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '')
-        MYSQL_DATABASE = os.getenv('MYSQL_DATABASE', 'train_model_manager')
-        SQLALCHEMY_DATABASE_URI = (
-            f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}"
-            f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
-        )
-    else:
-        # 默认使用 SQLite
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///train_model.db'
+    # 注册蓝图
+    from routes.main import main_bp
+    from routes.locomotive import locomotive_bp
+    from routes.carriage import carriage_bp
+    from routes.trainset import trainset_bp
+    from routes.locomotive_head import locomotive_head_bp
+    from routes.options import options_bp
+    from routes.api import api_bp
+    from routes.files import files_bp
 
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    app.register_blueprint(main_bp)
+    app.register_blueprint(locomotive_bp)
+    app.register_blueprint(carriage_bp)
+    app.register_blueprint(trainset_bp)
+    app.register_blueprint(locomotive_head_bp)
+    app.register_blueprint(options_bp)
+    app.register_blueprint(api_bp)
+    app.register_blueprint(files_bp)
+
+    return app
 ```
 
-**Step 3: Commit**
+### 2.3 前端架构
 
-```bash
-git add requirements.txt config.py
-git commit -m "feat: add project config and dependencies"
+#### JavaScript 模块结构
+
+```javascript
+// static/js/utils.js - 核心工具模块
+
+// 通用工具
+const Utils = {
+  filterModelsBySeries(seriesId, modelSelectId, models),
+  autoFill(modelId, apiUrl, fieldMappings),
+  showTab(tabId, tabGroup),
+  // ...
+};
+
+// API 封装
+const Api = {
+  post(url, data),
+  postForm(url, formData),
+  // ...
+};
+
+// 表单处理
+const FormHelper = {
+  clearErrors(form),
+  showErrors(form, errors),
+  showSuccess(form, message),
+  // ...
+};
+
+// 表格管理
+const TableManager = {
+  init(tableId),
+  handleSort(table, th),
+  handleFilter(table, select, column),
+  // ...
+};
+
+// 文件管理
+const FileManager = {
+  showModelDetail(modelType, modelId),
+  triggerUpload(fileType),
+  downloadFile(fileId),
+  viewFile(fileId),
+  deleteFile(fileId),
+  // ...
+};
+
+// 表单填充（复制按钮）
+const FormFiller = {
+  copyFromRow(button, fieldMappings),
+  fillField(fieldId, value),
+  // ...
+};
+```
+
+#### CSS 变量系统
+
+```css
+/* static/css/style.css */
+:root {
+  --color-primary: #007bff;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
+  --color-info: #17a2b8;
+  --color-secondary: #6c757d;
+  --border-radius: 4px;
+  --spacing-md: 1rem;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+}
 ```
 
 ---
 
-### Task 2: 创建数据库模型 - 参考数据表
+## 三、数据模型
 
-**Files:**
-- Create: `models.py`
-
-**Step 1: Create models.py with reference data models**
+### 3.1 参考数据表（共享）
 
 ```python
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Integer, Float, Boolean, Date, ForeignKey
-from sqlalchemy.orm import relationship
-from datetime import date
+# models.py
 
-db = SQLAlchemy()
-
-# 参考数据表 - 跨模型共享
 class PowerType(db.Model):
     """动力类型（机车和动车组共享）"""
     __tablename__ = 'power_type'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, unique=True, comment='动力类型名称')
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False, unique=True)
 
 class Brand(db.Model):
     """品牌（所有模型共享）"""
     __tablename__ = 'brand'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(100), nullable=False, unique=True, comment='品牌名称')
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(100), nullable=False, unique=True)
+    search_url = db.Column(String(255))  # 品牌搜索 URL
 
 class ChipInterface(db.Model):
     """芯片接口（机车和动车组共享）"""
     __tablename__ = 'chip_interface'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, unique=True, comment='芯片接口名称')
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False, unique=True)
 
 class ChipModel(db.Model):
     """芯片型号（机车和动车组共享）"""
     __tablename__ = 'chip_model'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(100), nullable=False, unique=True, comment='芯片型号名称')
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(100), nullable=False, unique=True)
 
 class Merchant(db.Model):
     """购买商家（所有模型共享）"""
     __tablename__ = 'merchant'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(100), nullable=False, unique=True, comment='商家名称')
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(100), nullable=False, unique=True)
 
 class Depot(db.Model):
     """车辆段/机务段（机车、车厢、动车组共享）"""
     __tablename__ = 'depot'
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False, unique=True)
+```
 
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, unique=True, comment='车辆段/机务段名称')
+### 3.2 系列和型号表
 
-# 机车专用表
+```python
+# 机车系列和型号
 class LocomotiveSeries(db.Model):
-    """机车系列"""
     __tablename__ = 'locomotive_series'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, unique=True, comment='机车系列名称')
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False, unique=True)
 
 class LocomotiveModel(db.Model):
-    """机车型号（关联系列和类型）"""
     __tablename__ = 'locomotive_model'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, comment='机车型号名称')
-    series_id = db.Column(Integer, ForeignKey('locomotive_series.id'), nullable=False, comment='关联系列ID')
-    power_type_id = db.Column(Integer, ForeignKey('power_type.id'), nullable=False, comment='关联动力类型ID')
-
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False)
+    series_id = db.Column(Integer, ForeignKey('locomotive_series.id'))
+    power_type_id = db.Column(Integer, ForeignKey('power_type.id'))
     series = relationship('LocomotiveSeries', backref='models')
     power_type = relationship('PowerType', backref='locomotive_models')
 
-# 车厢专用表
+# 车厢系列和型号
 class CarriageSeries(db.Model):
-    """车厢系列"""
     __tablename__ = 'carriage_series'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, unique=True, comment='车厢系列名称')
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False, unique=True)
 
 class CarriageModel(db.Model):
-    """车厢型号（关联系列和类型）"""
     __tablename__ = 'carriage_model'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, comment='车厢型号名称')
-    series_id = db.Column(Integer, ForeignKey('carriage_series.id'), nullable=False, comment='关联系列ID')
-    type = db.Column(String(20), nullable=False, comment='类型：客车/货车/工程车')
-
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False)
+    series_id = db.Column(Integer, ForeignKey('carriage_series.id'))
+    type = db.Column(String(20))  # 客车/货车/工程车
     series = relationship('CarriageSeries', backref='models')
 
-# 动车组专用表（与先头车共享）
+# 动车组系列和型号
 class TrainsetSeries(db.Model):
-    """动车组系列"""
     __tablename__ = 'trainset_series'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, unique=True, comment='动车组系列名称')
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False, unique=True)
 
 class TrainsetModel(db.Model):
-    """动车组车型（关联系列和类型）"""
     __tablename__ = 'trainset_model'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    name = db.Column(String(50), nullable=False, comment='动车组车型名称')
-    series_id = db.Column(Integer, ForeignKey('trainset_series.id'), nullable=False, comment='关联系列ID')
-    power_type_id = db.Column(Integer, ForeignKey('power_type.id'), nullable=False, comment='关联动力类型ID')
-
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(50), nullable=False)
+    series_id = db.Column(Integer, ForeignKey('trainset_series.id'))
+    power_type_id = db.Column(Integer, ForeignKey('power_type.id'))
     series = relationship('TrainsetSeries', backref='models')
     power_type = relationship('PowerType', backref='trainset_models')
 ```
 
-**Step 2: Commit**
-
-```bash
-git add models.py
-git commit -m "feat: add reference data models"
-```
-
----
-
-### Task 3: 创建数据库模型 - 核心数据表（机车）
-
-**Files:**
-- Modify: `models.py`
-
-**Step 1: Add locomotive model to models.py**
+### 3.3 核心数据表（四种模型类型）
 
 ```python
-# 核心数据表
+# 机车模型
 class Locomotive(db.Model):
-    """机车模型"""
     __tablename__ = 'locomotive'
+    id = db.Column(Integer, primary_key=True)
+    series_id = db.Column(Integer, ForeignKey('locomotive_series.id'))
+    power_type_id = db.Column(Integer, ForeignKey('power_type.id'))
+    model_id = db.Column(Integer, ForeignKey('locomotive_model.id'))
+    brand_id = db.Column(Integer, ForeignKey('brand.id'))
+    depot_id = db.Column(Integer, ForeignKey('depot.id'))
+    plaque = db.Column(String(50))
+    color = db.Column(String(50))
+    scale = db.Column(String(2), nullable=False)
+    locomotive_number = db.Column(String(12))
+    decoder_number = db.Column(String(4))
+    chip_interface_id = db.Column(Integer, ForeignKey('chip_interface.id'))
+    chip_model_id = db.Column(Integer, ForeignKey('chip_model.id'))
+    price = db.Column(String(50))
+    total_price = db.Column(Float)
+    item_number = db.Column(String(50))
+    product_url = db.Column(String(255))
+    purchase_date = db.Column(Date)
+    merchant_id = db.Column(Integer, ForeignKey('merchant.id'))
+    # 关系...
+    files = relationship('ModelFile', backref='locomotive',
+                         foreign_keys='ModelFile.model_id',
+                         primaryjoin="and_(Locomotive.id==ModelFile.model_id, "
+                                     "ModelFile.model_type=='locomotive')")
 
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    series_id = db.Column(Integer, ForeignKey('locomotive_series.id'), comment='关联机车系列ID')
-    power_type_id = db.Column(Integer, ForeignKey('power_type.id'), comment='关联动力类型ID')
-    model_id = db.Column(Integer, ForeignKey('locomotive_model.id'), comment='关联机车型号ID')
-    brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
-    depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联机务段ID')
-    plaque = db.Column(String(50), comment='挂牌')
-    color = db.Column(String(50), comment='颜色')
-    scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
-    locomotive_number = db.Column(String(12), comment='机车号（4-12位数字，前导0）')
-    decoder_number = db.Column(String(4), comment='编号（1-4位数字，无前导0）')
-    chip_interface_id = db.Column(Integer, ForeignKey('chip_interface.id'), comment='关联芯片接口ID')
-    chip_model_id = db.Column(Integer, ForeignKey('chip_model.id'), comment='关联芯片型号ID')
-    price = db.Column(String(50), comment='价格表达式（如288+538）')
-    total_price = db.Column(Float, comment='总价（自动计算）')
-    item_number = db.Column(String(50), comment='货号')
-    purchase_date = db.Column(Date, default=date.today, comment='购买日期')
-    merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
-
-    # 关系
-    series = relationship('LocomotiveSeries', backref='locomotives')
-    power_type = relationship('PowerType', backref='locomotives')
-    model = relationship('LocomotiveModel', backref='locomotives')
-    brand = relationship('Brand', backref='locomotives')
-    depot = relationship('Depot', backref='locomotives')
-    chip_interface = relationship('ChipInterface', backref='locomotives')
-    chip_model = relationship('ChipModel', backref='locomotives')
-    merchant = relationship('Merchant', backref='locomotives')
-```
-
-**Step 2: Commit**
-
-```bash
-git add models.py
-git commit -m "feat: add locomotive model"
-```
-
----
-
-### Task 4: 创建数据库模型 - 核心数据表（车厢套装）
-
-**Files:**
-- Modify: `models.py`
-
-**Step 1: Add carriage set and item models to models.py**
-
-```python
+# 车厢套装（主表）
 class CarriageSet(db.Model):
-    """车厢套装主表"""
     __tablename__ = 'carriage_set'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
-    series_id = db.Column(Integer, ForeignKey('carriage_series.id'), comment='关联车厢系列ID')
-    depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联车辆段ID')
-    train_number = db.Column(String(20), comment='车次')
-    plaque = db.Column(String(50), comment='挂牌')
-    item_number = db.Column(String(50), comment='货号')
-    scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
-    total_price = db.Column(Float, comment='总价')
-    purchase_date = db.Column(Date, default=date.today, comment='购买日期')
-    merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
-
-    # 关系
-    brand = relationship('Brand', backref='carriage_sets')
-    series = relationship('CarriageSeries', backref='carriage_sets')
-    depot = relationship('Depot', backref='carriage_sets')
-    merchant = relationship('Merchant', backref='carriage_sets')
+    id = db.Column(Integer, primary_key=True)
+    brand_id = db.Column(Integer, ForeignKey('brand.id'))
+    series_id = db.Column(Integer, ForeignKey('carriage_series.id'))
+    depot_id = db.Column(Integer, ForeignKey('depot.id'))
+    train_number = db.Column(String(20))
+    plaque = db.Column(String(50))
+    item_number = db.Column(String(50))
+    scale = db.Column(String(2), nullable=False)
+    total_price = db.Column(Float)
+    product_url = db.Column(String(255))
+    purchase_date = db.Column(Date)
+    merchant_id = db.Column(Integer, ForeignKey('merchant.id'))
     items = relationship('CarriageItem', backref='set', cascade='all, delete-orphan')
 
+# 车厢项（子表）
 class CarriageItem(db.Model):
-    """车厢套装子表（每辆车的详细信息）"""
     __tablename__ = 'carriage_item'
+    id = db.Column(Integer, primary_key=True)
+    set_id = db.Column(Integer, ForeignKey('carriage_set.id'), nullable=False)
+    model_id = db.Column(Integer, ForeignKey('carriage_model.id'))
+    car_number = db.Column(String(10))
+    color = db.Column(String(50))
+    lighting = db.Column(String(50))
 
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    set_id = db.Column(Integer, ForeignKey('carriage_set.id'), nullable=False, comment='关联套装ID')
-    model_id = db.Column(Integer, ForeignKey('carriage_model.id'), comment='关联车厢型号ID')
-    car_number = db.Column(String(10), comment='车辆号（3-10位数字，无前导0）')
-    color = db.Column(String(50), comment='颜色')
-    lighting = db.Column(String(50), comment='灯光')
-
-    # 关系
-    model = relationship('CarriageModel', backref='items')
-```
-
-**Step 2: Commit**
-
-```bash
-git add models.py
-git commit -m "feat: add carriage set and item models"
-```
-
----
-
-### Task 5: 创建数据库模型 - 核心数据表（动车组和先头车）
-
-**Files:**
-- Modify: `models.py`
-
-**Step 1: Add trainset and locomotive head models to models.py**
-
-```python
+# 动车组模型
 class Trainset(db.Model):
-    """动车组模型"""
     __tablename__ = 'trainset'
+    # 类似 Locomotive，额外字段：
+    formation = db.Column(Integer)      # 编组数
+    trainset_number = db.Column(String(12))
+    head_light = db.Column(Boolean)
+    interior_light = db.Column(String(50))
 
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    series_id = db.Column(Integer, ForeignKey('trainset_series.id'), comment='关联动车组系列ID')
-    power_type_id = db.Column(Integer, ForeignKey('power_type.id'), comment='关联动力类型ID')
-    model_id = db.Column(Integer, ForeignKey('trainset_model.id'), comment='关联动车组车型ID')
-    brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
-    depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联动车段ID')
-    plaque = db.Column(String(50), comment='挂牌')
-    color = db.Column(String(50), comment='颜色')
-    scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
-    formation = db.Column(Integer, comment='编组数')
-    trainset_number = db.Column(String(12), comment='动车号（3-12位数字，前导0）')
-    decoder_number = db.Column(String(4), comment='编号（1-4位数字，无前导0）')
-    head_light = db.Column(Boolean, comment='头车灯（有/无）')
-    interior_light = db.Column(String(50), comment='室内灯')
-    chip_interface_id = db.Column(Integer, ForeignKey('chip_interface.id'), comment='关联芯片接口ID')
-    chip_model_id = db.Column(Integer, ForeignKey('chip_model.id'), comment='关联芯片型号ID')
-    price = db.Column(String(50), comment='价格表达式（如288+538）')
-    total_price = db.Column(Float, comment='总价（自动计算）')
-    item_number = db.Column(String(50), comment='货号')
-    purchase_date = db.Column(Date, default=date.today, comment='购买日期')
-    merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
-
-    # 关系
-    series = relationship('TrainsetSeries', backref='trainsets')
-    power_type = relationship('PowerType', backref='trainsets')
-    model = relationship('TrainsetModel', backref='trainsets')
-    brand = relationship('Brand', backref='trainsets')
-    depot = relationship('Depot', backref='trainsets')
-    chip_interface = relationship('ChipInterface', backref='trainsets')
-    chip_model = relationship('ChipModel', backref='trainsets')
-    merchant = relationship('Merchant', backref='trainsets')
-
+# 先头车模型（无动车段、无芯片）
 class LocomotiveHead(db.Model):
-    """先头车模型"""
     __tablename__ = 'locomotive_head'
-
-    id = db.Column(Integer, primary_key=True, comment='主键')
-    model_id = db.Column(Integer, ForeignKey('trainset_model.id'), comment='关联动车组车型ID')
-    brand_id = db.Column(Integer, ForeignKey('brand.id'), comment='关联品牌ID')
-    depot_id = db.Column(Integer, ForeignKey('depot.id'), comment='关联动车段ID')
-    special_color = db.Column(String(32), comment='特涂')
-    scale = db.Column(String(2), nullable=False, comment='比例：HO/N')
-    head_light = db.Column(Boolean, comment='头车灯（有/无）')
-    interior_light = db.Column(String(50), comment='室内灯')
-    price = db.Column(String(50), comment='价格表达式（如288+538）')
-    total_price = db.Column(Float, comment='总价（自动计算）')
-    item_number = db.Column(String(50), comment='货号')
-    purchase_date = db.Column(Date, default=date.today, comment='购买日期')
-    merchant_id = db.Column(Integer, ForeignKey('merchant.id'), comment='关联商家ID')
-
-    # 关系
-    model = relationship('TrainsetModel', backref='locomotive_heads')
-    brand = relationship('Brand', backref='locomotive_heads')
-    depot = relationship('Depot', backref='locomotive_heads')
-    merchant = relationship('Merchant', backref='locomotive_heads')
+    # 简化字段：无 chip_interface, chip_model, depot
+    model_id = db.Column(Integer, ForeignKey('trainset_model.id'))
+    special_color = db.Column(String(32))
+    head_light = db.Column(Boolean)
+    interior_light = db.Column(String(50))
 ```
 
-**Step 2: Commit**
-
-```bash
-git add models.py
-git commit -m "feat: add trainset and locomotive head models"
-```
-
----
-
-### Task 6: 创建数据库初始化脚本
-
-**Files:**
-- Create: `init_db.py`
-
-**Step 1: Create init_db.py with initial data**
+### 3.4 文件跟踪表
 
 ```python
-from app import app
-from models import db, PowerType, Brand, ChipInterface, ChipModel, Merchant, Depot
-from models import LocomotiveSeries, LocomotiveModel, CarriageSeries, CarriageModel
-from models import TrainsetSeries, TrainsetModel
-
-def init_db():
-    """初始化数据库并插入预置数据"""
-    with app.app_context():
-        db.create_all()
-        insert_reference_data()
-        print("数据库初始化完成！")
-
-def insert_reference_data():
-    """插入参考数据"""
-
-    # 1. 动力类型
-    power_types = ['蒸汽', '电力', '内燃', '双源']
-    for name in power_types:
-        if not PowerType.query.filter_by(name=name).first():
-            db.session.add(PowerType(name=name))
-
-    # 2. 机车系列
-    locomotive_series = ['内电', '内集', '东风', '韶山', '和谐电', '和谐内', '复兴电', '复兴内', 'Vossloh', 'Vectron', 'EMD', 'TRAXX']
-    for name in locomotive_series:
-        if not LocomotiveSeries.query.filter_by(name=name).first():
-            db.session.add(LocomotiveSeries(name=name))
-
-    # 3. 车厢系列
-    carriage_series = ['22', '25B', '25G', '25T', '25Z', '19T', '棚车', '敞车', '平车', '罐车']
-    for name in carriage_series:
-        if not CarriageSeries.query.filter_by(name=name).first():
-            db.session.add(CarriageSeries(name=name))
-
-    # 4. 动车组系列
-    trainset_series = ['ICE', 'TGV', 'CRH', 'CRH380', 'CR400', 'CR450', 'DESIRO', 'RailJet', '新干线', '特急', '旅游列车']
-    for name in trainset_series:
-        if not TrainsetSeries.query.filter_by(name=name).first():
-            db.session.add(TrainsetSeries(name=name))
-
-    # 5. 芯片接口
-    chip_interfaces = ['NEM651(6pin)', 'NEM652(8pin)', 'MTC21', 'MKL21', 'NEXT18', 'PluX16', 'PluX22', 'E24']
-    for name in chip_interfaces:
-        if not ChipInterface.query.filter_by(name=name).first():
-            db.session.add(ChipInterface(name=name))
-
-    # 6. 芯片型号
-    chip_models = ['动芯5323', '动芯8004', '动芯8003', 'ESU5.0', 'MS450P22', 'XP5.1', 'Pragon4', 'Tsunami2']
-    for name in chip_models:
-        if not ChipModel.query.filter_by(name=name).first():
-            db.session.add(ChipModel(name=name))
-
-    # 7. 品牌
-    brands = ['1435', 'ATHEARN', 'BLI', 'CMR', 'PIKO', 'ROCO', 'TRIX', '百万城', '浩瀚', '深东', '猩猩', '长鸣', '跨越', 'Kunter', '茂杉', 'KATO', 'HCMX', 'HTMX', 'KukePig', 'N27', '毫米制造', '火车花园', '曙光', 'WALTHERS', 'Tomix', '微景', 'ARNOLD', 'Fleischmann', 'MicroAce']
-    for name in brands:
-        if not Brand.query.filter_by(name=name).first():
-            db.session.add(Brand(name=name))
-
-    # 8. 商家
-    merchants = ['星期五火车模型', 'SRE铁路模型店', '火车女侠店', '长鸣淘宝', '长鸣京东', '中车文创', 'Kunter飘局的模型店', '南京攀登者模型', '铸造模型', '天易模型', '日本N比例火车模型店', '百万城百克曼', '魔都铁路模型社', '火车模型之家', '百万城旗舰店', '1435火车模型', '浩瀚火车模型', '宁东火车模型', '百酷火车模型', '阿易火车模型', '闲鱼']
-    for name in merchants:
-        if not Merchant.query.filter_by(name=name).first():
-            db.session.add(Merchant(name=name))
-
-    # 9. 车辆段/机务段
-    depots = ['京局京段', '京局丰段', '上局沪段', '上局杭段']
-    for name in depots:
-        if not Depot.query.filter_by(name=name).first():
-            db.session.add(Depot(name=name))
-
-    db.session.commit()
-
-if __name__ == '__main__':
-    init_db()
-```
-
-**Step 2: Commit**
-
-```bash
-git add init_db.py
-git commit -m "feat: add database initialization script"
-```
-
----
-
-### Task 7: 创建 Flask 主应用框架
-
-**Files:**
-- Create: `app.py`
-
-**Step 1: Create app.py with Flask application structure**
-
-```python
-from flask import Flask, render_template, request, jsonify, redirect, url_for
-from config import Config
-from models import db
-
-app = Flask(__name__)
-app.config.from_object(Config)
-db.init_app(app)
-
-@app.route('/')
-def index():
-    """汇总统计页面"""
-    return render_template('index.html')
-
-@app.route('/options')
-def options():
-    """信息维护页面"""
-    return render_template('options.html')
-
-if __name__ == '__main__':
-    app.run(debug=True)
-```
-
-**Step 2: Commit**
-
-```bash
-git add app.py
-git commit -m "feat: add Flask application structure"
-```
-
----
-
-### Task 8: 创建基础模板和样式
-
-**Files:**
-- Create: `templates/base.html`
-- Create: `static/css/style.css`
-
-**Step 1: Create base.html template**
-
-```html
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}火车模型管理系统{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <nav>
-        <ul>
-            <li><a href="{{ url_for('index') }}">首页</a></li>
-            <li><a href="{{ url_for('locomotive') }}">机车模型</a></li>
-            <li><a href="{{ url_for('carriage') }}">车厢模型</a></li>
-            <li><a href="{{ url_for('trainset') }}">动车组模型</a></li>
-            <li><a href="{{ url_for('locomotive_head') }}">先头车模型</a></li>
-            <li><a href="{{ url_for('options') }}">信息维护</a></li>
-        </ul>
-    </nav>
-
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    {% block scripts %}{% endblock %}
-</body>
-</html>
-```
-
-**Step 2: Create style.css**
-
-```css
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f5f5f5;
-}
-
-nav {
-    background-color: #333;
-    padding: 1rem;
-}
-
-nav ul {
-    list-style: none;
-    display: flex;
-    gap: 1rem;
-}
-
-nav a {
-    color: white;
-    text-decoration: none;
-    padding: 0.5rem 1rem;
-}
-
-nav a:hover {
-    background-color: #555;
-}
-
-main {
-    max-width: 1200px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-}
-
-input, select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-button {
-    padding: 0.5rem 1rem;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #0056b3;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 2rem;
-}
-
-th, td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #f8f9fa;
-}
-
-.error {
-    color: red;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-}
-
-.form-row {
-    display: flex;
-    gap: 1rem;
-}
-
-.form-row .form-group {
-    flex: 1;
-}
-```
-
-**Step 3: Commit**
-
-```bash
-git add templates/base.html static/css/style.css
-git commit -m "feat: add base template and styles"
-```
-
----
-
-### Task 9: 创建首页（汇总统计）
-
-**Files:**
-- Create: `templates/index.html`
-- Modify: `app.py`
-
-**Step 1: Create index.html template**
-
-```html
-{% extends "base.html" %}
-
-{% block title %}汇总统计 - 火车模型管理系统{% endblock %}
-
-{% block content %}
-<h1>汇总统计</h1>
-
-<div id="statistics">
-    <h2>各类型统计</h2>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>机车模型</h3>
-            <p>数量: <span id="locomotive-count">0</span></p>
-            <p>总价: ¥<span id="locomotive-total">0</span></p>
-        </div>
-        <div class="stat-card">
-            <h3>车厢模型</h3>
-            <p>数量: <span id="carriage-count">0</span></p>
-            <p>总价: ¥<span id="carriage-total">0</span></p>
-        </div>
-        <div class="stat-card">
-            <h3>动车组模型</h3>
-            <p>数量: <span id="trainset-count">0</span></p>
-            <p>总价: ¥<span id="trainset-total">0</span></p>
-        </div>
-        <div class="stat-card">
-            <h3>先头车模型</h3>
-            <p>数量: <span id="locomotive-head-count">0</span></p>
-            <p>总价: ¥<span id="locomotive-head-total">0</span></p>
-        </div>
-    </div>
-</div>
-
-<script>
-// 页面加载时获取统计数据
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/statistics')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('locomotive-count').textContent = data.locomotive.count;
-            document.getElementById('locomotive-total').textContent = data.locomotive.total;
-            document.getElementById('carriage-count').textContent = data.carriage.count;
-            document.getElementById('carriage-total').textContent = data.carriage.total;
-            document.getElementById('trainset-count').textContent = data.trainset.count;
-            document.getElementById('trainset-total').textContent = data.trainset.total;
-            document.getElementById('locomotive-head-count').textContent = data.locomotive_head.count;
-            document.getElementById('locomotive-head-total').textContent = data.locomotive_head.total;
-        });
-});
-</script>
-
-<style>
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.stat-card {
-    padding: 1rem;
-    background-color: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
-}
-
-.stat-card h3 {
-    margin-bottom: 0.5rem;
-}
-</style>
-{% endblock %}
-```
-
-**Step 2: Add statistics API route to app.py**
-
-```python
-from models import Locomotive, CarriageSet, Trainset, LocomotiveHead
-
-@app.route('/api/statistics')
-def statistics():
-    """获取汇总统计数据"""
-    locomotives = Locomotive.query.all()
-    carriage_sets = CarriageSet.query.all()
-    trainsets = Trainset.query.all()
-    locomotive_heads = LocomotiveHead.query.all()
-
-    return jsonify({
-        'locomotive': {
-            'count': len(locomotives),
-            'total': sum(l.total_price or 0 for l in locomotives)
-        },
-        'carriage': {
-            'count': len(carriage_sets),
-            'total': sum(c.total_price or 0 for c in carriage_sets)
-        },
-        'trainset': {
-            'count': len(trainsets),
-            'total': sum(t.total_price or 0 for t in trainsets)
-        },
-        'locomotive_head': {
-            'count': len(locomotive_heads),
-            'total': sum(l.total_price or 0 for l in locomotive_heads)
+class ModelFile(db.Model):
+    """模型文件跟踪表"""
+    __tablename__ = 'model_file'
+    id = db.Column(Integer, primary_key=True)
+    model_type = db.Column(String(20), nullable=False)  # locomotive/carriage/trainset/locomotive_head
+    model_id = db.Column(Integer, nullable=False)
+    file_type = db.Column(String(20), nullable=False)   # image/manual/function_table
+    file_path = db.Column(String(255), nullable=False)  # 相对路径
+    stored_filename = db.Column(String(255), nullable=False)  # 存储文件名
+    original_filename = db.Column(String(255), nullable=False)  # 原始文件名
+    file_size = db.Column(Integer)
+    mime_type = db.Column(String(100))
+    uploaded_at = db.Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'model_type': self.model_type,
+            'model_id': self.model_id,
+            'file_type': self.file_type,
+            'file_path': self.file_path,
+            'stored_filename': self.stored_filename,
+            'original_filename': self.original_filename,
+            'file_size': self.file_size,
+            'mime_type': self.mime_type,
+            'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None
         }
-    })
 ```
 
-**Step 3: Commit**
+### 3.5 导入模板表
 
-```bash
-git add templates/index.html app.py
-git commit -m "feat: add statistics page and API"
+```python
+class ImportTemplate(db.Model):
+    """自定义导入模板"""
+    __tablename__ = 'import_template'
+    id = db.Column(Integer, primary_key=True)
+    name = db.Column(String(100), nullable=False)
+    target_table = db.Column(String(50), nullable=False)
+    column_mapping = db.Column(JSON, nullable=False)  # {"Excel列名": "系统字段名"}
+    created_at = db.Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                          onupdate=lambda: datetime.now(timezone.utc))
 ```
 
 ---
 
-### Task 10: 创建机车模型页面
+## 四、API 路由
 
-**Files:**
-- Create: `templates/locomotive.html`
-- Modify: `app.py`
+### 4.1 统计 API
 
-**Step 1: Create locomotive.html template**
+| 路由 | 方法 | 描述 |
+|------|------|------|
+| `GET /api/statistics` | GET | 返回多维度统计数据 |
 
-```html
-{% extends "base.html" %}
-
-{% block title %}机车模型 - 火车模型管理系统{% endblock %}
-
-{% block content %}
-<h1>机车模型</h1>
-
-<form id="locomotive-form" method="POST">
-    <div class="form-row">
-        <div class="form-group">
-            <label for="model_id">车型 *</label>
-            <select id="model_id" name="model_id" required onchange="autoFillLocomotive()">
-                <option value="">请选择</option>
-                {% for model in locomotive_models %}
-                <option value="{{ model.id }}">{{ model.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="series_id">系列</label>
-            <select id="series_id" name="series_id">
-                <option value="">请选择</option>
-                {% for series in locomotive_series %}
-                <option value="{{ series.id }}">{{ series.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="power_type_id">动力类型</label>
-            <select id="power_type_id" name="power_type_id">
-                <option value="">请选择</option>
-                {% for type in power_types %}
-                <option value="{{ type.id }}">{{ type.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label for="brand_id">品牌 *</label>
-            <select id="brand_id" name="brand_id" required>
-                <option value="">请选择</option>
-                {% for brand in brands %}
-                <option value="{{ brand.id }}">{{ brand.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="depot_id">机务段</label>
-            <select id="depot_id" name="depot_id">
-                <option value="">请选择</option>
-                {% for depot in depots %}
-                <option value="{{ depot.id }}">{{ depot.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="scale">比例 *</label>
-            <select id="scale" name="scale" required>
-                <option value="HO">HO</option>
-                <option value="N">N</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label for="locomotive_number">机车号 *</label>
-            <input type="text" id="locomotive_number" name="locomotive_number" required>
-        </div>
-        <div class="form-group">
-            <label for="decoder_number">编号</label>
-            <input type="text" id="decoder_number" name="decoder_number">
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label for="plaque">挂牌</label>
-            <input type="text" id="plaque" name="plaque">
-        </div>
-        <div class="form-group">
-            <label for="color">颜色</label>
-            <input type="text" id="color" name="color">
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label for="chip_interface_id">芯片接口</label>
-            <select id="chip_interface_id" name="chip_interface_id">
-                <option value="">请选择</option>
-                {% for interface in chip_interfaces %}
-                <option value="{{ interface.id }}">{{ interface.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="chip_model_id">芯片型号</label>
-            <select id="chip_model_id" name="chip_model_id">
-                <option value="">请选择</option>
-                {% for model in chip_models %}
-                <option value="{{ model.id }}">{{ model.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-
-    <div class="form-row">
-        <div class="form-group">
-            <label for="price">价格（表达式，如288+538）</label>
-            <input type="text" id="price" name="price">
-        </div>
-        <div class="form-group">
-            <label for="item_number">货号</label>
-            <input type="text" id="item_number" name="item_number">
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label for="purchase_date">购买日期</label>
-        <input type="date" id="purchase_date" name="purchase_date">
-    </div>
-
-    <div class="form-group">
-        <label for="merchant_id">购买商家</label>
-        <select id="merchant_id" name="merchant_id">
-            <option value="">请选择</option>
-            {% for merchant in merchants %}
-            <option value="{{ merchant.id }}">{{ merchant.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <button type="submit">添加</button>
-</form>
-
-{% if errors %}
-<div class="error">
-    {% for error in errors %}
-    <p>{{ error }}</p>
-    {% endfor %}
-</div>
-{% endif %}
-
-<table>
-    <thead>
-        <tr>
-            <th>车型</th>
-            <th>系列</th>
-            <th>品牌</th>
-            <th>比例</th>
-            <th>机车号</th>
-            <th>编号</th>
-            <th>总价</th>
-            <th>操作</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for locomotive in locomotives %}
-        <tr>
-            <td>{{ locomotive.model.name }}</td>
-            <td>{{ locomotive.series.name if locomotive.series else '-' }}</td>
-            <td>{{ locomotive.brand.name }}</td>
-            <td>{{ locomotive.scale }}</td>
-            <td>{{ locomotive.locomotive_number }}</td>
-            <td>{{ locomotive.decoder_number }}</td>
-            <td>{{ locomotive.total_price }}</td>
-            <td>
-                <form method="POST" action="{{ url_for('delete_locomotive', id=locomotive.id) }}" onsubmit="return confirm('确定删除？')">
-                    <button type="submit" class="btn-danger">删除</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<script>
-function autoFillLocomotive() {
-    const modelId = document.getElementById('model_id').value;
-    if (!modelId) return;
-
-    fetch(`/api/auto-fill/locomotive/${modelId}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('series_id').value = data.series_id;
-            document.getElementById('power_type_id').value = data.power_type_id;
-        });
+**响应示例：**
+```json
+{
+  "type_stats": [...],
+  "scale_stats": [...],
+  "brand_stats": [...],
+  "merchant_stats": [...]
 }
-</script>
-{% endblock %}
 ```
 
-**Step 2: Add locomotive routes to app.py**
+### 4.2 模型操作 API
+
+| 路由 | 方法 | 描述 |
+|------|------|------|
+| `POST /api/locomotive/add` | POST | 添加机车模型 |
+| `POST /api/locomotive/edit/<id>` | POST | 编辑机车模型 |
+| `POST /api/carriage/add` | POST | 添加车厢套装 |
+| `POST /api/carriage/edit/<id>` | POST | 编辑车厢套装 |
+| `POST /api/trainset/add` | POST | 添加动车组模型 |
+| `POST /api/trainset/edit/<id>` | POST | 编辑动车组模型 |
+| `POST /api/locomotive-head/add` | POST | 添加先头车模型 |
+| `POST /api/locomotive-head/edit/<id>` | POST | 编辑先头车模型 |
+
+### 4.3 自动填充 API
+
+| 路由 | 方法 | 描述 |
+|------|------|------|
+| `GET /api/auto-fill/locomotive/<model_id>` | GET | 机车型号自动填充 |
+| `GET /api/auto-fill/trainset/<model_id>` | GET | 动车组车型自动填充 |
+
+### 4.4 Excel 导入导出 API
+
+| 路由 | 方法 | 描述 |
+|------|------|------|
+| `GET /api/export/excel?mode=<models\|system\|all>` | GET | 导出 Excel |
+| `POST /api/import/excel` | POST | 导入 Excel（智能识别） |
+
+### 4.5 自定义导入 API
+
+| 路由 | 方法 | 描述 |
+|------|------|------|
+| `GET /api/import-templates` | GET | 获取导入模板列表 |
+| `POST /api/import-templates` | POST | 创建导入模板 |
+| `GET /api/import-templates/<id>` | GET | 获取指定模板 |
+| `PUT /api/import-templates/<id>` | PUT | 更新模板 |
+| `DELETE /api/import-templates/<id>` | DELETE | 删除模板 |
+| `GET /api/custom-import/tables` | GET | 获取系统表配置 |
+| `POST /api/custom-import/parse` | POST | 解析 Excel 文件 |
+| `POST /api/custom-import/preview` | POST | 预览导入数据（含冲突检测）|
+| `POST /api/custom-import/execute` | POST | 执行导入 |
+
+### 4.6 文件管理 API
+
+| 路由 | 方法 | 描述 |
+|------|------|------|
+| `POST /api/files/upload` | POST | 上传文件 |
+| `GET /api/files/download/<id>` | GET | 下载文件 |
+| `GET /api/files/view/<id>` | GET | 在浏览器中预览文件 |
+| `DELETE /api/files/delete/<id>` | DELETE | 删除文件 |
+| `GET /api/files/list/<type>/<id>` | GET | 获取模型文件列表 |
+| `GET /api/files/export-all` | GET | 导出所有模型文件为 ZIP |
+| `GET /api/files/model/<type>/<id>` | GET | 获取模型详情（含文件）|
+
+---
+
+## 五、文件存储
+
+### 5.1 目录结构
+
+```
+data/
+├── locomotive/
+│   └── {品牌}_{货号}/
+│       ├── {品牌}_{货号}.{ext}                    # 模型图片
+│       ├── {品牌}_{货号}_FunctionKey.{ext}        # 数码功能表
+│       └── {品牌}_{货号}_Manual_{原始文件名}.{ext} # 说明书（可多个）
+├── carriage/
+│   └── {品牌}_{货号}/
+├── trainset/
+│   └── {品牌}_{货号}/
+└── locomotive_head/
+    └── {品牌}_{货号}/
+        ├── {品牌}_{货号}.{ext}                    # 模型图片
+        └── {品牌}_{货号}_Manual_{原始文件名}.{ext} # 说明书（无数码功能表）
+```
+
+### 5.2 文件命名规则
+
+| 文件类型 | 文件名格式 | 唯一性 |
+|----------|-----------|--------|
+| 模型图片 | `{品牌}_{货号}.{ext}` | 每个模型唯一 |
+| 数码功能表 | `{品牌}_{货号}_FunctionKey.{ext}` | 每个模型唯一 |
+| 说明书 | `{品牌}_{货号}_Manual_{原始文件名}.{ext}` | 可多个 |
+
+### 5.3 文件上传逻辑
 
 ```python
-import re
-from models import Locomotive, LocomotiveModel, LocomotiveSeries, PowerType, Brand, Depot, ChipInterface, ChipModel, Merchant
-from datetime import date
+# routes/files.py
 
-def calculate_price(price_expr):
-    """安全计算价格表达式"""
-    if not price_expr:
-        return 0
-    # 只允许数字、+、-、*、/、()
-    if not re.match(r'^[\d+\-*/().\s]+$', price_expr):
-        return 0
-    try:
-        return eval(price_expr)
-    except:
-        return 0
+@files_bp.route('/upload', methods=['POST'])
+def upload_file():
+    model_type = request.form.get('model_type')
+    model_id = request.form.get('model_id')
+    file_type = request.form.get('file_type')
+    file = request.files.get('file')
 
-def check_duplicate(table, field, value, scale=None):
-    """检查同一比例内的唯一性"""
-    if table == 'locomotive':
-        if field == 'locomotive_number':
-            return Locomotive.query.filter_by(locomotive_number=value, scale=scale).first()
-        elif field == 'decoder_number':
-            return Locomotive.query.filter_by(decoder_number=value, scale=scale).first()
-    return None
+    # 获取模型信息构建目录名
+    model = get_model_by_type(model_type, model_id)
+    dir_name = f"{model.brand.name}_{model.item_number or 'unknown'}"
 
-@app.route('/locomotive', methods=['GET', 'POST'])
-def locomotive():
-    """机车模型列表和添加"""
-    locomotives = Locomotive.query.all()
-    locomotive_models = LocomotiveModel.query.all()
-    locomotive_series = LocomotiveSeries.query.all()
-    power_types = PowerType.query.all()
-    brands = Brand.query.all()
-    depots = Depot.query.all()
-    chip_interfaces = ChipInterface.query.all()
-    chip_models = ChipModel.query.all()
-    merchants = Merchant.query.all()
+    # 构建存储路径
+    storage_dir = os.path.join(DATA_DIR, model_type, dir_name)
 
-    errors = []
+    # 生成文件名
+    if file_type == 'image':
+        filename = f"{dir_name}.{extension}"
+    elif file_type == 'function_table':
+        filename = f"{dir_name}_FunctionKey.{extension}"
+    elif file_type == 'manual':
+        safe_name = secure_filename(original_name)
+        filename = f"{dir_name}_Manual_{safe_name}"
 
-    if request.method == 'POST':
-        scale = request.form.get('scale')
-        locomotive_number = request.form.get('locomotive_number')
-        decoder_number = request.form.get('decoder_number')
+    # 保存文件
+    file_path = os.path.join(storage_dir, filename)
 
-        # 唯一性验证
-        if locomotive_number and check_duplicate('locomotive', 'locomotive_number', locomotive_number, scale):
-            errors.append(f"机车号 {locomotive_number} 在 {scale} 比例下已存在")
-        if decoder_number and check_duplicate('locomotive', 'decoder_number', decoder_number, scale):
-            errors.append(f"编号 {decoder_number} 在 {scale} 比例下已存在")
+    # 更新数据库
+    model_file = ModelFile(
+        model_type=model_type,
+        model_id=model_id,
+        file_type=file_type,
+        file_path=file_path,
+        stored_filename=filename,
+        original_filename=file.filename,
+        file_size=file_size,
+        mime_type=file.mimetype
+    )
+    db.session.add(model_file)
+    db.session.commit()
+```
 
-        if not errors:
-            locomotive = Locomotive(
-                model_id=int(request.form.get('model_id')),
-                series_id=request.form.get('series_id'),
-                power_type_id=request.form.get('power_type_id'),
-                brand_id=int(request.form.get('brand_id')),
-                depot_id=request.form.get('depot_id'),
-                plaque=request.form.get('plaque'),
-                color=request.form.get('color'),
-                scale=scale,
-                locomotive_number=locomotive_number,
-                decoder_number=decoder_number,
-                chip_interface_id=request.form.get('chip_interface_id'),
-                chip_model_id=request.form.get('chip_model_id'),
-                price=request.form.get('price'),
-                total_price=calculate_price(request.form.get('price')),
-                item_number=request.form.get('item_number'),
-                purchase_date=request.form.get('purchase_date') or date.today(),
-                merchant_id=request.form.get('merchant_id')
-            )
-            db.session.add(locomotive)
-            db.session.commit()
-            return redirect(url_for('locomotive'))
+---
 
-    return render_template('locomotive.html',
-        locomotives=locomotives,
-        locomotive_models=locomotive_models,
-        locomotive_series=locomotive_series,
-        power_types=power_types,
-        brands=brands,
-        depots=depots,
-        chip_interfaces=chip_interfaces,
-        chip_models=chip_models,
-        merchants=merchants,
-        errors=errors
+## 六、核心业务逻辑
+
+### 6.1 价格计算
+
+使用 AST 安全解析表达式，防止代码注入：
+
+```python
+# utils/price_calculator.py
+
+import ast
+import operator
+
+class SafeEval(ast.NodeVisitor):
+    """
+    安全的表达式计算器
+    通过 AST 验证限制只允许数学运算，防止代码注入
+    """
+    ALLOWED_NODES = (
+        ast.Expression, ast.BinOp, ast.UnaryOp,
+        ast.Num, ast.Constant,
+        ast.Add, ast.Sub, ast.Mult, ast.Div, ast.USub
     )
 
-@app.route('/locomotive/delete/<int:id>', methods=['POST'])
-def delete_locomotive(id):
-    """删除机车模型"""
-    locomotive = Locomotive.query.get_or_404(id)
-    db.session.delete(locomotive)
-    db.session.commit()
-    return redirect(url_for('locomotive'))
+    def visit(self, node):
+        if not isinstance(node, self.ALLOWED_NODES):
+            raise ValueError(f"不允许的操作: {type(node).__name__}")
+        return super().visit(node)
+
+def calculate_price(expression):
+    """
+    安全计算价格表达式
+    支持基本四则运算，如 "288+538"、"100*2+50"
+    """
+    if not expression:
+        return 0.0
+    try:
+        tree = ast.parse(expression, mode='eval')
+        SafeEval().visit(tree)  # 验证 AST 节点
+        # 使用 operator 模块安全计算
+        return _eval_node(tree.body)
+    except:
+        return 0.0
+
+def _eval_node(node):
+    """递归计算 AST 节点"""
+    if isinstance(node, ast.Num):
+        return node.n
+    if isinstance(node, ast.Constant):
+        return float(node.value)
+    if isinstance(node, ast.BinOp):
+        left = _eval_node(node.left)
+        right = _eval_node(node.right)
+        ops = {
+            ast.Add: operator.add,
+            ast.Sub: operator.sub,
+            ast.Mult: operator.mul,
+            ast.Div: operator.truediv,
+        }
+        return ops[type(node.op)](left, right)
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
+        return -_eval_node(node.operand)
+    raise ValueError("不支持的操作")
 ```
 
-**Step 3: Commit**
-
-```bash
-git add templates/locomotive.html app.py
-git commit -m "feat: add locomotive model CRUD"
-```
-
----
-
-### Task 11: 创建自动填充 API
-
-**Files:**
-- Modify: `app.py`
-
-**Step 1: Add auto-fill API to app.py**
+### 6.2 唯一性验证
 
 ```python
-@app.route('/api/auto-fill/locomotive/<int:model_id>')
-def auto_fill_locomotive(model_id):
-    """机车车型自动填充"""
-    model = LocomotiveModel.query.get_or_404(model_id)
-    return jsonify({
-        'series_id': model.series_id,
-        'power_type_id': model.power_type_id
-    })
+# utils/validators.py
 
-@app.route('/api/auto-fill/carriage/<int:model_id>')
-def auto_fill_carriage(model_id):
-    """车厢车型自动填充"""
-    model = CarriageModel.query.get_or_404(model_id)
-    return jsonify({
-        'series_id': model.series_id,
-        'type': model.type
-    })
+def validate_locomotive_number(number, scale, exclude_id=None):
+    """验证机车号在同一比例内的唯一性"""
+    query = Locomotive.query.filter_by(
+        locomotive_number=number,
+        scale=scale
+    )
+    if exclude_id:
+        query = query.filter(Locomotive.id != exclude_id)
+    return query.first() is None
 
-@app.route('/api/auto-fill/trainset/<int:model_id>')
-def auto_fill_trainset(model_id):
-    """动车组车型自动填充"""
-    model = TrainsetModel.query.get_or_404(model_id)
-    return jsonify({
-        'series_id': model.series_id,
-        'power_type_id': model.power_type_id
-    })
+def validate_decoder_number(number, scale, exclude_id=None):
+    """验证编号在同一比例内的唯一性"""
+    query = Locomotive.query.filter_by(
+        decoder_number=number,
+        scale=scale
+    )
+    if exclude_id:
+        query = query.filter(Locomotive.id != exclude_id)
+    return query.first() is None
 ```
 
-**Step 2: Commit**
+### 6.3 文件同步
 
-```bash
-git add app.py
-git commit -m "feat: add auto-fill API endpoints"
+```python
+# utils/file_sync.py
+
+def sync_files_on_startup():
+    """启动时同步 data 目录到数据库"""
+    for model_type in ['locomotive', 'carriage', 'trainset', 'locomotive_head']:
+        type_dir = os.path.join(DATA_DIR, model_type)
+        if not os.path.exists(type_dir):
+            continue
+
+        for dir_name in os.listdir(type_dir):
+            # 解析目录名获取品牌和货号
+            # 匹配模型记录
+            # 同步文件记录
 ```
 
 ---
 
-### Task 12-15: 创建车厢、动车组、先头车和信息维护页面
+## 七、前端实现
 
-（由于篇幅原因，这些任务的详细步骤与机车模型页面类似，遵循相同的模式）
+### 7.1 模态框表单
+
+所有模型类型使用模态框进行添加和编辑，无需跳转页面：
+
+```html
+<!-- 添加/编辑模态框 -->
+<div id="locomotive-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-dialog modal-form">
+    <div class="modal-header">
+      <h3 id="modal-title">添加机车模型</h3>
+      <button type="button" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="locomotive-form">
+        <!-- 表单字段 -->
+      </form>
+    </div>
+    <div class="modal-form-actions">
+      <button type="button" class="btn btn-secondary" onclick="ModalManager.close()">取消</button>
+      <button type="button" class="btn btn-primary" onclick="submitForm()">保存</button>
+    </div>
+  </div>
+</div>
+```
+
+### 7.2 模型详情模态框
+
+50/50 布局显示图片和基本信息：
+
+```html
+<!-- 模型详情模态框 -->
+<div id="model-detail-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-dialog modal-large">
+    <div class="modal-body">
+      <div class="model-detail-content">
+        <!-- 左侧：图片和文件 -->
+        <div class="model-left-section">
+          <div class="model-image-section">...</div>
+          <div class="model-file-section">...</div>
+        </div>
+        <!-- 右侧：属性 -->
+        <div class="model-attributes-section">
+          <table class="model-attributes-table">...</table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### 7.3 表格排序筛选
+
+```javascript
+// TableManager 实现
+const TableManager = {
+  init(tableId) {
+    const table = document.getElementById(tableId);
+    // 绑定排序事件
+    table.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => this.handleSort(table, th));
+    });
+    // 创建筛选下拉框
+    table.querySelectorAll('th[data-filter]').forEach(th => {
+      this.createFilter(table, th);
+    });
+  },
+
+  handleSort(table, th) {
+    const column = th.dataset.sort;
+    const order = th.classList.contains('sort-asc') ? 'desc' : 'asc';
+    // 排序逻辑...
+  },
+
+  handleFilter(table, select, column) {
+    const value = select.value;
+    // 筛选逻辑...
+  }
+};
+```
+
+### 7.4 文件管理模块
+
+```javascript
+// FileManager 实现
+const FileManager = {
+  currentModel: null,
+
+  showModelDetail(modelType, modelId) {
+    Api.get(`/api/files/model/${modelType}/${modelId}`).then(data => {
+      this.currentModel = { type: modelType, id: modelId };
+      this.renderDetail(data);
+      ModalManager.open('model-detail-modal');
+    });
+  },
+
+  triggerUpload(fileType) {
+    const input = document.getElementById(`${fileType}-upload-input`);
+    input.click();
+  },
+
+  downloadFile(fileId) {
+    window.location.href = `/api/files/download/${fileId}`;
+  },
+
+  viewFile(fileId) {
+    window.open(`/api/files/view/${fileId}`, '_blank');
+  },
+
+  deleteFile(fileId) {
+    if (confirm('确定删除此文件？')) {
+      Api.delete(`/api/files/delete/${fileId}`).then(() => {
+        this.refreshFileList();
+      });
+    }
+  }
+};
+```
 
 ---
 
-### Task 16: 创建 README 文档
+## 八、测试
 
-**Files:**
-- Create: `README.md`
+### 8.1 测试配置
 
-**Step 1: Create README.md**
+```python
+# tests/conftest.py
 
-```markdown
-# 火车模型管理系统
+import pytest
+from app import create_app
+from models import db
 
-用于管理火车模型藏品、统计和展示的 Web 应用。
+@pytest.fixture
+def app():
+    """创建测试应用"""
+    app = create_app(TestConfig)
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
 
-## 功能特性
-
-- 支持四种模型类型：机车模型、车厢模型、动车组模型、先头车模型
-- 自动填充：选择车型后自动填充系列和类型
-- 唯一性验证：同一比例内的机车号、编号等唯一性检查
-- 价格表达式：支持 "288+538" 形式的价格计算
-- 车厢套装：支持动态添加/删除车厢
-- 统计汇总：展示各类型的花费统计
-- 信息维护：集中管理所有下拉选项
-
-## 技术栈
-
-- Python 3.x
-- Flask
-- SQLAlchemy
-- MySQL / SQLite
-
-## 安装依赖
-
-```bash
-pip install -r requirements.txt
+@pytest.fixture
+def client(app):
+    """创建测试客户端"""
+    return app.test_client()
 ```
 
-## 数据库初始化
+### 8.2 测试分类
+
+| 测试文件 | 覆盖范围 |
+|---------|---------|
+| `test_models.py` | 数据模型测试 |
+| `test_routes.py` | 路由测试 |
+| `test_api.py` | API 测试 |
+| `test_crud.py` | CRUD 操作测试 |
+| `test_validation.py` | 验证逻辑测试 |
+| `test_files.py` | 文件功能测试 |
+| `test_integration.py` | 集成测试 |
+
+### 8.3 运行测试
 
 ```bash
-python init_db.py
+pytest                    # 运行所有测试
+pytest -v                 # 详细输出
+pytest tests/test_api.py  # 运行特定文件
+pytest -k "locomotive"    # 运行名称匹配的测试
 ```
 
-## 启动应用
+---
+
+## 九、部署
+
+### 9.1 环境变量
 
 ```bash
-python app.py
-```
-
-## 访问系统
-
-浏览器打开：http://localhost:5000
-
-## 切换数据库
-
-默认使用 SQLite。要使用 MySQL，设置环境变量：
-
-```bash
+# 数据库配置
 export DB_TYPE=mysql
 export MYSQL_HOST=localhost
 export MYSQL_PORT=3306
 export MYSQL_USER=root
 export MYSQL_PASSWORD=your_password
 export MYSQL_DATABASE=train_model_manager
+
+# 文件存储
+export DATA_DIR=/path/to/data
+
+# 安全配置
+export SECRET_KEY=your-secret-key
+export FLASK_ENV=production
 ```
 
-## 依赖组件
-
-- Flask==3.0.0
-- Flask-SQLAlchemy==3.1.1
-- PyMySQL==1.1.0
-- cryptography==41.0.7
-```
-
-**Step 2: Commit**
+### 9.2 启动命令
 
 ```bash
-git add README.md
-git commit -m "docs: add README"
+# 开发环境
+python app.py
+
+# 生产环境（使用 gunicorn）
+gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
 ```
 
 ---
 
-## 执行说明
+## 十、版本历史
 
-计划完成并保存至 `docs/plans/2025-02-14-train-model-manager-implementation.md`。
+### v0.8.0
+- 模型文件管理功能（图片、说明书、数码功能表）
+- 模态框表单（合并添加/编辑页面）
+- 代码现代化（修复 deprecation warnings）
 
-两种执行选项：
+### v0.7.0
+- 自定义 Excel 导入向导
+- 导入模板管理
 
-**1. 子代理驱动（当前会话）** - 我为每个任务分派新的子代理，任务间审查，快速迭代
+### v0.6.0
+- JavaScript 函数提取
+- CSS 变量统一
 
-**2. 并行会话（独立）** - 在新会话中使用 executing-plans 批量执行并设置检查点
+### v0.5.0
+- 复制按钮功能
+- Excel 导入导出增强
 
-您选择哪种方式？
+### v0.4.0
+- 首页多维度统计
+- 表格排序筛选
+
+### v0.3.0
+- Blueprint 模块化重构
+- 公共辅助函数提取
+
+### v0.2.0
+- 基础 CRUD 功能
+- 四种模型类型支持
+
+### v0.1.0
+- 项目初始化
+- 基础架构搭建

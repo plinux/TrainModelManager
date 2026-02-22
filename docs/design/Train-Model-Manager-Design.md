@@ -1,8 +1,8 @@
 # 火车模型管理系统设计文档
 
-**日期**: 2026-02-18
+**日期**: 2026-02-22
 **状态**: 已批准
-**版本**: v0.5.0
+**版本**: v0.8.0
 
 ## 概述
 
@@ -39,7 +39,7 @@
 TrainModelManager/
 ├── app.py              # Flask 主应用（应用工厂模式）
 ├── models.py           # SQLAlchemy 数据模型定义
-├── config.py           # 配置文件（含 TestConfig）
+├── config.py           # 配置文件（含 TestConfig、DATA_DIR）
 ├── init_db.py         # 数据库初始化脚本
 ├── requirements.txt    # Python 依赖
 ├── routes/             # Blueprint 路由模块
@@ -49,11 +49,14 @@ TrainModelManager/
 │   ├── trainset.py     # 动车组模型
 │   ├── locomotive_head.py  # 先头车模型
 │   ├── options.py      # 信息维护
-│   └── api.py          # API 端点（导入导出、自动填充、统计）
+│   ├── api.py          # API 端点（导入导出、自动填充、统计）
+│   └── files.py        # 文件管理 API（上传、下载、预览、删除）
 ├── utils/              # 公共辅助函数
 │   ├── helpers.py      # 通用辅助函数
 │   ├── validators.py   # 验证函数
-│   └── price_calculator.py  # 价格计算
+│   ├── price_calculator.py  # 价格计算
+│   ├── system_tables.py # 系统表配置（自定义导入）
+│   └── file_sync.py    # 文件同步工具
 ├── static/             # 静态资源
 │   ├── css/
 │   │   └── style.css    # 全局样式
@@ -61,25 +64,31 @@ TrainModelManager/
 │       ├── utils.js     # 核心 JS 模块
 │       ├── app.js       # 页面初始化
 │       ├── options.js   # 信息维护页面
-│       └── system.js    # 系统维护页面
+│       ├── system.js    # 系统维护页面
+│       └── custom-import.js # 自定义导入向导
 ├── templates/          # Jinja2 模板
 │   ├── base.html         # 基础模板（包含导航栏）
 │   ├── index.html        # 汇总页面
-│   ├── locomotive.html   # 机车模型列表和添加
-│   ├── locomotive_edit.html # 机车模型编辑
-│   ├── carriage.html     # 车厢模型列表和添加
-│   ├── carriage_edit.html  # 车厢模型编辑
-│   ├── trainset.html     # 动车组模型列表和添加
-│   ├── trainset_edit.html  # 动车组模型编辑
-│   ├── locomotive_head.html # 先头车模型列表和添加
-│   ├── locomotive_head_edit.html # 先头车模型编辑
+│   ├── locomotive.html   # 机车模型列表和模态框
+│   ├── carriage.html     # 车厢模型列表和模态框
+│   ├── trainset.html     # 动车组模型列表和模态框
+│   ├── locomotive_head.html # 先头车模型列表和模态框
 │   ├── options.html      # 信息维护页面
 │   ├── system.html       # 系统维护页面
+│   ├── 404.html          # 404 错误页面
+│   ├── 500.html          # 500 错误页面
 │   └── macros/           # Jinja2 宏
+├── data/               # 模型文件存储目录（不在版本控制中）
+│   ├── locomotive/       # 机车模型文件
+│   ├── carriage/         # 车厢模型文件
+│   ├── trainset/         # 动车组模型文件
+│   └── locomotive_head/  # 先头车模型文件
 ├── tests/              # 测试文件
 │   ├── conftest.py       # 测试配置和 fixtures
 │   ├── test_api.py       # API 测试
 │   ├── test_crud.py      # CRUD 测试
+│   ├── test_custom_import_api.py # 自定义导入测试
+│   ├── test_files.py     # 文件管理测试
 │   ├── test_integration.py # 集成测试
 │   ├── test_labels.py    # 标签测试
 │   ├── test_models.py    # 模型测试
@@ -157,6 +166,13 @@ CarriageSet (车厢套装主表)
 | locomotive_series | 机车系列 | 机车型号 |
 | carriage_series | 车厢系列 | 车厢型号 |
 | trainset_series | 动车组系列 | 动车组型号 |
+
+### 功能数据表（2 个）
+
+| 表名 | 用途 | 关键特性 |
+|-----|------|---------|
+| import_template | 自定义导入模板 | 存储列映射配置 |
+| model_file | 模型文件跟踪 | 跟踪图片、说明书、数码功能表 |
 
 #### brand（品牌）
 
@@ -281,6 +297,30 @@ CarriageSet (车厢套装主表)
 
 **注意**：先头车模型没有 depot_id（动车段）字段，与其他模型不同。
 
+#### import_template（导入模板）
+
+| 字段 | 类型 | 约束 | 说明 |
+|-----|------|------|------|
+| id | Integer | PK | 主键 |
+| name | String(100) | NOT NULL | 模板名称 |
+| config | JSON | NOT NULL | 映射配置（目标表、列映射）|
+| created_at | DateTime | | 创建时间 |
+| updated_at | DateTime | | 更新时间 |
+
+#### model_file（模型文件）
+
+| 字段 | 类型 | 约束 | 说明 |
+|-----|------|------|------|
+| id | Integer | PK | 主键 |
+| model_type | String(20) | NOT NULL | 模型类型：locomotive/carriage/trainset/locomotive_head |
+| model_id | Integer | NOT NULL | 关联模型 ID |
+| file_type | String(20) | NOT NULL | 文件类型：image/manual/function_table |
+| file_path | String(255) | NOT NULL | 相对路径（相对于 DATA_DIR）|
+| original_filename | String(255) | NOT NULL | 原始文件名 |
+| file_size | Integer | | 文件大小（字节）|
+| mime_type | String(100) | | MIME 类型 |
+| uploaded_at | DateTime | | 上传时间 |
+
 ## 路由设计
 
 ### 页面路由（传统表单提交）
@@ -318,6 +358,32 @@ CarriageSet (车厢套装主表)
 | `/api/options/<type>/edit` | POST | 行内编辑选项 | JSON |
 | `/api/export/excel` | GET | 导出 Excel | File |
 | `/api/import/excel` | POST | 导入 Excel | JSON |
+
+### 文件管理 API 路由
+
+| 路由 | 方法 | 功能 | 返回格式 |
+|-----|------|------|---------|
+| `/api/files/upload` | POST | 上传文件（图片/说明书/数码功能表）| JSON |
+| `/api/files/download/<id>` | GET | 下载文件 | File |
+| `/api/files/view/<id>` | GET | 在浏览器中预览文件 | File |
+| `/api/files/delete/<id>` | DELETE | 删除文件 | JSON |
+| `/api/files/list/<type>/<id>` | GET | 获取模型文件列表 | JSON |
+| `/api/files/export-all` | GET | 导出所有模型文件为 ZIP | File |
+| `/api/files/model/<type>/<id>` | GET | 获取模型详情（含文件）| JSON |
+
+### 自定义导入 API 路由
+
+| 路由 | 方法 | 功能 | 返回格式 |
+|-----|------|------|---------|
+| `/api/import-templates` | GET | 获取导入模板列表 | JSON |
+| `/api/import-templates` | POST | 创建导入模板 | JSON |
+| `/api/import-templates/<id>` | GET | 获取模板详情 | JSON |
+| `/api/import-templates/<id>` | PUT | 更新模板 | JSON |
+| `/api/import-templates/<id>` | DELETE | 删除模板 | JSON |
+| `/api/custom-import/tables` | GET | 获取系统表配置 | JSON |
+| `/api/custom-import/parse` | POST | 解析 Excel 文件 | JSON |
+| `/api/custom-import/preview` | POST | 预览导入数据 | JSON |
+| `/api/custom-import/execute` | POST | 执行导入 | JSON |
 
 ### 信息维护路由
 
@@ -449,6 +515,42 @@ def check_import_conflicts(file):
 - 根据工作表名称自动识别导入类型
 - 支持模型数据和系统信息的混合导入
 
+### 模型文件管理
+
+**文件存储结构**:
+```
+data/
+├── locomotive/
+│   └── {品牌}_{货号}/
+│       ├── {品牌}_{货号}.{ext}                    # 模型图片（唯一）
+│       ├── {品牌}_{货号}_FunctionKey.{ext}        # 数码功能表（唯一）
+│       └── {品牌}_{货号}_Manual_{原始文件名}.{ext} # 说明书（可多个）
+├── carriage/
+├── trainset/
+└── locomotive_head/
+    ├── {品牌}_{货号}.{ext}                        # 模型图片
+    └── {品牌}_{货号}_Manual_{原始文件名}.{ext}     # 说明书（无数码功能表）
+```
+
+**文件命名规则**:
+| 文件类型 | 文件名格式 | 数量限制 |
+|----------|-----------|----------|
+| 模型图片 | `{品牌}_{货号}.{ext}` | 每个模型唯一 |
+| 数码功能表 | `{品牌}_{货号}_FunctionKey.{ext}` | 每个模型唯一 |
+| 说明书 | `{品牌}_{货号}_Manual_{安全处理后的原始文件名}.{ext}` | 可多个 |
+
+**功能特性**:
+- 图片和功能表上传时自动覆盖旧文件（可能扩展名不同）
+- 说明书同名文件提示覆盖确认
+- 支持在浏览器中预览文件
+- 一键导出所有模型文件为 ZIP
+- 品牌/货号修改时自动重命名文件夹
+
+**文件同步**:
+- 启动时扫描 data 目录
+- 同步数据库中的文件记录
+- 处理手动删除文件的情况
+
 ## 前端模块设计
 
 ### utils.js - 核心模块
@@ -461,7 +563,14 @@ CarriageManager // 车厢项管理（addRow、removeRow、handleSeriesChange）
 ModelForm       // 模型表单（handleLocomotiveSeriesChange、autoFillLocomotive）
 TableManager    // 表格管理（init、handleSort、handleFilter、applySortAndFilter）
 FormFiller      // 表单填充（copyFromRow、fillField）
+FileManager     // 文件管理（showModelDetail、uploadFile、deleteFile、downloadFile）
 searchProduct   // 产品搜索（在官网搜索指定货号）
+```
+
+### custom-import.js - 自定义导入向导
+
+```javascript
+CustomImportWizard  // 5步向导管理（选择文件 → 管理模板 → 配置映射 → 预览确认 → 执行导入）
 ```
 
 ### app.js - 页面初始化
@@ -656,6 +765,8 @@ python app.py
 
 ## 版本历史
 
+- **v0.8.0**: 模型文件管理（图片、说明书、数码功能表）、模态框表单、文件同步、ZIP 导出
+- **v0.7.0**: 自定义导入向导、导入模板管理、灵活列映射、车厢合并单元格检测
 - **v0.5.0**: 复制按钮、导入冲突检测、多模式导出
 - **v0.4.0**: AJAX 表单提交、行内编辑
 - **v0.3.0**: 系列筛选、Blueprint 重构

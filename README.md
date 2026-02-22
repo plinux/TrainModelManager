@@ -7,6 +7,7 @@
 ### 核心功能
 - **四种模型类型支持**：机车模型、车厢模型、动车组模型、先头车模型
 - **CRUD 操作**：完整的增删改查功能
+- **模态框表单**：添加/编辑模型使用模态框，无需跳转页面
 - **自动填充**：选择车型后自动填充系列和类型
 - **系列筛选**：选择系列后自动过滤对应车型
 - **唯一性验证**：同一比例内的机车号、编号、动车号唯一性检查
@@ -14,6 +15,14 @@
 - **车厢套装管理**：支持动态添加/删除车厢项
 - **统计汇总**：展示各类型和维度的花费统计（支持表格和饼图）
 - **信息维护**：集中管理所有下拉选项（品牌、商家、系列、车型等）
+
+### 模型文件管理（v0.8.0 新增）
+- **图片管理**：上传模型图片，支持动态高度预览
+- **说明书管理**：支持多个说明书文件上传
+- **数码功能表**：上传数码功能表（先头车不支持）
+- **文件存储**：按 "模型类型/品牌_货号/" 结构自动组织
+- **文件操作**：查看原图、下载原图、删除文件
+- **ZIP 导出**：一键导出所有模型文件
 
 ### 数据导入导出
 - **多模式导出**：
@@ -35,6 +44,7 @@
 ### 用户体验优化
 - **快速复制**：模型列表页支持复制按钮，快速填充表单
 - **表格排序筛选**：点击列头排序，下拉框筛选
+- **模型详情**：点击图片查看模型详情和文件
 - **AJAX 表单提交**：添加模型时不刷新页面，验证失败保留已填写内容
 - **行内编辑**：信息维护页面支持行内编辑，无需跳转
 - **错误提示**：输入框标签显示红色错误气泡
@@ -145,12 +155,14 @@ TrainModelManager/
 │   ├── trainset.py          # 动车组模型
 │   ├── locomotive_head.py   # 先头车模型
 │   ├── options.py           # 信息维护
-│   └── api.py               # API 端点（导入导出、自动填充）
+│   ├── api.py               # API 端点（导入导出、自动填充）
+│   └── files.py             # 文件管理 API
 ├── utils/                   # 公共辅助函数
 │   ├── helpers.py           # 通用辅助函数
 │   ├── validators.py        # 验证函数
 │   ├── price_calculator.py  # 价格计算
-│   └── system_tables.py     # 系统表配置（自定义导入）
+│   ├── system_tables.py     # 系统表配置（自定义导入）
+│   └── file_sync.py         # 文件同步工具
 ├── static/                  # 静态资源
 │   ├── css/
 │   │   └── style.css       # 全局样式
@@ -163,21 +175,26 @@ TrainModelManager/
 ├── templates/              # Jinja2 模板
 │   ├── base.html           # 基础模板
 │   ├── index.html          # 汇总页面
-│   ├── locomotive.html     # 机车模型列表
-│   ├── locomotive_edit.html
-│   ├── carriage.html       # 车厢模型列表
-│   ├── carriage_edit.html
-│   ├── trainset.html       # 动车组模型列表
-│   ├── trainset_edit.html
-│   ├── locomotive_head.html # 先头车模型列表
-│   ├── locomotive_head_edit.html
+│   ├── locomotive.html     # 机车模型列表和模态框
+│   ├── carriage.html       # 车厢模型列表和模态框
+│   ├── trainset.html       # 动车组模型列表和模态框
+│   ├── locomotive_head.html # 先头车模型列表和模态框
 │   ├── options.html        # 信息维护页面
 │   ├── system.html         # 系统维护页面
+│   ├── 404.html            # 404 错误页面
+│   ├── 500.html            # 500 错误页面
 │   └── macros/             # Jinja2 宏
+├── data/                   # 模型文件存储目录
+│   ├── locomotive/         # 机车模型文件
+│   ├── carriage/           # 车厢模型文件
+│   ├── trainset/           # 动车组模型文件
+│   └── locomotive_head/    # 先头车模型文件
 ├── tests/                  # 测试文件
 │   ├── conftest.py         # 测试配置和 fixtures
 │   ├── test_api.py         # API 测试
 │   ├── test_crud.py        # CRUD 测试
+│   ├── test_custom_import_api.py # 自定义导入测试
+│   ├── test_files.py       # 文件管理测试
 │   ├── test_integration.py # 集成测试
 │   ├── test_labels.py      # 标签测试
 │   ├── test_models.py      # 模型测试
@@ -216,6 +233,8 @@ TrainModelManager/
 | chip_interface | 芯片接口 |
 | chip_model | 芯片型号 |
 | merchant | 购买商家 |
+| import_template | 自定义导入模板 |
+| model_file | 模型文件跟踪 |
 
 ## API 文档
 
@@ -445,6 +464,58 @@ AJAX 添加机车模型。
 }
 ```
 
+### 文件管理 API（v0.8.0 新增）
+
+**POST /api/files/upload**
+
+上传模型文件（图片、说明书、数码功能表）。
+
+**请求参数**（FormData）：
+- `model_type`: 模型类型（locomotive/carriage/trainset/locomotive_head）
+- `model_id`: 模型 ID
+- `file_type`: 文件类型（image/manual/function_table）
+- `file`: 文件
+
+**响应示例**：
+```json
+{
+  "success": true,
+  "file": {
+    "id": 1,
+    "file_type": "image",
+    "original_filename": "HXD3D001.jpg",
+    "stored_filename": "百万城_HXD3D001.jpg",
+    "file_size": 102400
+  }
+}
+```
+
+**GET /api/files/download/\<id\>**
+
+下载文件。
+
+**GET /api/files/view/\<id\>**
+
+在浏览器中预览文件。
+
+**DELETE /api/files/delete/\<id\>**
+
+删除文件。
+
+**GET /api/files/list/\<type\>/\<id\>**
+
+获取模型的所有文件列表。
+
+**GET /api/files/export-all**
+
+导出所有模型文件为 ZIP。
+
+**响应**：ZIP 文件下载，文件名格式：`TMM_ModelFiles_YYYYMMDD_HHMMSS_XXXX.zip`
+
+**GET /api/files/model/\<type\>/\<id\>**
+
+获取模型详情（包含属性和文件）。
+
 ## 验证规则
 
 ### 数字格式验证
@@ -570,6 +641,16 @@ server {
 - [数据库初始化要求](docs/plans/DatabaseInitDescription.txt) - 预置数据清单
 
 ## 版本历史
+
+- **v0.8.0**
+  - 模型文件管理（图片、说明书、数码功能表）
+  - 模态框表单（添加/编辑使用模态框）
+  - 文件存储结构：按 "模型类型/品牌_货号/" 组织
+  - 文件上传、下载、预览、删除
+  - ZIP 导出所有模型文件
+  - 文件同步工具（启动时同步 data 目录）
+  - 品牌/货号修改时自动重命名文件夹
+  - ModelFile 数据模型
 
 - **v0.7.0**
   - 自定义 Excel 导入向导（5 步向导流程）
