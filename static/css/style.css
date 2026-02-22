@@ -2175,7 +2175,7 @@ td form {
 /* 模型详情内容布局 */
 .model-detail-content {
   display: grid;
-  grid-template-columns: 320px auto;
+  grid-template-columns: 1fr 1fr;
   gap: var(--spacing-lg);
   padding: var(--spacing-lg);
 }
@@ -2228,6 +2228,7 @@ td form {
 .model-image-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--spacing-xs);
 }
 
@@ -2312,6 +2313,7 @@ td form {
 .model-file-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--spacing-xs);
 }
 
@@ -2352,10 +2354,40 @@ td form {
   gap: 4px;
 }
 
-/* 说明书按钮缩小样式 */
-.file-actions .btn-sm {
-  padding: 2px 6px;
-  font-size: 0.75rem;
+/* 图标按钮样式 */
+.btn-icon {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: bold;
+  text-shadow: 0 0 1px currentColor;
+  transition: opacity 0.2s;
+}
+
+.btn-icon:hover {
+  opacity: 0.8;
+}
+
+.btn-icon.btn-view {
+  background-color: var(--color-info);
+  color: white;
+}
+
+.btn-icon.btn-download {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.btn-icon.btn-delete {
+  background-color: var(--color-danger);
+  color: white;
 }
 
 .file-upload-row {

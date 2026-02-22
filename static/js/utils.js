@@ -1356,6 +1356,7 @@ const FileManager = {
     const img = document.getElementById('model-detail-image');
     const placeholder = document.getElementById('model-detail-image-placeholder');
     const btnView = document.getElementById('btn-view-image');
+    const btnDownload = document.getElementById('btn-download-image');
     const btnDelete = document.getElementById('btn-delete-image');
 
     if (imageFile) {
@@ -1363,12 +1364,14 @@ const FileManager = {
       img.style.display = 'block';
       placeholder.style.display = 'none';
       btnView.style.display = 'inline-block';
+      if (btnDownload) btnDownload.style.display = 'inline-block';
       btnDelete.style.display = 'inline-block';
     } else {
       img.src = '';
       img.style.display = 'none';
       placeholder.style.display = 'flex';
       btnView.style.display = 'none';
+      if (btnDownload) btnDownload.style.display = 'none';
       btnDelete.style.display = 'none';
     }
   },
@@ -1531,20 +1534,23 @@ const FileManager = {
 
     const btnView = document.createElement('button');
     btnView.type = 'button';
-    btnView.className = 'btn btn-sm';
-    btnView.textContent = '查看';
+    btnView.className = 'btn-icon btn-view';
+    btnView.textContent = '○';
+    btnView.title = '查看';
     btnView.onclick = () => window.open(`/api/files/view/${file.id}`, '_blank');
 
     const btnDownload = document.createElement('button');
     btnDownload.type = 'button';
-    btnDownload.className = 'btn btn-sm btn-secondary';
-    btnDownload.textContent = '下载';
+    btnDownload.className = 'btn-icon btn-download';
+    btnDownload.textContent = '↓';
+    btnDownload.title = '下载';
     btnDownload.onclick = () => window.location.href = `/api/files/download/${file.id}`;
 
     const btnDelete = document.createElement('button');
     btnDelete.type = 'button';
-    btnDelete.className = 'btn btn-sm btn-danger';
-    btnDelete.textContent = '删除';
+    btnDelete.className = 'btn-icon btn-delete';
+    btnDelete.textContent = '×';
+    btnDelete.title = '删除';
     btnDelete.onclick = () => this.deleteFileById(file.id, div);
 
     actions.appendChild(btnView);
