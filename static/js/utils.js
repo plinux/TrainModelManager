@@ -1770,7 +1770,8 @@ const FileManager = {
         img.src = `/api/files/view/${files.image.id}`;
         img.className = 'thumbnail';
         img.title = '点击查看详情';
-        img.onclick = () => this.showModelDetail(row.dataset.model_type, parseInt(row.dataset.model_id));
+        // 使用 setAttribute 以便 cloneNode(true) 能保留事件
+        img.setAttribute('onclick', `FileManager.showModelDetail('${row.dataset.model_type}', ${row.dataset.model_id})`);
         imageCell.appendChild(img);
       }
     }
