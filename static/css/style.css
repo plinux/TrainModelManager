@@ -2053,8 +2053,8 @@ td form {
 
 /* 缩略图占位符 */
 .thumbnail-placeholder {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 30px;
   background-color: #f0f0f0;
   border: 1px dashed #ccc;
   border-radius: var(--border-radius);
@@ -2071,15 +2071,17 @@ td form {
 }
 
 .thumbnail-placeholder span {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: #999;
 }
 
 /* 缩略图 */
 .thumbnail {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
+  width: 50px;
+  height: 30px;
+  object-fit: contain;
+  object-position: center;
+  background-color: #f8f8f8;
   border-radius: var(--border-radius);
   cursor: pointer;
   transition: transform 0.2s;
