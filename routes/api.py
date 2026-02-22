@@ -26,7 +26,7 @@ api_bp = Blueprint('api', __name__, url_prefix='')
 @api_bp.route('/api/auto-fill/locomotive/<int:model_id>')
 def auto_fill_locomotive(model_id):
   """机车车型自动填充"""
-  model = LocomotiveModel.query.get_or_404(model_id)
+  model = db.get_or_404(LocomotiveModel, model_id)
   return jsonify({
     'series_id': model.series_id,
     'power_type_id': model.power_type_id
@@ -36,7 +36,7 @@ def auto_fill_locomotive(model_id):
 @api_bp.route('/api/auto-fill/carriage/<int:model_id>')
 def auto_fill_carriage(model_id):
   """车厢车型自动填充"""
-  model = CarriageModel.query.get_or_404(model_id)
+  model = db.get_or_404(CarriageModel, model_id)
   return jsonify({
     'series_id': model.series_id,
     'type': model.type
@@ -46,7 +46,7 @@ def auto_fill_carriage(model_id):
 @api_bp.route('/api/auto-fill/trainset/<int:model_id>')
 def auto_fill_trainset(model_id):
   """动车组车型自动填充"""
-  model = TrainsetModel.query.get_or_404(model_id)
+  model = db.get_or_404(TrainsetModel, model_id)
   return jsonify({
     'series_id': model.series_id,
     'power_type_id': model.power_type_id

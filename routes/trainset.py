@@ -106,7 +106,7 @@ def update_trainset_from_form(trainset, form_data):
 def api_edit_trainset(id):
   """AJAX 编辑动车组模型"""
   try:
-    trainset = Trainset.query.get_or_404(id)
+    trainset = db.get_or_404(Trainset, id)
     data = request.get_json()
     scale = data.get('scale')
     trainset_number = data.get('trainset_number')
@@ -117,7 +117,7 @@ def api_edit_trainset(id):
       return jsonify(api_error('验证失败', errors=errors)), 400
 
     # 保存旧的品牌和货号（用于重命名文件夹）
-    old_brand = Brand.query.get(trainset.brand_id)
+    old_brand = db.session.get(Brand, trainset.brand_id)
     old_brand_name = old_brand.name if old_brand else ''
     old_item_number = trainset.item_number or ''
 
@@ -125,7 +125,7 @@ def api_edit_trainset(id):
     update_trainset_from_form(trainset, data)
 
     # 获取新的品牌和货号
-    new_brand = Brand.query.get(trainset.brand_id)
+    new_brand = db.session.get(Brand, trainset.brand_id)
     new_brand_name = new_brand.name if new_brand else ''
     new_item_number = trainset.item_number or ''
 
@@ -212,7 +212,7 @@ def trainset():
 def delete_trainset(id):
   """删除动车组模型"""
   try:
-    trainset = Trainset.query.get_or_404(id)
+    trainset = db.get_or_404(Trainset, id)
     logger.info(f"Deleting trainset: {trainset}")
     db.session.delete(trainset)
     db.session.commit()
@@ -227,7 +227,7 @@ def delete_trainset(id):
 @trainset_bp.route('/trainset/edit/<int:id>', methods=['GET', 'POST'])
 def edit_trainset(id):
   """编辑动车组模型"""
-  trainset = Trainset.query.get_or_404(id)
+  trainset = db.get_or_404(Trainset, id)
   form_data = get_trainset_form_data()
 
   if request.method == 'POST':

@@ -84,7 +84,7 @@ def create_carriage_items(carriage_set_id, form_data, is_json=False):
 def api_edit_carriage(id):
   """AJAX 编辑车厢套装"""
   try:
-    carriage_set = CarriageSet.query.get_or_404(id)
+    carriage_set = db.get_or_404(CarriageSet, id)
     data = request.get_json()
 
     errors = validate_carriage_items(data, is_json=True)
@@ -92,7 +92,7 @@ def api_edit_carriage(id):
       return jsonify(api_error('验证失败', errors=errors)), 400
 
     # 保存旧的品牌和货号（用于重命名文件夹）
-    old_brand = Brand.query.get(carriage_set.brand_id)
+    old_brand = db.session.get(Brand, carriage_set.brand_id)
     old_brand_name = old_brand.name if old_brand else ''
     old_item_number = carriage_set.item_number or ''
 
@@ -110,7 +110,7 @@ def api_edit_carriage(id):
     carriage_set.merchant_id = safe_int(data.get('merchant_id'))
 
     # 获取新的品牌和货号
-    new_brand = Brand.query.get(carriage_set.brand_id)
+    new_brand = db.session.get(Brand, carriage_set.brand_id)
     new_brand_name = new_brand.name if new_brand else ''
     new_item_number = carriage_set.item_number or ''
 
@@ -207,7 +207,7 @@ def carriage():
 def delete_carriage(id):
   """删除车厢套装"""
   try:
-    carriage_set = CarriageSet.query.get_or_404(id)
+    carriage_set = db.get_or_404(CarriageSet, id)
     logger.info(f"Deleting carriage set: {carriage_set}")
     db.session.delete(carriage_set)
     db.session.commit()
@@ -222,7 +222,7 @@ def delete_carriage(id):
 @carriage_bp.route('/carriage/edit/<int:id>', methods=['GET', 'POST'])
 def edit_carriage(id):
   """编辑车厢套装"""
-  carriage_set = CarriageSet.query.get_or_404(id)
+  carriage_set = db.get_or_404(CarriageSet, id)
   form_data = get_carriage_form_data()
 
   if request.method == 'POST':

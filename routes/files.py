@@ -9,7 +9,7 @@ import zipfile
 import tempfile
 import logging
 import random
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from flask import Blueprint, request, jsonify, send_file, send_from_directory, current_app
 from werkzeug.utils import secure_filename
 from models import db, ModelFile
@@ -66,11 +66,11 @@ def get_model_info(model_type: str, model_id: int) -> dict:
   if not model_class:
     return None
 
-  model = model_class.query.get(model_id)
+  model = db.session.get(model_class, model_id)
   if not model:
     return None
 
-  brand = Brand.query.get(model.brand_id)
+  brand = db.session.get(Brand, model.brand_id)
   if not brand:
     return None
 
@@ -225,7 +225,7 @@ def upload_file():
       original_filename=file.filename,
       file_size=file_size,
       mime_type=get_mime_type(new_filename),
-      uploaded_at=datetime.utcnow()
+      uploaded_at=datetime.now(timezone.utc)
     )
     db.session.add(new_record)
     db.session.commit()
@@ -251,7 +251,7 @@ def download_file(file_id):
   Args:
     file_id: 文件记录ID
   """
-  file_record = ModelFile.query.get_or_404(file_id)
+  file_record = db.get_or_404(ModelFile, file_id)
 
   data_dir = current_app.config.get('DATA_DIR', 'data')
   file_path = os.path.join(data_dir, file_record.file_path)
@@ -274,7 +274,7 @@ def view_file(file_id):
   Args:
     file_id: 文件记录ID
   """
-  file_record = ModelFile.query.get_or_404(file_id)
+  file_record = db.get_or_404(ModelFile, file_id)
 
   data_dir = current_app.config.get('DATA_DIR', 'data')
   file_path = os.path.join(data_dir, file_record.file_path)
@@ -301,7 +301,7 @@ def delete_file(file_id):
     {"success": true} 或 {"success": false, "error": "错误信息"}
   """
   try:
-    file_record = ModelFile.query.get_or_404(file_id)
+    file_record = db.get_or_404(ModelFile, file_id)
 
     # 删除物理文件
     data_dir = current_app.config.get('DATA_DIR', 'data')
@@ -407,7 +407,7 @@ def get_model_detail(model_type, model_id):
   if not model_class:
     return jsonify({'success': False, 'error': '无效的模型类型'}), 400
 
-  model = model_class.query.get_or_404(model_id)
+  model = db.get_or_404(model_class, model_id)
 
   # 获取模型属性
   result = {

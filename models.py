@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Integer, Float, Boolean, Date, ForeignKey, JSON, DateTime
 from sqlalchemy.orm import relationship
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 db = SQLAlchemy()
 
@@ -300,8 +300,8 @@ class ImportTemplate(db.Model):
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(100), nullable=False, comment='模板名称')
   config = db.Column(JSON, nullable=False, comment='映射配置')
-  created_at = db.Column(DateTime, default=datetime.utcnow, comment='创建时间')
-  updated_at = db.Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment='更新时间')
+  created_at = db.Column(DateTime, default=lambda: datetime.now(timezone.utc), comment='创建时间')
+  updated_at = db.Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), comment='更新时间')
 
   def __repr__(self):
     return f'<ImportTemplate {self.id}: {self.name}>'
@@ -319,7 +319,7 @@ class ModelFile(db.Model):
   original_filename = db.Column(String(255), nullable=False, comment='原始文件名')
   file_size = db.Column(Integer, comment='文件大小（字节）')
   mime_type = db.Column(String(100), comment='MIME 类型')
-  uploaded_at = db.Column(DateTime, default=datetime.utcnow, comment='上传时间')
+  uploaded_at = db.Column(DateTime, default=lambda: datetime.now(timezone.utc), comment='上传时间')
 
   def __repr__(self):
     return f'<ModelFile {self.id}: {self.model_type}/{self.model_id} - {self.file_type}>'

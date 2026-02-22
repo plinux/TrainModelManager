@@ -156,7 +156,7 @@ def create_option_delete_route(option_type):
     try:
       config = OPTION_CONFIG[option_type]
       model_class = config['model']
-      item = model_class.query.get_or_404(id)
+      item = db.get_or_404(model_class, id)
 
       # 检查是否被使用
       if config['cascade_check']:
@@ -182,7 +182,7 @@ def create_option_edit_route(option_type):
     config = OPTION_CONFIG[option_type]
     model_class = config['model']
     optional_fields = config.get('optional_fields', [])
-    item = model_class.query.get_or_404(id)
+    item = db.get_or_404(model_class, id)
 
     if request.method == 'POST':
       try:
@@ -249,7 +249,7 @@ def edit_option_api(type):
     model_class = config['model']
     optional_fields = config.get('optional_fields', [])
     id = request.form.get('id')
-    item = model_class.query.get_or_404(id)
+    item = db.get_or_404(model_class, id)
 
     for field in config['fields']:
       value = request.form.get(field)

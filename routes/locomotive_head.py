@@ -62,11 +62,11 @@ def update_locomotive_head_from_form(locomotive_head, form_data):
 def api_edit_locomotive_head(id):
   """AJAX 编辑先头车模型"""
   try:
-    locomotive_head = LocomotiveHead.query.get_or_404(id)
+    locomotive_head = db.get_or_404(LocomotiveHead, id)
     data = request.get_json()
 
     # 保存旧的品牌和货号（用于重命名文件夹）
-    old_brand = Brand.query.get(locomotive_head.brand_id)
+    old_brand = db.session.get(Brand, locomotive_head.brand_id)
     old_brand_name = old_brand.name if old_brand else ''
     old_item_number = locomotive_head.item_number or ''
 
@@ -74,7 +74,7 @@ def api_edit_locomotive_head(id):
     update_locomotive_head_from_form(locomotive_head, data)
 
     # 获取新的品牌和货号
-    new_brand = Brand.query.get(locomotive_head.brand_id)
+    new_brand = db.session.get(Brand, locomotive_head.brand_id)
     new_brand_name = new_brand.name if new_brand else ''
     new_item_number = locomotive_head.item_number or ''
 
@@ -139,7 +139,7 @@ def locomotive_head():
 def delete_locomotive_head(id):
   """删除先头车模型"""
   try:
-    locomotive_head = LocomotiveHead.query.get_or_404(id)
+    locomotive_head = db.get_or_404(LocomotiveHead, id)
     logger.info(f"Deleting locomotive head: {locomotive_head}")
     db.session.delete(locomotive_head)
     db.session.commit()
@@ -154,7 +154,7 @@ def delete_locomotive_head(id):
 @locomotive_head_bp.route('/locomotive-head/edit/<int:id>', methods=['GET', 'POST'])
 def edit_locomotive_head(id):
   """编辑先头车模型"""
-  locomotive_head = LocomotiveHead.query.get_or_404(id)
+  locomotive_head = db.get_or_404(LocomotiveHead, id)
   form_data = get_locomotive_head_form_data()
 
   if request.method == 'POST':

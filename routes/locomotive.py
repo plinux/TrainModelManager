@@ -125,7 +125,7 @@ def api_add_locomotive():
 def api_edit_locomotive(id):
   """AJAX 编辑机车模型"""
   try:
-    locomotive = Locomotive.query.get_or_404(id)
+    locomotive = db.get_or_404(Locomotive, id)
     data = request.get_json()
     scale = data.get('scale')
     locomotive_number = data.get('locomotive_number')
@@ -136,7 +136,7 @@ def api_edit_locomotive(id):
       return jsonify(api_error('验证失败', errors=errors)), 400
 
     # 保存旧的品牌和货号（用于重命名文件夹）
-    old_brand = Brand.query.get(locomotive.brand_id)
+    old_brand = db.session.get(Brand, locomotive.brand_id)
     old_brand_name = old_brand.name if old_brand else ''
     old_item_number = locomotive.item_number or ''
 
@@ -144,7 +144,7 @@ def api_edit_locomotive(id):
     update_locomotive_from_form(locomotive, data)
 
     # 获取新的品牌和货号
-    new_brand = Brand.query.get(locomotive.brand_id)
+    new_brand = db.session.get(Brand, locomotive.brand_id)
     new_brand_name = new_brand.name if new_brand else ''
     new_item_number = locomotive.item_number or ''
 
@@ -205,7 +205,7 @@ def locomotive():
 def delete_locomotive(id):
   """删除机车模型"""
   try:
-    locomotive = Locomotive.query.get_or_404(id)
+    locomotive = db.get_or_404(Locomotive, id)
     logger.info(f"Deleting locomotive: {locomotive}")
     db.session.delete(locomotive)
     db.session.commit()
@@ -220,7 +220,7 @@ def delete_locomotive(id):
 @locomotive_bp.route('/locomotive/edit/<int:id>', methods=['GET', 'POST'])
 def edit_locomotive(id):
   """编辑机车模型"""
-  locomotive = Locomotive.query.get_or_404(id)
+  locomotive = db.get_or_404(Locomotive, id)
   form_data = get_locomotive_form_data()
 
   if request.method == 'POST':

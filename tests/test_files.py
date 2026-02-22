@@ -359,7 +359,7 @@ class TestFileDelete:
       assert data['success'] is True
 
       # 验证文件已删除
-      file_record = ModelFile.query.get(file_id)
+      file_record = db.session.get(ModelFile, file_id)
       assert file_record is None
 
 

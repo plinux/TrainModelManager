@@ -6,7 +6,7 @@
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import current_app
 from models import db, ModelFile
 
@@ -228,7 +228,7 @@ def sync_data_directory():
           original_filename=filename,
           file_size=file_size,
           mime_type=mime_type,
-          uploaded_at=datetime.utcnow()
+          uploaded_at=datetime.now(timezone.utc)
         )
         db.session.add(new_file)
         synced_count += 1
