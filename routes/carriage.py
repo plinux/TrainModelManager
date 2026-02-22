@@ -13,7 +13,11 @@ carriage_bp = Blueprint('carriage', __name__, url_prefix='')
 
 
 def get_carriage_form_data():
-  """获取车厢表单所需的下拉框数据"""
+  """
+  获取车厢表单所需的下拉框数据
+
+  @returns dict: 包含所有下拉选项的字典
+  """
   return {
     'carriage_models': CarriageModel.query.all(),
     'carriage_series': CarriageSeries.query.all(),
@@ -24,7 +28,13 @@ def get_carriage_form_data():
 
 
 def validate_carriage_items(form_data, is_json=False):
-  """验证车厢项数据，返回错误列表"""
+  """
+  验证车厢项数据
+
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns list: 错误信息列表
+  """
   errors = []
   get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
 
@@ -41,7 +51,13 @@ def validate_carriage_items(form_data, is_json=False):
 
 
 def create_carriage_set_from_form(form_data, is_json=False):
-  """从表单数据创建车厢套装对象"""
+  """
+  从表单数据创建车厢套装对象
+
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns CarriageSet: 新创建的车厢套装对象（未保存到数据库）
+  """
   get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
 
   return CarriageSet(
@@ -60,7 +76,14 @@ def create_carriage_set_from_form(form_data, is_json=False):
 
 
 def create_carriage_items(carriage_set_id, form_data, is_json=False):
-  """从表单数据创建车厢项列表"""
+  """
+  从表单数据创建车厢项列表
+
+  @param carriage_set_id: 车厢套装ID
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns list: CarriageItem 对象列表
+  """
   get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
   items = []
 
@@ -217,51 +240,3 @@ def delete_carriage(id):
     logger.error(f"Error deleting carriage: {e}")
 
   return redirect(url_for('carriage.carriage'))
-
-
-@carriage_bp.route('/carriage/edit/<int:id>', methods=['GET', 'POST'])
-def edit_carriage(id):
-  """编辑车厢套装"""
-  carriage_set = db.get_or_404(CarriageSet, id)
-  form_data = get_carriage_form_data()
-
-  if request.method == 'POST':
-    errors = validate_carriage_items(request.form)
-    if errors:
-      form_data['carriage_set'] = carriage_set
-      form_data['errors'] = [e['message'] for e in errors]
-      return render_template('carriage_edit.html', **form_data)
-
-    try:
-      # 更新套装信息
-      carriage_set.brand_id = safe_int(request.form.get('brand_id'))
-      carriage_set.series_id = safe_int(request.form.get('series_id'))
-      carriage_set.depot_id = safe_int(request.form.get('depot_id'))
-      carriage_set.train_number = request.form.get('train_number')
-      carriage_set.plaque = request.form.get('plaque')
-      carriage_set.item_number = request.form.get('item_number')
-      carriage_set.scale = request.form.get('scale')
-      carriage_set.total_price = safe_float(request.form.get('total_price'))
-      carriage_set.product_url = request.form.get('product_url')
-      carriage_set.purchase_date = parse_purchase_date(request.form.get('purchase_date'))
-      carriage_set.merchant_id = safe_int(request.form.get('merchant_id'))
-
-      # 删除旧的车厢项并添加新的
-      CarriageItem.query.filter_by(set_id=id).delete()
-      items = create_carriage_items(carriage_set.id, request.form)
-      for item in items:
-        db.session.add(item)
-
-      db.session.commit()
-      logger.info(f"Carriage set updated: ID={id}")
-      return redirect(url_for('carriage.carriage'))
-    except Exception as e:
-      db.session.rollback()
-      logger.error(f"Error updating carriage: {e}")
-      form_data['carriage_set'] = carriage_set
-      form_data['errors'] = [str(e)]
-      return render_template('carriage_edit.html', **form_data)
-
-  form_data['carriage_set'] = carriage_set
-  form_data['errors'] = []
-  return render_template('carriage_edit.html', **form_data)

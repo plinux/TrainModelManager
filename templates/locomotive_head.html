@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "macros/form.html" import autocomplete_field, text_field, date_field, price_field, scale_select, boolean_select %}
-{% from "macros/table.html" import action_buttons, relation_name %}
+{% from "macros/table.html" import relation_name %}
+{% from "macros/modal.html" import model_detail_modal %}
 
 {% block title %}先头车模型 - 火车模型管理系统{% endblock %}
 
@@ -133,59 +134,7 @@
   </div>
 </div>
 
-<!-- 模型详情模态框（先头车无数码功能表） -->
-<div id="model-detail-modal" class="modal-overlay" style="display: none;">
-  <div class="modal-dialog modal-large">
-    <div class="modal-header">
-      <h3>模型详情</h3>
-      <button type="button" class="modal-close">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="model-detail-content">
-        <!-- 左侧：图片和文件上传区域 -->
-        <div class="model-left-section">
-          <!-- 图片区域 -->
-          <div class="model-image-section">
-            <div class="model-image-preview">
-              <img id="model-detail-image" src="" alt="模型图片" style="display: none;">
-              <div id="model-detail-image-placeholder" class="thumbnail-large">
-                <span>暂无图片</span>
-              </div>
-            </div>
-            <div class="model-image-actions">
-              <input type="file" id="image-upload-input" accept="image/*" style="display: none;">
-              <button type="button" class="btn btn-sm" onclick="FileManager.triggerUpload('image')">上传图片</button>
-              <button type="button" class="btn btn-sm btn-secondary" id="btn-view-image" style="display: none;" onclick="FileManager.viewFile('image')">查看原图</button>
-              <button type="button" class="btn btn-sm btn-secondary" id="btn-download-image" style="display: none;" onclick="FileManager.downloadFile('image')">下载原图</button>
-              <button type="button" class="btn btn-sm btn-danger" id="btn-delete-image" style="display: none;" onclick="FileManager.deleteFile('image')">删除图片</button>
-            </div>
-          </div>
-
-          <!-- 说明书 -->
-          <div class="model-file-section">
-            <h4>说明书 <span id="manual-count">(0)</span></h4>
-            <div id="manual-list" class="file-list"></div>
-            <div class="file-upload-row">
-              <input type="file" id="manual-upload-input" accept=".pdf,.doc,.docx,.zip" multiple style="display: none;">
-              <button type="button" class="btn btn-sm" onclick="FileManager.triggerUpload('manual')">添加说明书</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 右侧：属性区域 -->
-        <div class="model-attributes-section">
-          <h4>基本信息</h4>
-          <table class="model-attributes-table" id="model-attributes-table">
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" onclick="ModalManager.close('model-detail-modal')">关闭</button>
-    </div>
-  </div>
-</div>
+{{ model_detail_modal(show_function_table=false) }}
 {% endblock %}
 
 {% block scripts %}
@@ -351,11 +300,11 @@
     var uploadPromises = [];
 
     if (imageFile) {
-      uploadPromises.push(uploadFile('locomotive_head', modelId, 'image', imageFile));
+      uploadPromises.push(uploadModelFile('locomotive_head', modelId, 'image', imageFile));
     }
     // 说明书支持多文件上传
     for (var i = 0; i < manualFiles.length; i++) {
-      uploadPromises.push(uploadFile('locomotive_head', modelId, 'manual', manualFiles[i]));
+      uploadPromises.push(uploadModelFile('locomotive_head', modelId, 'manual', manualFiles[i]));
     }
 
     if (uploadPromises.length > 0) {
@@ -368,30 +317,6 @@
     } else {
       if (callback) callback();
     }
-  }
-
-  // 通用文件上传函数
-  function uploadFile(modelType, modelId, fileType, file) {
-    return new Promise(function(resolve, reject) {
-      var formData = new FormData();
-      formData.append('model_type', modelType);
-      formData.append('model_id', modelId);
-      formData.append('file_type', fileType);
-      formData.append('file', file);
-
-      fetch('/api/files/upload', {
-        method: 'POST',
-        body: formData
-      }).then(function(response) {
-        return response.json();
-      }).then(function(data) {
-        if (data.success) {
-          resolve(data);
-        } else {
-          reject(new Error(data.error || '上传失败'));
-        }
-      }).catch(reject);
-    });
   }
 
   // 文件选择显示文件名

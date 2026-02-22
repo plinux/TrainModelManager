@@ -14,7 +14,11 @@ locomotive_bp = Blueprint('locomotive', __name__, url_prefix='')
 
 
 def get_locomotive_form_data():
-  """获取机车表单所需的下拉框数据"""
+  """
+  获取机车表单所需的下拉框数据
+
+  @returns dict: 包含所有下拉选项的字典，键为模板变量名，值为查询结果列表
+  """
   return {
     'locomotive_models': LocomotiveModel.query.all(),
     'locomotive_series': LocomotiveSeries.query.all(),
@@ -28,7 +32,15 @@ def get_locomotive_form_data():
 
 
 def validate_locomotive_data(locomotive_number, decoder_number, scale, exclude_id=None):
-  """验证机车数据，返回错误列表"""
+  """
+  验证机车数据
+
+  @param locomotive_number: 机车号（4-12位数字）
+  @param decoder_number: 编号（1-4位数字）
+  @param scale: 比例（HO/N）
+  @param exclude_id: 排除的机车ID（用于编辑时排除自身）
+  @returns list: 错误信息列表，每个元素包含 field 和 message
+  """
   errors = []
 
   # 格式验证
@@ -47,7 +59,13 @@ def validate_locomotive_data(locomotive_number, decoder_number, scale, exclude_i
 
 
 def create_locomotive_from_form(form_data, is_json=False):
-  """从表单数据创建机车对象"""
+  """
+  从表单数据创建机车对象
+
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns Locomotive: 新创建的机车对象（未保存到数据库）
+  """
   get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
 
   return Locomotive(
@@ -73,7 +91,12 @@ def create_locomotive_from_form(form_data, is_json=False):
 
 
 def update_locomotive_from_form(locomotive, form_data):
-  """从表单数据更新机车对象"""
+  """
+  从表单数据更新机车对象
+
+  @param locomotive: 要更新的机车对象
+  @param form_data: 表单数据字典
+  """
   locomotive.model_id = safe_int(form_data.get('model_id'))
   locomotive.series_id = safe_int(form_data.get('series_id'))
   locomotive.power_type_id = safe_int(form_data.get('power_type_id'))
@@ -215,37 +238,3 @@ def delete_locomotive(id):
     logger.error(f"Error deleting locomotive: {e}")
 
   return redirect(url_for('locomotive.locomotive'))
-
-
-@locomotive_bp.route('/locomotive/edit/<int:id>', methods=['GET', 'POST'])
-def edit_locomotive(id):
-  """编辑机车模型"""
-  locomotive = db.get_or_404(Locomotive, id)
-  form_data = get_locomotive_form_data()
-
-  if request.method == 'POST':
-    scale = request.form.get('scale')
-    locomotive_number = request.form.get('locomotive_number')
-    decoder_number = request.form.get('decoder_number')
-
-    errors = validate_locomotive_data(locomotive_number, decoder_number, scale, exclude_id=id)
-    if errors:
-      form_data['locomotive'] = locomotive
-      form_data['errors'] = [e['message'] for e in errors]
-      return render_template('locomotive_edit.html', **form_data)
-
-    try:
-      update_locomotive_from_form(locomotive, request.form)
-      db.session.commit()
-      logger.info(f"Locomotive updated: ID={id}")
-      return redirect(url_for('locomotive.locomotive'))
-    except Exception as e:
-      db.session.rollback()
-      logger.error(f"Error updating locomotive: {e}")
-      form_data['locomotive'] = locomotive
-      form_data['errors'] = [str(e)]
-      return render_template('locomotive_edit.html', **form_data)
-
-  form_data['locomotive'] = locomotive
-  form_data['errors'] = []
-  return render_template('locomotive_edit.html', **form_data)

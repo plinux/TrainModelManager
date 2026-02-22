@@ -1253,6 +1253,37 @@ function searchProduct(btn, searchUrl, itemNumber) {
 }
 
 /**
+ * 通用文件上传函数
+ * @param {string} modelType - 模型类型（locomotive/carriage/trainset/locomotive_head）
+ * @param {number|string} modelId - 模型ID
+ * @param {string} fileType - 文件类型（image/manual/function_table）
+ * @param {File} file - 要上传的文件对象
+ * @returns {Promise} 上传结果的 Promise
+ */
+function uploadModelFile(modelType, modelId, fileType, file) {
+  return new Promise(function(resolve, reject) {
+    var formData = new FormData();
+    formData.append('model_type', modelType);
+    formData.append('model_id', modelId);
+    formData.append('file_type', fileType);
+    formData.append('file', file);
+
+    fetch('/api/files/upload', {
+      method: 'POST',
+      body: formData
+    }).then(function(response) {
+      return response.json();
+    }).then(function(data) {
+      if (data.success) {
+        resolve(data);
+      } else {
+        reject(new Error(data.error || '上传失败'));
+      }
+    }).catch(reject);
+  });
+}
+
+/**
  * 文件管理器
  * 处理模型文件的上传、下载、预览、删除等功能
  */

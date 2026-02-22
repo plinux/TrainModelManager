@@ -13,7 +13,11 @@ locomotive_head_bp = Blueprint('locomotive_head', __name__, url_prefix='')
 
 
 def get_locomotive_head_form_data():
-  """获取先头车表单所需的下拉框数据"""
+  """
+  获取先头车表单所需的下拉框数据
+
+  @returns dict: 包含所有下拉选项的字典
+  """
   return {
     'trainset_models': TrainsetModel.query.all(),
     'brands': Brand.query.all(),
@@ -22,7 +26,13 @@ def get_locomotive_head_form_data():
 
 
 def create_locomotive_head_from_form(form_data, is_json=False):
-  """从表单数据创建先头车对象"""
+  """
+  从表单数据创建先头车对象
+
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns LocomotiveHead: 新创建的先头车对象（未保存到数据库）
+  """
   get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
 
   return LocomotiveHead(
@@ -42,7 +52,12 @@ def create_locomotive_head_from_form(form_data, is_json=False):
 
 
 def update_locomotive_head_from_form(locomotive_head, form_data):
-  """从表单数据更新先头车对象"""
+  """
+  从表单数据更新先头车对象
+
+  @param locomotive_head: 要更新的先头车对象
+  @param form_data: 表单数据字典
+  """
   locomotive_head.model_id = safe_int(form_data.get('model_id'))
   locomotive_head.brand_id = safe_int(form_data.get('brand_id'))
   locomotive_head.special_color = form_data.get('special_color')
@@ -149,25 +164,3 @@ def delete_locomotive_head(id):
     logger.error(f"Error deleting locomotive head: {e}")
 
   return redirect(url_for('locomotive_head.locomotive_head'))
-
-
-@locomotive_head_bp.route('/locomotive-head/edit/<int:id>', methods=['GET', 'POST'])
-def edit_locomotive_head(id):
-  """编辑先头车模型"""
-  locomotive_head = db.get_or_404(LocomotiveHead, id)
-  form_data = get_locomotive_head_form_data()
-
-  if request.method == 'POST':
-    try:
-      update_locomotive_head_from_form(locomotive_head, request.form)
-      db.session.commit()
-      logger.info(f"Locomotive head updated: ID={id}")
-      return redirect(url_for('locomotive_head.locomotive_head'))
-    except Exception as e:
-      db.session.rollback()
-      logger.error(f"Error updating locomotive head: {e}")
-      form_data['locomotive_head'] = locomotive_head
-      return render_template('locomotive_head_edit.html', **form_data)
-
-  form_data['locomotive_head'] = locomotive_head
-  return render_template('locomotive_head_edit.html', **form_data)

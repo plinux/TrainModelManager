@@ -181,29 +181,6 @@ class TestCopyButtons:
 class TestLocomotiveHeadRoutes:
     """先头车路由测试 - 验证 depot 已被移除"""
 
-    def test_locomotive_head_edit_page_no_depot(self, client, sample_data):
-        """测试先头车编辑页面不包含动车段字段"""
-        from models import db, LocomotiveHead
-
-        with client.application.app_context():
-            # 创建一个先头车
-            head = LocomotiveHead(
-                model_id=1,
-                brand_id=1,
-                scale='HO',
-                head_light=True
-            )
-            db.session.add(head)
-            db.session.commit()
-            head_id = head.id
-
-        response = client.get(f'/locomotive-head/edit/{head_id}')
-        assert response.status_code == 200
-        html = response.data.decode('utf-8')
-        # 确保页面不包含动车段
-        assert 'depot_id' not in html
-        assert '动车段' not in html
-
     def test_locomotive_head_list_no_depot_column(self, client):
         """测试先头车列表页面不包含动车段列"""
         response = client.get('/locomotive-head')

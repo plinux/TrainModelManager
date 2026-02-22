@@ -437,3 +437,109 @@ class TestFileSync:
 
       assert file_record is not None
       assert file_record.original_filename == '测试品牌_TEST001.jpg'
+
+
+class TestFileDownload:
+  """文件下载测试"""
+
+  def test_download_file_success(self, file_test_app, file_test_client):
+    """测试下载文件成功"""
+    with file_test_app.app_context():
+      # 先上传一个文件
+      image_data = io.BytesIO(b'\x89PNG\r\n\x1a\n' + b'\x00' * 100)
+      upload_response = file_test_client.post(
+        '/api/files/upload',
+        data={
+          'model_type': 'locomotive',
+          'model_id': 1,
+          'file_type': 'image',
+          'file': (image_data, 'test.jpg', 'image/jpeg')
+        },
+        content_type='multipart/form-data'
+      )
+      file_id = upload_response.get_json()['file']['id']
+
+      # 下载文件
+      download_response = file_test_client.get(f'/api/files/download/{file_id}')
+
+      assert download_response.status_code == 200
+      assert download_response.content_type.startswith('image/jpeg')
+
+  def test_download_nonexistent_file(self, file_test_app, file_test_client):
+    """测试下载不存在的文件"""
+    with file_test_app.app_context():
+      response = file_test_client.get('/api/files/download/99999')
+
+      assert response.status_code == 404
+
+
+class TestFileView:
+  """文件预览测试"""
+
+  def test_view_file_success(self, file_test_app, file_test_client):
+    """测试预览文件成功"""
+    with file_test_app.app_context():
+      # 先上传一个文件
+      image_data = io.BytesIO(b'\x89PNG\r\n\x1a\n' + b'\x00' * 100)
+      upload_response = file_test_client.post(
+        '/api/files/upload',
+        data={
+          'model_type': 'locomotive',
+          'model_id': 1,
+          'file_type': 'image',
+          'file': (image_data, 'test.jpg', 'image/jpeg')
+        },
+        content_type='multipart/form-data'
+      )
+      file_id = upload_response.get_json()['file']['id']
+
+      # 预览文件
+      view_response = file_test_client.get(f'/api/files/view/{file_id}')
+
+      assert view_response.status_code == 200
+      assert view_response.content_type.startswith('image/jpeg')
+
+  def test_view_nonexistent_file(self, file_test_app, file_test_client):
+    """测试预览不存在的文件"""
+    with file_test_app.app_context():
+      response = file_test_client.get('/api/files/view/99999')
+
+      # 应该返回 404 或重定向
+      assert response.status_code in [404, 302]
+
+
+class TestExportAllFiles:
+  """导出所有文件测试"""
+
+  def test_export_all_empty(self, file_test_app, file_test_client):
+    """测试导出空文件列表"""
+    with file_test_app.app_context():
+      response = file_test_client.get('/api/files/export-all')
+
+      # 应该返回一个 ZIP 文件，即使是空的
+      assert response.status_code == 200
+      assert response.content_type == 'application/zip'
+
+  def test_export_all_with_files(self, file_test_app, file_test_client):
+    """测试导出包含文件的 ZIP"""
+    with file_test_app.app_context():
+      # 上传一个文件
+      image_data = io.BytesIO(b'\x89PNG\r\n\x1a\n' + b'\x00' * 100)
+      file_test_client.post(
+        '/api/files/upload',
+        data={
+          'model_type': 'locomotive',
+          'model_id': 1,
+          'file_type': 'image',
+          'file': (image_data, 'test.jpg', 'image/jpeg')
+        },
+        content_type='multipart/form-data'
+      )
+
+      # 导出
+      response = file_test_client.get('/api/files/export-all')
+
+      assert response.status_code == 200
+      assert response.content_type == 'application/zip'
+      # 验证 ZIP 文件不为空
+      assert len(response.data) > 0

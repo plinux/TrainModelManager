@@ -14,7 +14,11 @@ trainset_bp = Blueprint('trainset', __name__, url_prefix='')
 
 
 def get_trainset_form_data():
-  """获取动车组表单所需的下拉框数据"""
+  """
+  获取动车组表单所需的下拉框数据
+
+  @returns dict: 包含所有下拉选项的字典
+  """
   return {
     'trainset_models': TrainsetModel.query.all(),
     'trainset_series': TrainsetSeries.query.all(),
@@ -28,7 +32,15 @@ def get_trainset_form_data():
 
 
 def validate_trainset_data(trainset_number, decoder_number, scale, exclude_id=None):
-  """验证动车组数据，返回错误列表"""
+  """
+  验证动车组数据
+
+  @param trainset_number: 动车号（3-12位数字）
+  @param decoder_number: 编号（1-4位数字）
+  @param scale: 比例（HO/N）
+  @param exclude_id: 排除的动车组ID（用于编辑时排除自身）
+  @returns list: 错误信息列表
+  """
   errors = []
 
   # 格式验证
@@ -47,7 +59,13 @@ def validate_trainset_data(trainset_number, decoder_number, scale, exclude_id=No
 
 
 def create_trainset_from_form(form_data, is_json=False):
-  """从表单数据创建动车组对象"""
+  """
+  从表单数据创建动车组对象
+
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns Trainset: 新创建的动车组对象（未保存到数据库）
+  """
   get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
   get_formation = lambda: safe_int(get_value('formation')) if get_value('formation') else None
 
@@ -77,7 +95,12 @@ def create_trainset_from_form(form_data, is_json=False):
 
 
 def update_trainset_from_form(trainset, form_data):
-  """从表单数据更新动车组对象"""
+  """
+  从表单数据更新动车组对象
+
+  @param trainset: 要更新的动车组对象
+  @param form_data: 表单数据字典
+  """
   trainset.model_id = safe_int(form_data.get('model_id'))
   trainset.series_id = safe_int(form_data.get('series_id'))
   trainset.power_type_id = safe_int(form_data.get('power_type_id'))
@@ -161,7 +184,7 @@ def api_add_trainset():
 
     trainset = create_trainset_from_form(data, is_json=True)
 
-    db.session.add(trainset);
+    db.session.add(trainset)
     db.session.commit()
     logger.info(f"Trainset added: ID={trainset.id}")
 
@@ -222,37 +245,3 @@ def delete_trainset(id):
     logger.error(f"Error deleting trainset: {e}")
 
   return redirect(url_for('trainset.trainset'))
-
-
-@trainset_bp.route('/trainset/edit/<int:id>', methods=['GET', 'POST'])
-def edit_trainset(id):
-  """编辑动车组模型"""
-  trainset = db.get_or_404(Trainset, id)
-  form_data = get_trainset_form_data()
-
-  if request.method == 'POST':
-    scale = request.form.get('scale')
-    trainset_number = request.form.get('trainset_number')
-    decoder_number = request.form.get('decoder_number')
-
-    errors = validate_trainset_data(trainset_number, decoder_number, scale, exclude_id=id)
-    if errors:
-      form_data['trainset'] = trainset
-      form_data['errors'] = [e['message'] for e in errors]
-      return render_template('trainset_edit.html', **form_data)
-
-    try:
-      update_trainset_from_form(trainset, request.form)
-      db.session.commit()
-      logger.info(f"Trainset updated: ID={id}")
-      return redirect(url_for('trainset.trainset'))
-    except Exception as e:
-      db.session.rollback()
-      logger.error(f"Error updating trainset: {e}")
-      form_data['trainset'] = trainset
-      form_data['errors'] = [str(e)]
-      return render_template('trainset_edit.html', **form_data)
-
-  form_data['trainset'] = trainset
-  form_data['errors'] = []
-  return render_template('trainset_edit.html', **form_data)
