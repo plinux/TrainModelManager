@@ -107,6 +107,15 @@
    ```
 
 6. **启动应用**
+
+   **开发环境**（推荐）：
+   ```bash
+   ./run_dev.sh
+   ```
+   - 启用 DEBUG 模式和自动重载
+   - 日志输出到控制台
+
+   **或者手动启动**：
    ```bash
    python app.py
    ```
@@ -587,13 +596,41 @@ pytest==8.0.0
 ## 部署建议
 
 ### 开发环境
+
+使用提供的启动脚本：
+
 ```bash
-python app.py
+./run_dev.sh
 ```
+
+特性：
+- 启用 DEBUG 模式
+- 代码修改自动重载
+- 日志输出到控制台
+- 访问地址：http://127.0.0.1:5000
 
 ### 生产环境
 
-推荐使用 Gunicorn 作为 WSGI 服务器：
+**方式一：使用启动脚本（简单）**
+
+```bash
+# 启动服务
+./run_prod.sh
+
+# 停止服务
+./stop_prod.sh
+
+# 查看日志
+tail -f logs/app.log
+```
+
+特性：
+- 关闭 DEBUG 模式
+- 后台运行
+- 日志输出到 `logs/app.log`
+- 监听所有网卡（0.0.0.0）
+
+**方式二：使用 Gunicorn（推荐）**
 
 ```bash
 pip install gunicorn
