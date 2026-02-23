@@ -227,7 +227,7 @@ class TestBrandValidation:
     def test_brand_with_empty_name(self, app):
         """测试品牌名为空"""
         with app.app_context():
-            brand = Brand(name='')
+            brand = Brand(name='', abbreviation='EMP')
             db.session.add(brand)
             db.session.commit()
 
@@ -237,7 +237,7 @@ class TestBrandValidation:
     def test_brand_with_search_url(self, app):
         """测试品牌搜索链接"""
         with app.app_context():
-            brand = Brand(name='测试品牌URL', search_url='https://example.com/search?q={{query}}')
+            brand = Brand(name='测试品牌URL', abbreviation='CSP', search_url='https://example.com/search?q={{query}}')
             db.session.add(brand)
             db.session.commit()
 
@@ -247,11 +247,11 @@ class TestBrandValidation:
     def test_brand_duplicate_name(self, app):
         """测试品牌名重复"""
         with app.app_context():
-            brand1 = Brand(name='重复品牌')
+            brand1 = Brand(name='重复品牌', abbreviation='CFP')
             db.session.add(brand1)
             db.session.commit()
 
-            brand2 = Brand(name='重复品牌')
+            brand2 = Brand(name='重复品牌', abbreviation='CFP2')
             db.session.add(brand2)
             # 根据数据库约束，可能允许重复或抛出异常
             # 这里测试是否能正常处理

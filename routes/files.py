@@ -60,7 +60,7 @@ def get_model_info(model_type: str, model_id: int) -> dict:
     model_id: 模型ID
 
   Returns:
-    包含 brand_name 和 item_number 的字典
+    包含 brand_abbreviation 和 item_number 的字典
   """
   model_class = MODEL_CLASS_MAP.get(model_type)
   if not model_class:
@@ -75,27 +75,27 @@ def get_model_info(model_type: str, model_id: int) -> dict:
     return None
 
   return {
-    'brand_name': brand.name,
+    'brand_abbreviation': brand.abbreviation or '',
     'item_number': model.item_number or ''
   }
 
 
-def generate_filename(file_type: str, brand_name: str, item_number: str,
+def generate_filename(file_type: str, brand_abbreviation: str, item_number: str,
                       original_filename: str = None) -> str:
   """
   生成存储文件名
 
   Args:
     file_type: 文件类型
-    brand_name: 品牌名称
+    brand_abbreviation: 品牌缩写
     item_number: 货号
     original_filename: 原始文件名（用于说明书）
 
   Returns:
     生成的文件名
   """
-  # 安全处理品牌名称和货号
-  safe_brand = secure_filename(brand_name)
+  # 安全处理品牌缩写和货号
+  safe_brand = secure_filename(brand_abbreviation)
   safe_item = secure_filename(item_number)
   base_name = f"{safe_brand}_{safe_item}"
 
@@ -163,16 +163,16 @@ def upload_file():
     if not model_info:
       return jsonify({'success': False, 'error': '模型不存在或缺少品牌/货号信息'}), 404
 
-    brand_name = model_info['brand_name']
+    brand_abbreviation = model_info['brand_abbreviation']
     item_number = model_info['item_number']
     if not item_number:
       return jsonify({'success': False, 'error': '模型缺少货号信息'}), 400
 
     # 生成存储文件名
-    new_filename = generate_filename(file_type, brand_name, item_number, file.filename)
+    new_filename = generate_filename(file_type, brand_abbreviation, item_number, file.filename)
 
     # 获取存储路径
-    folder_path = get_model_folder_path(model_type, brand_name, item_number)
+    folder_path = get_model_folder_path(model_type, brand_abbreviation, item_number)
     if not ensure_folder_exists(folder_path):
       return jsonify({'success': False, 'error': '创建存储目录失败'}), 500
 
@@ -214,7 +214,7 @@ def upload_file():
 
     # 获取文件信息
     file_size = os.path.getsize(file_path)
-    relative_path = os.path.join(model_type, f"{brand_name}_{item_number}", new_filename)
+    relative_path = os.path.join(model_type, f"{brand_abbreviation}_{item_number}", new_filename)
 
     # 创建数据库记录
     new_record = ModelFile(

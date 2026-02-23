@@ -48,7 +48,7 @@ def sample_data(app):
         # 检查是否已有数据，避免重复创建
         brand = Brand.query.filter_by(name='测试品牌').first()
         if not brand:
-            brand = Brand(name='测试品牌')
+            brand = Brand(name='测试品牌', abbreviation='CSP')
             db.session.add(brand)
 
             depot = Depot(name='测试机务段')

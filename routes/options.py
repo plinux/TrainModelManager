@@ -9,7 +9,7 @@ from models import (
   LocomotiveSeries, LocomotiveModel, CarriageSeries, CarriageModel,
   TrainsetSeries, TrainsetModel
 )
-from utils.helpers import safe_int, api_success, api_error
+from utils.helpers import safe_int, api_success, api_error, generate_brand_abbreviation
 import subprocess
 import logging
 
@@ -28,8 +28,8 @@ OPTION_CONFIG = {
   'brand': {
     'model': Brand,
     'cascade_check': None,
-    'fields': ['name', 'website', 'search_url'],
-    'optional_fields': ['website', 'search_url']
+    'fields': ['name', 'website', 'search_url', 'abbreviation'],
+    'optional_fields': ['website', 'search_url', 'abbreviation']
   },
   'merchant': {
     'model': Merchant,
@@ -137,6 +137,12 @@ def create_option_add_route(option_type):
         elif value:
           kwargs[field] = value
 
+      # 品牌特殊处理：abbreviation 为空时自动生成
+      if option_type == 'brand':
+        if not kwargs.get('abbreviation'):
+          name = kwargs.get('name', '')
+          kwargs['abbreviation'] = generate_brand_abbreviation(name)
+
       item = model_class(**kwargs)
       db.session.add(item)
       db.session.commit()
@@ -202,6 +208,16 @@ def create_option_edit_route(option_type):
           elif value:
             setattr(item, field, value)
 
+        # 品牌特殊处理：验证 abbreviation 唯一性
+        if option_type == 'brand' and item.abbreviation:
+          existing = Brand.query.filter(
+            Brand.abbreviation == item.abbreviation,
+            Brand.id != item.id
+          ).first()
+          if existing:
+            db.session.rollback()
+            return f"缩写 '{item.abbreviation}' 已被其他品牌使用！<script>setTimeout(()=>history.back(), 2000);</script>"
+
         db.session.commit()
         return redirect(url_for('options.options'))
       except Exception as e:
@@ -263,6 +279,15 @@ def edit_option_api(type):
       # 其他字段需要非空
       elif value:
         setattr(item, field, value)
+
+    # 品牌特殊处理：验证 abbreviation 唯一性
+    if type == 'brand' and item.abbreviation:
+      existing = Brand.query.filter(
+        Brand.abbreviation == item.abbreviation,
+        Brand.id != item.id
+      ).first()
+      if existing:
+        return jsonify(api_error(f"缩写 '{item.abbreviation}' 已被其他品牌使用")), 400
 
     db.session.commit()
     return jsonify(api_success('保存成功'))

@@ -1764,6 +1764,8 @@ def execute_system_table_import(table_name, table_config, rows, source_to_target
   Returns:
     int: 导入的记录数
   """
+  from utils.helpers import generate_brand_abbreviation
+
   model_class = MODEL_CLASS_MAP.get(table_name)
   if not model_class:
     return 0
@@ -1780,6 +1782,10 @@ def execute_system_table_import(table_name, table_config, rows, source_to_target
     name = mapped_row.get('name')
     if not name:
       continue
+
+    # 品牌特殊处理：abbreviation 为空时自动生成
+    if table_name == 'brand' and not mapped_row.get('abbreviation'):
+      mapped_row['abbreviation'] = generate_brand_abbreviation(name)
 
     # 检查是否存在
     existing = model_class.query.filter_by(name=name).first()

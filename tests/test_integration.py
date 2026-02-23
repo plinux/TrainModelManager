@@ -204,7 +204,7 @@ class TestDatabaseInitialization:
             initial_count = Brand.query.count()
 
             # 添加一个品牌
-            brand = Brand(name='隔离测试品牌')
+            brand = Brand(name='隔离测试品牌', abbreviation='GLC')
             db.session.add(brand)
             db.session.commit()
 
@@ -246,12 +246,12 @@ class TestUniqueConstraints:
     def test_brand_name_uniqueness(self, app):
         """测试品牌名唯一性"""
         with app.app_context():
-            brand1 = Brand(name='唯一品牌测试')
+            brand1 = Brand(name='唯一品牌测试', abbreviation='WYP')
             db.session.add(brand1)
             db.session.commit()
 
             # 尝试创建同名品牌
-            brand2 = Brand(name='唯一品牌测试')
+            brand2 = Brand(name='唯一品牌测试', abbreviation='WYP2')
             db.session.add(brand2)
 
             # 根据数据库约束，可能成功或失败

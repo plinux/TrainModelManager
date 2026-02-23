@@ -59,45 +59,68 @@ def insert_reference_data():
     if not ChipModel.query.filter_by(name=name).first():
       db.session.add(ChipModel(name=name))
 
-  # 7. 品牌（带官网和搜索URL模板）
+  # 7. 品牌（带缩写、官网和搜索URL模板）
   # search_url 中 {query} 会被替换为货号
+  # 格式：(名称, 缩写, 官网, 搜索URL)
   brands = [
-    ('1435', None, None),
-    ('ATHEARN', 'https://www.athearn.com/', 'https://www.athearn.com/Search?term={query}'),
-    ('BLI', 'https://broadway-limited.com/', 'https://broadway-limited.com/search?q={query}'),
-    ('CMR', None, None),
-    ('PIKO', 'https://www.piko-shop.de/en/', 'https://www.piko-shop.de/en/search?query={query}'),
-    ('ROCO', 'https://www.roco.cc/ren/', 'https://www.roco.cc/ren/search?searchterm={query}'),
-    ('TRIX', 'https://www.trix.de/en', 'https://www.trix.de/en/search?query={query}'),
-    ('百万城', 'http://www.bachmannchina.com.cn/', None),
-    ('浩瀚', None, None),
-    ('深东', None, None),
-    ('猩猩', 'http://www.lyxxmx.com/', None),
-    ('长鸣', None, None),
-    ('跨越', 'https://www.auroraminiature.com/', 'https://www.auroraminiature.com/search?q={query}'),
-    ('Kunter', None, None),
-    ('茂杉', None, None),
-    ('KATO', 'https://www.katomodels.com/', 'https://www.katomodels.com/product/search?keyword={query}'),
-    ('HCMX', None, None),
-    ('HTMX', None, None),
-    ('KukePig', None, None),
-    ('N27', None, None),
-    ('毫米制造', None, None),
-    ('火车花园', None, None),
-    ('曙光', None, None),
-    ('WALTHERS', 'https://www.walthers.com/', 'https://www.walthers.com/search?w={query}'),
-    ('Tomix', 'https://www.tomytec.co.jp/tomix/', None),
-    ('微景', None, None),
-    ('ARNOLD', 'https://www.arnoldmodel.com/', 'https://www.arnoldmodel.com/search?query={query}'),
-    ('Fleischmann', 'https://www.fleischmann.de/fen', 'https://www.fleischmann.de/fen/search?query={query}'),
-    ('MicroAce', 'http://www.microace-arii.co.jp/', None)
+    ('1435', '1435', None, None),
+    ('ARNOLD', 'ARN', 'https://www.arnoldmodel.com/', 'https://www.arnoldmodel.com/search?query={query}'),
+    ('ATHEARN', 'ATH', 'https://www.athearn.com/', 'https://www.athearn.com/Search?term={query}'),
+    ('BLI', 'BLI', 'https://broadway-limited.com/', 'https://broadway-limited.com/search?q={query}'),
+    ('CMR', 'CMR', None, None),
+    ('Fleischmann', 'FLE', 'https://www.fleischmann.de/fen', 'https://www.fleischmann.de/fen/search?query={query}'),
+    ('HCMX', 'HCMX', None, None),
+    ('KATO', 'KATO', 'https://www.katomodels.com/', 'https://www.katomodels.com/product/search?keyword={query}'),
+    ('KukePig', 'KP', None, None),
+    ('Kunter', 'KUNTER', None, None),
+    ('MicroAce', 'MA', 'http://www.microace-arii.co.jp/', None),
+    ('N27', 'N27', None, None),
+    ('PIKO', 'PIKO', 'https://www.piko-shop.de/en/', 'https://www.piko-shop.de/en/search?query={query}'),
+    ('ROCO', 'ROCO', 'https://www.roco.cc/ren/', 'https://www.roco.cc/ren/search?searchterm={query}'),
+    ('TRIX', 'TRIX', 'https://www.trix.de/en', 'https://www.trix.de/en/search?query={query}'),
+    ('Tomix', 'TOMIX', 'https://www.tomytec.co.jp/tomix/', None),
+    ('WALTHERS', 'WTH', 'https://www.walthers.com/', 'https://www.walthers.com/search?w={query}'),
+    ('百万城', 'BWC', 'http://www.bachmannchina.com.cn/', None),
+    ('浩瀚', 'HH', None, None),
+    ('海通模型', 'HTMX', None, None),
+    ('深东', 'SD', None, None),
+    ('火车花园', 'TG', None, None),
+    ('猩猩', 'XX', 'http://www.lyxxmx.com/', None),
+    ('曙光', 'AURORA', 'https://www.auroraminiature.com/', None),
+    ('毫米制造', 'HM', None, None),
+    ('茂杉', 'MS', None, None),
+    ('跨越', 'KY', 'https://www.auroraminiature.com/', 'https://www.auroraminiature.com/search?q={query}'),
+    ('长鸣', 'CM', None, None),
+    ('微景', 'MV', None, None),
   ]
-  for name, website, search_url in brands:
+  for name, abbreviation, website, search_url in brands:
     if not Brand.query.filter_by(name=name).first():
-      db.session.add(Brand(name=name, website=website, search_url=search_url))
+      db.session.add(Brand(name=name, abbreviation=abbreviation, website=website, search_url=search_url))
 
   # 8. 商家
-  merchants = ['星期五火车模型', 'SRE铁路模型店', '火车女侠店', '长鸣淘宝', '长鸣京东', '中车文创', 'Kunter飘局的模型店', '南京攀登者模型', '铸造模型', '天易模型', '日本N比例火车模型店', '百万城百克曼', '魔都铁路模型社', '火车模型之家', '百万城旗舰店', '1435火车模型', '浩瀚火车模型', '宁东火车模型', '百酷火车模型', '阿易火车模型', '闲鱼']
+  merchants = [
+    '1435火车模型',
+    'Kunter飘局的模型店',
+    'SRE铁路模型',
+    '中车文创',
+    '南京攀登者模型',
+    '天易模型',
+    '宁东火车模型',
+    '日本N比例火车模型',
+    '星期五火车模型',
+    '浩瀚火车模型',
+    '火车女侠店',
+    '火车模型之家',
+    '百万城旗舰店',
+    '百万城百克曼',
+    '百酷火车模型',
+    '铸造模型',
+    '长鸣京东',
+    '长鸣淘宝',
+    '闲鱼',
+    '阿易火车模型',
+    '魔都铁路模型社',
+  ]
   for name in merchants:
     if not Merchant.query.filter_by(name=name).first():
       db.session.add(Merchant(name=name))

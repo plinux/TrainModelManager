@@ -93,13 +93,13 @@ def parse_folder_name(folder_name: str) -> tuple:
   return None, None
 
 
-def find_model_id(model_type: str, brand_name: str, item_number: str) -> int:
+def find_model_id(model_type: str, brand_abbreviation: str, item_number: str) -> int:
   """
-  根据品牌和货号查找模型ID
+  根据品牌缩写和货号查找模型ID
 
   Args:
     model_type: 模型类型
-    brand_name: 品牌名称
+    brand_abbreviation: 品牌缩写
     item_number: 货号
 
   Returns:
@@ -108,8 +108,8 @@ def find_model_id(model_type: str, brand_name: str, item_number: str) -> int:
   # 延迟导入避免循环依赖
   from models import Brand, Locomotive, CarriageSet, Trainset, LocomotiveHead
 
-  # 先查找品牌ID
-  brand = Brand.query.filter_by(name=brand_name).first()
+  # 先查找品牌ID（使用缩写）
+  brand = Brand.query.filter_by(abbreviation=brand_abbreviation).first()
   if not brand:
     return None
 
@@ -172,13 +172,13 @@ def sync_data_directory():
       if not os.path.isdir(folder_path):
         continue
 
-      # 解析品牌和货号
-      brand_name, item_number = parse_folder_name(folder_name)
-      if not brand_name or not item_number:
+      # 解析品牌缩写和货号
+      brand_abbreviation, item_number = parse_folder_name(folder_name)
+      if not brand_abbreviation or not item_number:
         continue
 
       # 查找对应的模型ID
-      model_id = find_model_id(model_type, brand_name, item_number)
+      model_id = find_model_id(model_type, brand_abbreviation, item_number)
       if not model_id:
         continue
 
@@ -277,20 +277,20 @@ def get_model_files(model_type: str, model_id: int) -> dict:
   return result
 
 
-def get_model_folder_path(model_type: str, brand_name: str, item_number: str) -> str:
+def get_model_folder_path(model_type: str, brand_abbreviation: str, item_number: str) -> str:
   """
   获取模型文件存储路径
 
   Args:
     model_type: 模型类型
-    brand_name: 品牌名称
+    brand_abbreviation: 品牌缩写
     item_number: 货号
 
   Returns:
     文件夹绝对路径
   """
   data_dir = current_app.config.get('DATA_DIR', 'data')
-  folder_name = f"{brand_name}_{item_number}"
+  folder_name = f"{brand_abbreviation}_{item_number}"
   return os.path.join(data_dir, model_type, folder_name)
 
 
@@ -312,16 +312,16 @@ def ensure_folder_exists(folder_path: str) -> bool:
     return False
 
 
-def rename_model_folder(model_type: str, old_brand_name: str, old_item_number: str,
-                        new_brand_name: str, new_item_number: str) -> bool:
+def rename_model_folder(model_type: str, old_brand_abbreviation: str, old_item_number: str,
+                        new_brand_abbreviation: str, new_item_number: str) -> bool:
   """
   重命名模型文件夹（当品牌或货号变更时）
 
   Args:
     model_type: 模型类型
-    old_brand_name: 旧品牌名称
+    old_brand_abbreviation: 旧品牌缩写
     old_item_number: 旧货号
-    new_brand_name: 新品牌名称
+    new_brand_abbreviation: 新品牌缩写
     new_item_number: 新货号
 
   Returns:
@@ -330,16 +330,16 @@ def rename_model_folder(model_type: str, old_brand_name: str, old_item_number: s
   from werkzeug.utils import secure_filename
 
   # 如果品牌和货号都没变，无需重命名
-  if old_brand_name == new_brand_name and old_item_number == new_item_number:
+  if old_brand_abbreviation == new_brand_abbreviation and old_item_number == new_item_number:
     return True
 
-  old_folder_path = get_model_folder_path(model_type, old_brand_name, old_item_number)
+  old_folder_path = get_model_folder_path(model_type, old_brand_abbreviation, old_item_number)
 
   # 如果旧目录不存在，无需重命名
   if not os.path.exists(old_folder_path):
     return True
 
-  new_folder_path = get_model_folder_path(model_type, new_brand_name, new_item_number)
+  new_folder_path = get_model_folder_path(model_type, new_brand_abbreviation, new_item_number)
 
   # 如果新旧路径相同，无需重命名
   if old_folder_path == new_folder_path:
@@ -359,8 +359,8 @@ def rename_model_folder(model_type: str, old_brand_name: str, old_item_number: s
     os.rename(old_folder_path, new_folder_path)
 
     # 重命名目录内的文件
-    old_base = f"{secure_filename(old_brand_name)}_{secure_filename(old_item_number)}"
-    new_base = f"{secure_filename(new_brand_name)}_{secure_filename(new_item_number)}"
+    old_base = f"{secure_filename(old_brand_abbreviation)}_{secure_filename(old_item_number)}"
+    new_base = f"{secure_filename(new_brand_abbreviation)}_{secure_filename(new_item_number)}"
 
     for filename in os.listdir(new_folder_path):
       old_file_path = os.path.join(new_folder_path, filename)
@@ -384,17 +384,17 @@ def rename_model_folder(model_type: str, old_brand_name: str, old_item_number: s
 
 
 def update_file_records_in_db(model_type: str, model_id: int,
-                              old_brand_name: str, old_item_number: str,
-                              new_brand_name: str, new_item_number: str) -> bool:
+                              old_brand_abbreviation: str, old_item_number: str,
+                              new_brand_abbreviation: str, new_item_number: str) -> bool:
   """
   更新数据库中的文件记录路径（当品牌或货号变更时）
 
   Args:
     model_type: 模型类型
     model_id: 模型ID
-    old_brand_name: 旧品牌名称
+    old_brand_abbreviation: 旧品牌缩写
     old_item_number: 旧货号
-    new_brand_name: 新品牌名称
+    new_brand_abbreviation: 新品牌缩写
     new_item_number: 新货号
 
   Returns:
@@ -403,12 +403,12 @@ def update_file_records_in_db(model_type: str, model_id: int,
   from werkzeug.utils import secure_filename
 
   # 如果品牌和货号都没变，无需更新
-  if old_brand_name == new_brand_name and old_item_number == new_item_number:
+  if old_brand_abbreviation == new_brand_abbreviation and old_item_number == new_item_number:
     return True
 
   try:
-    old_base = f"{secure_filename(old_brand_name)}_{secure_filename(old_item_number)}"
-    new_base = f"{secure_filename(new_brand_name)}_{secure_filename(new_item_number)}"
+    old_base = f"{secure_filename(old_brand_abbreviation)}_{secure_filename(old_item_number)}"
+    new_base = f"{secure_filename(new_brand_abbreviation)}_{secure_filename(new_item_number)}"
 
     # 查找该模型的所有文件记录
     files = ModelFile.query.filter_by(model_type=model_type, model_id=model_id).all()

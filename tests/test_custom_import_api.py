@@ -410,7 +410,7 @@ class TestCustomImportPreviewAPI:
     """测试唯一约束冲突检测（品牌名称）"""
     # 先在数据库中创建一个品牌
     with app.app_context():
-      brand = Brand(name='已存在品牌')
+      brand = Brand(name='已存在品牌', abbreviation='YCB')
       db.session.add(brand)
       db.session.commit()
 
@@ -459,7 +459,7 @@ class TestCustomImportPreviewAPI:
     """测试比例内唯一约束冲突检测（机车号）"""
     # 先在数据库中创建一个机车
     with app.app_context():
-      brand = Brand(name='测试品牌')
+      brand = Brand(name='测试品牌', abbreviation='CSP')
       db.session.add(brand)
       db.session.commit()
 
@@ -826,7 +826,7 @@ class TestCustomImportExecuteAPI:
     """测试 skip 模式：跳过已存在的数据"""
     # 先创建一个品牌
     with app.app_context():
-      brand = Brand(name='已存在品牌')
+      brand = Brand(name='已存在品牌', abbreviation='YCB')
       db.session.add(brand)
       db.session.commit()
 
@@ -874,7 +874,7 @@ class TestCustomImportExecuteAPI:
     """测试 overwrite 模式：更新已存在的数据"""
     # 先创建一个品牌
     with app.app_context():
-      brand = Brand(name='测试品牌', search_url='https://old.com')
+      brand = Brand(name='测试品牌', abbreviation='CSP', search_url='https://old.com')
       db.session.add(brand)
       db.session.commit()
 
@@ -923,7 +923,7 @@ class TestCustomImportExecuteAPI:
     """测试机车导入，包含外键解析"""
     # 创建必要的参考数据
     with app.app_context():
-      brand = Brand(name='百万城')
+      brand = Brand(name='百万城', abbreviation='BWC')
       series = LocomotiveSeries(name='和谐系列')
       power_type = PowerType(name='电力')
       db.session.add_all([brand, series, power_type])
@@ -989,7 +989,7 @@ class TestCustomImportExecuteAPI:
     """测试机车导入时跳过冲突数据"""
     # 创建必要的参考数据
     with app.app_context():
-      brand = Brand(name='百万城')
+      brand = Brand(name='百万城', abbreviation='BWC')
       db.session.add(brand)
       db.session.commit()
 
@@ -1047,8 +1047,8 @@ class TestCustomImportExecuteAPI:
     """测试机车导入时覆盖冲突数据"""
     # 创建必要的参考数据
     with app.app_context():
-      brand = Brand(name='百万城')
-      new_brand = Brand(name='新品牌')
+      brand = Brand(name='百万城', abbreviation='BWC')
+      new_brand = Brand(name='新品牌', abbreviation='XPP')
       db.session.add_all([brand, new_brand])
       db.session.commit()
 
@@ -1338,7 +1338,7 @@ class TestCarriageMergedCellDetection:
     """测试合并单元格识别套装"""
     # 创建必要的参考数据
     with app.app_context():
-      brand = Brand(name='百万城')
+      brand = Brand(name='百万城', abbreviation='BWC')
       series = CarriageSeries(name='YZ系列')
       model1 = CarriageModel(name='YZ22', series_id=1, type='客车')
       model2 = CarriageModel(name='YZ25', series_id=1, type='客车')
@@ -1432,7 +1432,7 @@ class TestCarriageMergedCellDetection:
     """测试无合并单元格时按品牌+比例识别套装"""
     # 创建必要的参考数据
     with app.app_context():
-      brand = Brand(name='百万城')
+      brand = Brand(name='百万城', abbreviation='BWC')
       series = CarriageSeries(name='YZ系列')
       model1 = CarriageModel(name='YZ22', series_id=1, type='客车')
       db.session.add_all([brand, series, model1])
@@ -1487,7 +1487,7 @@ class TestCarriageMergedCellDetection:
     """测试每行作为独立套装模式"""
     # 创建必要的参考数据
     with app.app_context():
-      brand = Brand(name='百万城')
+      brand = Brand(name='百万城', abbreviation='BWC')
       model1 = CarriageModel(name='YZ22', series_id=1, type='客车')
       model2 = CarriageModel(name='YZ25', series_id=1, type='客车')
       db.session.add_all([brand, model1, model2])
@@ -1556,8 +1556,8 @@ class TestCarriageMergedCellDetection:
     """测试合并单元格内值不一致时的警告"""
     # 创建必要的参考数据
     with app.app_context():
-      brand1 = Brand(name='百万城')
-      brand2 = Brand(name='ROC')
+      brand1 = Brand(name='百万城', abbreviation='BWC')
+      brand2 = Brand(name='ROC', abbreviation='ROC')
       series = CarriageSeries(name='YZ系列')
       model1 = CarriageModel(name='YZ22', series_id=1, type='客车')
       db.session.add_all([brand1, brand2, series, model1])
@@ -1619,7 +1619,7 @@ class TestCarriageMergedCellDetection:
     """测试每个套装只有一行数据"""
     # 创建必要的参考数据
     with app.app_context():
-      brand = Brand(name='百万城')
+      brand = Brand(name='百万城', abbreviation='BWC')
       model1 = CarriageModel(name='YZ22', series_id=1, type='客车')
       model2 = CarriageModel(name='YZ25', series_id=1, type='客车')
       db.session.add_all([brand, model1, model2])
@@ -1674,7 +1674,7 @@ class TestCarriageMergedCellDetection:
     """测试合并单元格范围内有空行"""
     # 创建必要的参考数据
     with app.app_context():
-      brand = Brand(name='百万城')
+      brand = Brand(name='百万城', abbreviation='BWC')
       model1 = CarriageModel(name='YZ22', series_id=1, type='客车')
       db.session.add_all([brand, model1])
       db.session.commit()

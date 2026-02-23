@@ -175,3 +175,47 @@ def parse_boolean(value: Any) -> Optional[bool]:
   if isinstance(value, bool):
     return value
   return str(value).lower() in ('true', '1', '是', '有', 'yes')
+
+
+def generate_brand_abbreviation(name: str) -> str:
+  """
+  根据品牌名称生成缩写
+
+  Args:
+    name: 品牌名称
+
+  Returns:
+    生成的缩写（大写英文字母和数字）
+
+  Rules:
+    - 中文名称：每个汉字的拼音首字母大写
+    - 纯英文≤6字母：直接使用原名称大写
+    - 纯英文>6字母：前3个字母大写
+    - 多词英文(camelCase)：每个单词首字母
+  """
+  if not name:
+    return ''
+
+  # 检查是否包含中文字符
+  has_chinese = any('\u4e00' <= char <= '\u9fff' for char in name)
+
+  if has_chinese:
+    # 中文品牌：拼音首字母
+    from pypinyin import pinyin, Style
+    result = ''.join([py[0].upper() for py in pinyin(name, style=Style.FIRST_LETTER)])
+    return result
+
+  # 检查是否是 camelCase 或 PascalCase 多词格式
+  import re
+  words = re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)|[0-9]+', name)
+
+  if len(words) > 1:
+    # 多词：取每个词首字母
+    result = ''.join([w[0].upper() for w in words if w])
+    return result
+
+  # 单词
+  if len(name) <= 6:
+    return name.upper()
+  else:
+    return name[:3].upper()

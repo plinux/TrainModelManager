@@ -22,6 +22,7 @@ class Brand(db.Model):
 
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(100), nullable=False, unique=True, comment='品牌名称')
+  abbreviation = db.Column(String(10), nullable=False, unique=True, comment='品牌缩写')
   website = db.Column(String(255), comment='官方网站')
   search_url = db.Column(String(255), comment='搜索URL模板，{query}为搜索词占位符')
 

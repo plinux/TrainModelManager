@@ -59,7 +59,7 @@ def file_test_client(file_test_app):
 def _create_test_data():
   """创建测试数据"""
   # 品牌
-  brand = Brand(name='测试品牌', search_url='https://example.com/search?q={query}')
+  brand = Brand(name='测试品牌', abbreviation='CSPZ', search_url='https://example.com/search?q={query}')
   db.session.add(brand)
 
   # 机务段
@@ -417,11 +417,11 @@ class TestFileSync:
 
       # 创建手动文件（模拟手动添加的文件）
       data_dir = file_test_app.config['DATA_DIR']
-      loco_dir = os.path.join(data_dir, 'locomotive', '测试品牌_TEST001')
+      loco_dir = os.path.join(data_dir, 'locomotive', 'CSPZ_TEST001')
       os.makedirs(loco_dir, exist_ok=True)
 
       # 创建测试图片文件
-      test_file_path = os.path.join(loco_dir, '测试品牌_TEST001.jpg')
+      test_file_path = os.path.join(loco_dir, 'CSPZ_TEST001.jpg')
       with open(test_file_path, 'wb') as f:
         f.write(b'\x89PNG\r\n\x1a\n' + b'\x00' * 100)
 
@@ -436,7 +436,7 @@ class TestFileSync:
       ).first()
 
       assert file_record is not None
-      assert file_record.original_filename == '测试品牌_TEST001.jpg'
+      assert file_record.original_filename == 'CSPZ_TEST001.jpg'
 
 
 class TestFileDownload:

@@ -239,7 +239,9 @@ class Brand(db.Model):
     __tablename__ = 'brand'
     id = db.Column(Integer, primary_key=True)
     name = db.Column(String(100), nullable=False, unique=True)
-    search_url = db.Column(String(255))  # 品牌搜索 URL
+    abbreviation = db.Column(String(10), nullable=False, unique=True)  # 品牌缩写，用于文件命名
+    website = db.Column(String(255))  # 官方网站
+    search_url = db.Column(String(255))  # 搜索URL模板，{query}为搜索词占位符
 
 class ChipInterface(db.Model):
     """芯片接口（机车和动车组共享）"""
@@ -520,27 +522,29 @@ class ImportTemplate(db.Model):
 ```
 data/
 ├── locomotive/
-│   └── {品牌}_{货号}/
-│       ├── {品牌}_{货号}.{ext}                    # 模型图片
-│       ├── {品牌}_{货号}_FunctionKey.{ext}        # 数码功能表
-│       └── {品牌}_{货号}_Manual_{原始文件名}.{ext} # 说明书（可多个）
+│   └── {品牌缩写}_{货号}/
+│       ├── {品牌缩写}_{货号}.{ext}                    # 模型图片
+│       ├── {品牌缩写}_{货号}_FunctionKey.{ext}        # 数码功能表
+│       └── {品牌缩写}_{货号}_Manual_{原始文件名}.{ext} # 说明书（可多个）
 ├── carriage/
-│   └── {品牌}_{货号}/
+│   └── {品牌缩写}_{货号}/
 ├── trainset/
-│   └── {品牌}_{货号}/
+│   └── {品牌缩写}_{货号}/
 └── locomotive_head/
-    └── {品牌}_{货号}/
-        ├── {品牌}_{货号}.{ext}                    # 模型图片
-        └── {品牌}_{货号}_Manual_{原始文件名}.{ext} # 说明书（无数码功能表）
+    └── {品牌缩写}_{货号}/
+        ├── {品牌缩写}_{货号}.{ext}                    # 模型图片
+        └── {品牌缩写}_{货号}_Manual_{原始文件名}.{ext} # 说明书（无数码功能表）
 ```
+
+**注意**：目录名和文件名使用品牌缩写而非品牌全名，以保持文件路径简洁。
 
 ### 5.2 文件命名规则
 
 | 文件类型 | 文件名格式 | 唯一性 |
 |----------|-----------|--------|
-| 模型图片 | `{品牌}_{货号}.{ext}` | 每个模型唯一 |
-| 数码功能表 | `{品牌}_{货号}_FunctionKey.{ext}` | 每个模型唯一 |
-| 说明书 | `{品牌}_{货号}_Manual_{原始文件名}.{ext}` | 可多个 |
+| 模型图片 | `{品牌缩写}_{货号}.{ext}` | 每个模型唯一 |
+| 数码功能表 | `{品牌缩写}_{货号}_FunctionKey.{ext}` | 每个模型唯一 |
+| 说明书 | `{品牌缩写}_{货号}_Manual_{原始文件名}.{ext}` | 可多个 |
 
 ### 5.3 文件上传逻辑
 
@@ -554,9 +558,11 @@ def upload_file():
     file_type = request.form.get('file_type')
     file = request.files.get('file')
 
-    # 获取模型信息构建目录名
+    # 获取模型信息构建目录名（使用品牌缩写）
     model = get_model_by_type(model_type, model_id)
-    dir_name = f"{model.brand.name}_{model.item_number or 'unknown'}"
+    brand_abbreviation = model.brand.abbreviation or ''
+    item_number = model.item_number or ''
+    dir_name = f"{brand_abbreviation}_{item_number}"
 
     # 构建存储路径
     storage_dir = os.path.join(DATA_DIR, model_type, dir_name)
@@ -906,6 +912,14 @@ gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
 ---
 
 ## 十、版本历史
+
+### v0.9.0
+- 品牌缩写功能
+  - Brand 表新增 abbreviation 字段（必填，唯一，最长 10 字符）
+  - 文件命名改用品牌缩写替代品牌全名，保持路径简洁
+  - 信息维护页面支持品牌缩写的增删改查
+  - 新增品牌时自动生成拼音首字母缩写
+  - 使用 pypinyin 库处理中文品牌名
 
 ### v0.8.0
 - 模型文件管理功能（图片、说明书、数码功能表）

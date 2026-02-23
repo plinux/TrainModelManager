@@ -99,6 +99,7 @@
   <h2>品牌</h2>
   <form method="POST" class="inline-form">
     <input type="text" name="name" placeholder="新增品牌" required>
+    <input type="text" name="abbreviation" placeholder="缩写（可选，留空自动生成）">
     <input type="text" name="website" placeholder="官网地址（可选）">
     <input type="text" name="search_url" placeholder="搜索URL模板（可选）">
     <button type="submit">添加</button>
@@ -107,6 +108,7 @@
     <thead>
       <tr>
         <th>名称</th>
+        <th>缩写</th>
         <th>官网</th>
         <th>搜索URL</th>
         <th>操作</th>
@@ -114,8 +116,9 @@
     </thead>
     <tbody>
       {% for brand in brands %}
-      <tr data-id="{{ brand.id }}" data-type="brand" data-fields="name,website,search_url">
+      <tr data-id="{{ brand.id }}" data-type="brand" data-fields="name,abbreviation,website,search_url">
         <td data-field="name">{{ brand.name }}</td>
+        <td data-field="abbreviation">{{ brand.abbreviation or '' }}</td>
         <td data-field="website">{{ brand.website or '' }}</td>
         <td data-field="search_url">{{ brand.search_url or '' }}</td>
         <td>

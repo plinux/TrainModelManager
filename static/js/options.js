@@ -2,6 +2,38 @@
  * 信息维护页面 JavaScript 模块
  */
 
+/**
+ * 生成品牌缩写（客户端预览）
+ * @param {string} name - 品牌名称
+ * @returns {string} - 生成的缩写建议
+ */
+function generateAbbreviation(name) {
+  if (!name) return '';
+
+  // 检查是否包含中文
+  const hasChinese = /[\u4e00-\u9fff]/.test(name);
+
+  if (hasChinese) {
+    // 中文：提示用户后端会自动生成，返回占位符
+    return name.length <= 6 ? name.toUpperCase() : name.substring(0, 3).toUpperCase();
+  }
+
+  // 检查是否是 camelCase 多词格式
+  const words = name.match(/[A-Z]?[a-z]+|[A-Z]+(?=[A-Z]|$)|[0-9]+/g) || [];
+
+  if (words.length > 1) {
+    // 多词：取每个词首字母
+    return words.map(w => w[0]).join('').toUpperCase();
+  }
+
+  // 单词
+  if (name.length <= 6) {
+    return name.toUpperCase();
+  } else {
+    return name.substring(0, 3).toUpperCase();
+  }
+}
+
 // 选项编辑管理
 const OptionEditor = {
   // 存储原始值，用于取消编辑时恢复
@@ -81,6 +113,17 @@ const OptionEditor = {
       input.value = originalValue;
       input.style.cssText = 'width:100%; padding:0.25rem 0.5rem;';
       input.placeholder = '可选';
+      cell.textContent = '';
+      cell.appendChild(input);
+    } else if (field === 'abbreviation') {
+      const originalValue = this.originalValues[field] || '';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = field;
+      input.value = originalValue;
+      input.style.cssText = 'width:100%; padding:0.25rem 0.5rem;';
+      input.placeholder = '留空自动生成';
+      input.maxLength = 20;
       cell.textContent = '';
       cell.appendChild(input);
     }
@@ -240,3 +283,15 @@ function cancelEdit(button) {
 function deleteItem(button, type, id, deleteUrl) {
   DeleteHelper.deleteItem(button, type, id, deleteUrl);
 }
+
+// 品牌名称输入时自动生成缩写建议（在编辑模式下）
+document.addEventListener('focusout', function(e) {
+  if (e.target.matches('#brands .editable[data-field="name"] input, #brands [data-field="name"] input')) {
+    const row = e.target.closest('tr');
+    const abbrCell = row.querySelector('[data-field="abbreviation"] input');
+    if (abbrCell && !abbrCell.value.trim()) {
+      // 只有缩写为空时才自动填充建议
+      abbrCell.value = generateAbbreviation(e.target.value.trim());
+    }
+  }
+});

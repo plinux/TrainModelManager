@@ -143,7 +143,7 @@ class TestBrandModel:
     def test_brand_creation(self, app):
         """测试品牌创建"""
         with app.app_context():
-            brand = Brand(name='新品牌', search_url='http://example.com/{query}')
+            brand = Brand(name='新品牌', abbreviation='XPP', search_url='http://example.com/{query}')
             db.session.add(brand)
             db.session.commit()
 
