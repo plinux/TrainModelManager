@@ -137,19 +137,22 @@
   <h2>商家</h2>
   <form method="POST" class="inline-form">
     <input type="text" name="name" placeholder="新增商家" required>
+    <input type="text" name="website" placeholder="网店地址（可选）">
     <button type="submit">添加</button>
   </form>
   <table id="merchants-table" class="sortable">
     <thead>
       <tr>
         <th data-sort="name">名称</th>
+        <th data-sort="website">网址</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for merchant in merchants %}
-      <tr data-id="{{ merchant.id }}" data-type="merchant" data-fields="name" data-name="{{ merchant.name }}">
+      <tr data-id="{{ merchant.id }}" data-type="merchant" data-fields="name,website" data-name="{{ merchant.name }}" data-website="{{ merchant.website or '' }}">
         <td data-field="name">{{ merchant.name }}</td>
+        <td data-field="website">{% if merchant.website %}<a href="{{ merchant.website }}" target="_blank" rel="noopener">{{ merchant.website }}</a>{% endif %}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
           <button type="button" class="btn-save" onclick="saveRow(this, 'merchant')" style="display:none;">保存</button>

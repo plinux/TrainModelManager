@@ -34,7 +34,8 @@ OPTION_CONFIG = {
   'merchant': {
     'model': Merchant,
     'cascade_check': None,
-    'fields': ['name']
+    'fields': ['name', 'website'],
+    'optional_fields': ['website']
   },
   'depot': {
     'model': Depot,

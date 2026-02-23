@@ -55,6 +55,7 @@ class Merchant(db.Model):
 
   id = db.Column(Integer, primary_key=True, comment='主键')
   name = db.Column(String(100), nullable=False, unique=True, comment='商家名称')
+  website = db.Column(String(255), comment='网店地址')
 
   def __repr__(self):
     return f'<Merchant {self.id}: {self.name}>'

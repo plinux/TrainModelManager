@@ -99,31 +99,31 @@ def insert_reference_data():
 
   # 8. 商家
   merchants = [
-    '1435火车模型',
-    'Kunter飘局的模型店',
-    'SRE铁路模型',
-    '中车文创',
-    '南京攀登者模型',
-    '天易模型',
-    '宁东火车模型',
-    '日本N比例火车模型',
-    '星期五火车模型',
-    '浩瀚火车模型',
-    '火车女侠店',
-    '火车模型之家',
-    '百万城旗舰店',
-    '百万城百克曼',
-    '百酷火车模型',
-    '铸造模型',
-    '长鸣京东',
-    '长鸣淘宝',
-    '闲鱼',
-    '阿易火车模型',
-    '魔都铁路模型社',
+    ('1435火车模型', None),
+    ('Kunter飘局的模型店', None),
+    ('SRE铁路模型', None),
+    ('中车文创', None),
+    ('南京攀登者模型', None),
+    ('天易模型', None),
+    ('宁东火车模型', None),
+    ('日本N比例火车模型', None),
+    ('星期五火车模型', None),
+    ('浩瀚火车模型', None),
+    ('火车女侠店', None),
+    ('火车模型之家', None),
+    ('百万城旗舰店', None),
+    ('百万城百克曼', None),
+    ('百酷火车模型', None),
+    ('铸造模型', None),
+    ('长鸣京东', None),
+    ('长鸣淘宝', None),
+    ('闲鱼', None),
+    ('阿易火车模型', None),
+    ('魔都铁路模型社', None),
   ]
-  for name in merchants:
+  for name, website in merchants:
     if not Merchant.query.filter_by(name=name).first():
-      db.session.add(Merchant(name=name))
+      db.session.add(Merchant(name=name, website=website))
 
   # 9. 车辆段/机务段
   depots = [
