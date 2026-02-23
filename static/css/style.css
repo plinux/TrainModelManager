@@ -809,13 +809,15 @@ td form {
 /* ========== 表格排序筛选样式 ========== */
 
 /* 可排序的表头 */
-.sortable-filterable th[data-sort] {
+.sortable-filterable th[data-sort],
+.sortable th[data-sort] {
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
 }
 
-.sortable-filterable th[data-sort]:hover {
+.sortable-filterable th[data-sort]:hover,
+.sortable th[data-sort]:hover {
   background-color: #e9ecef;
 }
 
@@ -828,6 +830,14 @@ td form {
 
 .sort-indicator.active {
   color: var(--color-primary);
+}
+
+/* 信息维护页面操作列样式 */
+.sortable th:last-child,
+.sortable td:last-child {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
 }
 
 /* 表头包装器 */

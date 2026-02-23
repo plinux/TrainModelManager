@@ -72,16 +72,16 @@
     <input type="text" name="name" placeholder="新增动力" required>
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="power_types-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
+        <th data-sort="name">名称</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for type in power_types %}
-      <tr data-id="{{ type.id }}" data-type="power_type" data-fields="name">
+      <tr data-id="{{ type.id }}" data-type="power_type" data-fields="name" data-name="{{ type.name }}">
         <td data-field="name">{{ type.name }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
@@ -104,19 +104,19 @@
     <input type="text" name="search_url" placeholder="搜索URL模板（可选）">
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="brands-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
-        <th>缩写</th>
-        <th>官网</th>
+        <th data-sort="name">名称</th>
+        <th data-sort="abbreviation">缩写</th>
+        <th data-sort="website">官网</th>
         <th>搜索URL</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for brand in brands %}
-      <tr data-id="{{ brand.id }}" data-type="brand" data-fields="name,abbreviation,website,search_url">
+      <tr data-id="{{ brand.id }}" data-type="brand" data-fields="name,abbreviation,website,search_url" data-name="{{ brand.name }}" data-abbreviation="{{ brand.abbreviation or '' }}" data-website="{{ brand.website or '' }}">
         <td data-field="name">{{ brand.name }}</td>
         <td data-field="abbreviation">{{ brand.abbreviation or '' }}</td>
         <td data-field="website">{{ brand.website or '' }}</td>
@@ -139,16 +139,16 @@
     <input type="text" name="name" placeholder="新增商家" required>
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="merchants-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
+        <th data-sort="name">名称</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for merchant in merchants %}
-      <tr data-id="{{ merchant.id }}" data-type="merchant" data-fields="name">
+      <tr data-id="{{ merchant.id }}" data-type="merchant" data-fields="name" data-name="{{ merchant.name }}">
         <td data-field="name">{{ merchant.name }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
@@ -168,16 +168,16 @@
     <input type="text" name="name" placeholder="新增车辆段" required>
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="depots-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
+        <th data-sort="name">名称</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for depot in depots %}
-      <tr data-id="{{ depot.id }}" data-type="depot" data-fields="name">
+      <tr data-id="{{ depot.id }}" data-type="depot" data-fields="name" data-name="{{ depot.name }}">
         <td data-field="name">{{ depot.name }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
@@ -197,16 +197,16 @@
     <input type="text" name="name" placeholder="新增芯片接口" required>
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="chip_interfaces-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
+        <th data-sort="name">名称</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for interface in chip_interfaces %}
-      <tr data-id="{{ interface.id }}" data-type="chip_interface" data-fields="name">
+      <tr data-id="{{ interface.id }}" data-type="chip_interface" data-fields="name" data-name="{{ interface.name }}">
         <td data-field="name">{{ interface.name }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
@@ -226,16 +226,16 @@
     <input type="text" name="name" placeholder="新增芯片型号" required>
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="chip_models-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
+        <th data-sort="name">名称</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for model in chip_models %}
-      <tr data-id="{{ model.id }}" data-type="chip_model" data-fields="name">
+      <tr data-id="{{ model.id }}" data-type="chip_model" data-fields="name" data-name="{{ model.name }}">
         <td data-field="name">{{ model.name }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
@@ -255,16 +255,16 @@
     <input type="text" name="name" placeholder="新增机车系列" required>
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="locomotive_series-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
+        <th data-sort="name">名称</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for series in locomotive_series %}
-      <tr data-id="{{ series.id }}" data-type="locomotive_series" data-fields="name">
+      <tr data-id="{{ series.id }}" data-type="locomotive_series" data-fields="name" data-name="{{ series.name }}">
         <td data-field="name">{{ series.name }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
@@ -298,19 +298,19 @@
       <button type="submit">添加</button>
     </div>
   </form>
-  <table>
+  <table id="locomotive_models-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
-        <th>系列</th>
-        <th>动力</th>
+        <th data-sort="name">名称</th>
+        <th data-sort="series">系列</th>
+        <th data-sort="power">动力</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for model in locomotive_models %}
       <tr data-id="{{ model.id }}" data-type="locomotive_model" data-fields="name,series_id,power_type_id"
-          data-series="{{ model.series_id or '' }}" data-power="{{ model.power_type_id or '' }}">
+          data-name="{{ model.name }}" data-series="{{ model.series.name if model.series else '' }}" data-power="{{ model.power_type.name if model.power_type else '' }}">
         <td data-field="name">{{ model.name }}</td>
         <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
         <td data-field="power_type_id">{{ model.power_type.name if model.power_type else '-' }}</td>
@@ -332,16 +332,16 @@
     <input type="text" name="name" placeholder="新增车厢系列" required>
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="carriage_series-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
+        <th data-sort="name">名称</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for series in carriage_series %}
-      <tr data-id="{{ series.id }}" data-type="carriage_series" data-fields="name">
+      <tr data-id="{{ series.id }}" data-type="carriage_series" data-fields="name" data-name="{{ series.name }}">
         <td data-field="name">{{ series.name }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
@@ -375,19 +375,19 @@
       <button type="submit">添加</button>
     </div>
   </form>
-  <table>
+  <table id="carriage_models-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
-        <th>系列</th>
-        <th>类型</th>
+        <th data-sort="name">名称</th>
+        <th data-sort="series">系列</th>
+        <th data-sort="carriageType">类型</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for model in carriage_models %}
       <tr data-id="{{ model.id }}" data-type="carriage_model" data-fields="name,series_id,type"
-          data-series="{{ model.series_id or '' }}" data-carriage-type="{{ model.type }}">
+          data-name="{{ model.name }}" data-series="{{ model.series.name if model.series else '' }}" data-carriageType="{{ model.type }}">
         <td data-field="name">{{ model.name }}</td>
         <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
         <td data-field="type">{{ model.type }}</td>
@@ -409,16 +409,16 @@
     <input type="text" name="name" placeholder="新增动车组系列" required>
     <button type="submit">添加</button>
   </form>
-  <table>
+  <table id="trainset_series-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
+        <th data-sort="name">名称</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for series in trainset_series %}
-      <tr data-id="{{ series.id }}" data-type="trainset_series" data-fields="name">
+      <tr data-id="{{ series.id }}" data-type="trainset_series" data-fields="name" data-name="{{ series.name }}">
         <td data-field="name">{{ series.name }}</td>
         <td>
           <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
@@ -452,19 +452,19 @@
       <button type="submit">添加</button>
     </div>
   </form>
-  <table>
+  <table id="trainset_models-table" class="sortable">
     <thead>
       <tr>
-        <th>名称</th>
-        <th>系列</th>
-        <th>动力</th>
+        <th data-sort="name">名称</th>
+        <th data-sort="series">系列</th>
+        <th data-sort="power">动力</th>
         <th>操作</th>
       </tr>
     </thead>
     <tbody>
       {% for model in trainset_models %}
       <tr data-id="{{ model.id }}" data-type="trainset_model" data-fields="name,series_id,power_type_id"
-          data-series="{{ model.series_id or '' }}" data-power="{{ model.power_type_id or '' }}">
+          data-name="{{ model.name }}" data-series="{{ model.series.name if model.series else '' }}" data-power="{{ model.power_type.name if model.power_type else '' }}">
         <td data-field="name">{{ model.name }}</td>
         <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
         <td data-field="power_type_id">{{ model.power_type.name if model.power_type else '-' }}</td>

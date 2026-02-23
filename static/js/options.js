@@ -295,3 +295,32 @@ document.addEventListener('focusout', function(e) {
     }
   }
 });
+
+// 为所有可排序表格初始化排序功能
+function initOptionsTableSort() {
+  const tableIds = [
+    'power_types-table',
+    'brands-table',
+    'merchants-table',
+    'depots-table',
+    'chip_interfaces-table',
+    'chip_models-table',
+    'locomotive_series-table',
+    'locomotive_models-table',
+    'carriage_series-table',
+    'carriage_models-table',
+    'trainset_series-table',
+    'trainset_models-table'
+  ];
+
+  tableIds.forEach(function(tableId) {
+    if (typeof TableManager !== 'undefined') {
+      TableManager.init(tableId);
+    }
+  });
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+  initOptionsTableSort();
+});

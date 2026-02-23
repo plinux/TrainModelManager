@@ -483,12 +483,8 @@ const ModelForm = {
 
 // 表格排序筛选管理器
 const TableManager = {
-  // 当前排序状态
-  sortColumn: null,
-  sortDirection: 'asc',  // 'asc' | 'desc' | null
-
-  // 当前筛选状态
-  filters: {},
+  // 存储每个表格实例的状态
+  instances: new Map(),
 
   /**
    * 初始化表格
@@ -498,22 +494,36 @@ const TableManager = {
     const table = document.getElementById(tableId);
     if (!table) return;
 
-    this.table = table;
-    this.tbody = table.querySelector('tbody');
-    this.originalRows = Array.from(this.tbody.querySelectorAll('tr'));
+    const tbody = table.querySelector('tbody');
+    const originalRows = Array.from(tbody.querySelectorAll('tr'));
 
-    this.setupSortHeaders();
-    this.setupFilterHeaders();
+    // 创建该表格的独立状态
+    const state = {
+      table: table,
+      tbody: tbody,
+      originalRows: originalRows,
+      sortColumn: null,
+      sortDirection: 'asc',
+      filters: {}
+    };
+
+    this.instances.set(tableId, state);
+    this.setupSortHeaders(tableId);
+    this.setupFilterHeaders(tableId);
   },
 
   /**
    * 设置排序表头
+   * @param {string} tableId - 表格 ID
    */
-  setupSortHeaders() {
-    const headers = this.table.querySelectorAll('th[data-sort]');
+  setupSortHeaders(tableId) {
+    const state = this.instances.get(tableId);
+    if (!state) return;
+
+    const headers = state.table.querySelectorAll('th[data-sort]');
     headers.forEach(th => {
       th.style.cursor = 'pointer';
-      th.addEventListener('click', () => this.handleSort(th));
+      th.addEventListener('click', () => this.handleSort(tableId, th));
 
       // 添加排序指示器
       if (!th.querySelector('.sort-indicator')) {
@@ -527,12 +537,16 @@ const TableManager = {
 
   /**
    * 设置筛选表头
+   * @param {string} tableId - 表格 ID
    */
-  setupFilterHeaders() {
-    const headers = this.table.querySelectorAll('th[data-filter]');
+  setupFilterHeaders(tableId) {
+    const state = this.instances.get(tableId);
+    if (!state) return;
+
+    const headers = state.table.querySelectorAll('th[data-filter]');
     headers.forEach(th => {
       const filterKey = th.dataset.filter;
-      const uniqueValues = this.getUniqueValues(filterKey);
+      const uniqueValues = this.getUniqueValues(tableId, filterKey);
 
       // 创建筛选下拉框
       const select = document.createElement('select');
@@ -552,7 +566,7 @@ const TableManager = {
         select.appendChild(option);
       });
 
-      select.addEventListener('change', (e) => this.handleFilter(filterKey, e.target.value));
+      select.addEventListener('change', (e) => this.handleFilter(tableId, filterKey, e.target.value));
 
       // 包装表头内容
       const wrapper = document.createElement('div');
@@ -567,12 +581,16 @@ const TableManager = {
 
   /**
    * 获取列的唯一值
+   * @param {string} tableId - 表格 ID
    * @param {string} key - 列标识
    * @returns {string[]}
    */
-  getUniqueValues(key) {
+  getUniqueValues(tableId, key) {
+    const state = this.instances.get(tableId);
+    if (!state) return [];
+
     const values = new Set();
-    this.originalRows.forEach(row => {
+    state.originalRows.forEach(row => {
       const value = row.dataset[key];
       if (value !== undefined && value !== '') {
         values.add(value);
@@ -583,35 +601,43 @@ const TableManager = {
 
   /**
    * 处理排序
+   * @param {string} tableId - 表格 ID
    * @param {HTMLElement} th - 被点击的表头
    */
-  handleSort(th) {
+  handleSort(tableId, th) {
+    const state = this.instances.get(tableId);
+    if (!state) return;
+
     const column = th.dataset.sort;
 
     // 切换排序方向
-    if (this.sortColumn === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    if (state.sortColumn === column) {
+      state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-      this.sortColumn = column;
-      this.sortDirection = 'asc';
+      state.sortColumn = column;
+      state.sortDirection = 'asc';
     }
 
     // 更新排序指示器
-    this.updateSortIndicators();
+    this.updateSortIndicators(tableId);
 
     // 执行排序
-    this.applySortAndFilter();
+    this.applySortAndFilter(tableId);
   },
 
   /**
    * 更新排序指示器
+   * @param {string} tableId - 表格 ID
    */
-  updateSortIndicators() {
-    const headers = this.table.querySelectorAll('th[data-sort]');
+  updateSortIndicators(tableId) {
+    const state = this.instances.get(tableId);
+    if (!state) return;
+
+    const headers = state.table.querySelectorAll('th[data-sort]');
     headers.forEach(th => {
       const indicator = th.querySelector('.sort-indicator');
-      if (th.dataset.sort === this.sortColumn) {
-        indicator.textContent = this.sortDirection === 'asc' ? '▲' : '▼';
+      if (th.dataset.sort === state.sortColumn) {
+        indicator.textContent = state.sortDirection === 'asc' ? '▲' : '▼';
         indicator.className = 'sort-indicator active';
       } else {
         indicator.textContent = '⇅';
@@ -622,74 +648,86 @@ const TableManager = {
 
   /**
    * 处理筛选
+   * @param {string} tableId - 表格 ID
    * @param {string} key - 列标识
    * @param {string} value - 筛选值
    */
-  handleFilter(key, value) {
+  handleFilter(tableId, key, value) {
+    const state = this.instances.get(tableId);
+    if (!state) return;
+
     if (value === '') {
-      delete this.filters[key];
+      delete state.filters[key];
     } else {
-      this.filters[key] = value;
+      state.filters[key] = value;
     }
-    this.applySortAndFilter();
+    this.applySortAndFilter(tableId);
   },
 
   /**
    * 执行排序和筛选
+   * @param {string} tableId - 表格 ID
    */
-  applySortAndFilter() {
+  applySortAndFilter(tableId) {
+    const state = this.instances.get(tableId);
+    if (!state) return;
+
     // 筛选
-    let filteredRows = this.originalRows.filter(row => {
-      return Object.entries(this.filters).every(([key, value]) => {
+    let filteredRows = state.originalRows.filter(row => {
+      return Object.entries(state.filters).every(([key, value]) => {
         return row.dataset[key] === value;
       });
     });
 
     // 排序
-    if (this.sortColumn) {
+    if (state.sortColumn) {
       filteredRows.sort((a, b) => {
-        const aVal = a.dataset[this.sortColumn] || '';
-        const bVal = b.dataset[this.sortColumn] || '';
+        const aVal = a.dataset[state.sortColumn] || '';
+        const bVal = b.dataset[state.sortColumn] || '';
 
         // 尝试数字比较
         const aNum = parseFloat(aVal);
         const bNum = parseFloat(bVal);
         if (!isNaN(aNum) && !isNaN(bNum)) {
-          return this.sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
+          return state.sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
         }
 
         // 字符串比较
         const compareResult = aVal.localeCompare(bVal, 'zh-CN');
-        return this.sortDirection === 'asc' ? compareResult : -compareResult;
+        return state.sortDirection === 'asc' ? compareResult : -compareResult;
       });
     }
 
     // 重新渲染
-    while (this.tbody.firstChild) {
-      this.tbody.removeChild(this.tbody.firstChild);
+    while (state.tbody.firstChild) {
+      state.tbody.removeChild(state.tbody.firstChild);
     }
-    filteredRows.forEach(row => this.tbody.appendChild(row.cloneNode(true)));
+    filteredRows.forEach(row => state.tbody.appendChild(row.cloneNode(true)));
   },
 
   /**
    * 重置表格
+   * @param {string} tableId - 表格 ID
    */
-  reset() {
-    this.sortColumn = null;
-    this.sortDirection = 'asc';
-    this.filters = {};
-    this.updateSortIndicators();
+  reset(tableId) {
+    const state = this.instances.get(tableId);
+    if (!state) return;
+
+    state.sortColumn = null;
+    state.sortDirection = 'asc';
+    state.filters = {};
+    this.updateSortIndicators(tableId);
 
     // 重置筛选下拉框
-    this.table.querySelectorAll('.column-filter').forEach(select => {
+    state.table.querySelectorAll('.column-filter').forEach(select => {
       select.value = '';
     });
 
     // 恢复原始顺序
-    while (this.tbody.firstChild) {
-      this.tbody.removeChild(this.tbody.firstChild);
+    while (state.tbody.firstChild) {
+      state.tbody.removeChild(state.tbody.firstChild);
     }
-    this.originalRows.forEach(row => this.tbody.appendChild(row.cloneNode(true)));
+    state.originalRows.forEach(row => state.tbody.appendChild(row.cloneNode(true)));
   }
 };
 
@@ -1209,7 +1247,7 @@ function initTableSortFilter(tableId) {
 }
 
 function resetTable(tableId) {
-  TableManager.reset();
+  TableManager.reset(tableId);
 }
 
 function initAutocomplete(inputId, hiddenId, options, config) {
