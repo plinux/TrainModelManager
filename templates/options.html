@@ -1,0 +1,607 @@
+{% extends "base.html" %}
+
+{% block title %}信息维护 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<div class="options-page">
+  <div class="page-header">
+    <h1>信息维护</h1>
+  </div>
+
+  <div class="option-groups">
+  <!-- 购买信息 -->
+  <div class="option-group">
+    <h3>购买信息</h3>
+    <div class="tab-group">
+      <button onclick="showTab('brands')" class="tab-btn">品牌</button>
+      <button onclick="showTab('merchants')" class="tab-btn">商家</button>
+    </div>
+  </div>
+
+  <!-- 铁路信息 -->
+  <div class="option-group">
+    <h3>铁路信息</h3>
+    <div class="tab-group">
+      <button onclick="showTab('power_types')" class="tab-btn">动力</button>
+      <button onclick="showTab('depots')" class="tab-btn">局段</button>
+    </div>
+  </div>
+
+  <!-- 芯片信息 -->
+  <div class="option-group">
+    <h3>芯片信息</h3>
+    <div class="tab-group">
+      <button onclick="showTab('chip_interfaces')" class="tab-btn">芯片接口</button>
+      <button onclick="showTab('chip_models')" class="tab-btn">芯片型号</button>
+    </div>
+  </div>
+
+  <!-- 机车信息 -->
+  <div class="option-group">
+    <h3>机车信息</h3>
+    <div class="tab-group">
+      <button onclick="showTab('locomotive_series')" class="tab-btn">机车系列</button>
+      <button onclick="showTab('locomotive_models')" class="tab-btn">机车型号</button>
+    </div>
+  </div>
+
+  <!-- 车厢信息 -->
+  <div class="option-group">
+    <h3>车厢信息</h3>
+    <div class="tab-group">
+      <button onclick="showTab('carriage_series')" class="tab-btn">车厢系列</button>
+      <button onclick="showTab('carriage_models')" class="tab-btn">车厢型号</button>
+    </div>
+  </div>
+
+  <!-- 动车组信息 -->
+  <div class="option-group">
+    <h3>动车组信息</h3>
+    <div class="tab-group">
+      <button onclick="showTab('trainset_series')" class="tab-btn">动车组系列</button>
+      <button onclick="showTab('trainset_models')" class="tab-btn">动车组型号</button>
+    </div>
+  </div>
+
+  <!-- 室内灯信息 -->
+  <div class="option-group">
+    <h3>室内灯信息</h3>
+    <div class="tab-group">
+      <button onclick="showTab('light_brands')" class="tab-btn">灯品牌</button>
+      <button onclick="showTab('light_models')" class="tab-btn">灯型号</button>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-container">
+
+<div id="power_types" class="tab-content" style="display:none;">
+  <h2>动力</h2>
+  <form method="POST" class="inline-form">
+    <input type="text" name="name" placeholder="新增动力" required>
+    <button type="submit">添加</button>
+  </form>
+  <table id="power_types-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for type in power_types %}
+      <tr data-id="{{ type.id }}" data-type="power_type" data-fields="name" data-name="{{ type.name }}">
+        <td data-field="name">{{ type.name }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'power_type')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'power_type', {{ type.id }}, '{{ url_for('options.delete_power_type', id=type.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="brands" class="tab-content" style="display:none;">
+  <h2>品牌</h2>
+  <form method="POST" class="inline-form">
+    <input type="text" name="name" placeholder="新增品牌" required>
+    <input type="text" name="abbreviation" placeholder="缩写（可选，留空自动生成）">
+    <input type="text" name="website" placeholder="官网地址（可选）">
+    <input type="text" name="search_url" placeholder="搜索URL模板（可选）">
+    <button type="submit">添加</button>
+  </form>
+  <table id="brands-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th data-sort="abbreviation">缩写</th>
+        <th data-sort="website">官网</th>
+        <th>搜索URL</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for brand in brands %}
+      <tr data-id="{{ brand.id }}" data-type="brand" data-fields="name,abbreviation,website,search_url" data-name="{{ brand.name }}" data-abbreviation="{{ brand.abbreviation or '' }}" data-website="{{ brand.website or '' }}">
+        <td data-field="name">{{ brand.name }}</td>
+        <td data-field="abbreviation">{{ brand.abbreviation or '' }}</td>
+        <td data-field="website">{{ brand.website or '' }}</td>
+        <td data-field="search_url">{{ brand.search_url or '' }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'brand')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'brand', {{ brand.id }}, '{{ url_for('options.delete_brand', id=brand.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="merchants" class="tab-content" style="display:none;">
+  <h2>商家</h2>
+  <form method="POST" class="inline-form">
+    <input type="text" name="name" placeholder="新增商家" required>
+    <input type="text" name="website" placeholder="网店地址（可选）">
+    <button type="submit">添加</button>
+  </form>
+  <table id="merchants-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th data-sort="website">网址</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for merchant in merchants %}
+      <tr data-id="{{ merchant.id }}" data-type="merchant" data-fields="name,website" data-name="{{ merchant.name }}" data-website="{{ merchant.website or '' }}">
+        <td data-field="name">{{ merchant.name }}</td>
+        <td data-field="website">{% if merchant.website %}<a href="{{ merchant.website }}" target="_blank" rel="noopener">{{ merchant.website }}</a>{% endif %}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'merchant')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'merchant', {{ merchant.id }}, '{{ url_for('options.delete_merchant', id=merchant.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="depots" class="tab-content" style="display:none;">
+  <h2>车辆段/机务段</h2>
+  <form method="POST" class="inline-form">
+    <input type="text" name="name" placeholder="新增车辆段" required>
+    <button type="submit">添加</button>
+  </form>
+  <table id="depots-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for depot in depots %}
+      <tr data-id="{{ depot.id }}" data-type="depot" data-fields="name" data-name="{{ depot.name }}">
+        <td data-field="name">{{ depot.name }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'depot')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'depot', {{ depot.id }}, '{{ url_for('options.delete_depot', id=depot.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="chip_interfaces" class="tab-content" style="display:none;">
+  <h2>芯片接口</h2>
+  <form method="POST" action="{{ url_for('options.add_chip_interface') }}" class="inline-form">
+    <input type="text" name="name" placeholder="新增芯片接口" required>
+    <button type="submit">添加</button>
+  </form>
+  <table id="chip_interfaces-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for interface in chip_interfaces %}
+      <tr data-id="{{ interface.id }}" data-type="chip_interface" data-fields="name" data-name="{{ interface.name }}">
+        <td data-field="name">{{ interface.name }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'chip_interface')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'chip_interface', {{ interface.id }}, '{{ url_for('options.delete_chip_interface', id=interface.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="chip_models" class="tab-content" style="display:none;">
+  <h2>芯片型号</h2>
+  <form method="POST" action="{{ url_for('options.add_chip_model') }}" class="inline-form">
+    <input type="text" name="name" placeholder="新增芯片型号" required>
+    <div class="multi-select" data-name="interface_ids">
+      <div class="multi-select-trigger" onclick="MultiSelect.toggle(this)">
+        <span class="multi-select-tags"><span class="multi-select-placeholder">选择接口</span></span>
+      </div>
+      <div class="multi-select-dropdown">
+        {% for iface in chip_interfaces %}
+        <label class="multi-select-option">
+          <input type="checkbox" name="interface_ids" value="{{ iface.id }}">
+          <span>{{ iface.name }}</span>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <button type="submit">添加</button>
+  </form>
+  <table id="chip_models-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th>接口</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in chip_models %}
+      <tr data-id="{{ model.id }}" data-type="chip_model" data-fields="name,interface_ids" data-name="{{ model.name }}" data-interface_ids="{{ model.interfaces | map(attribute='id') | join(',') }}">
+        <td data-field="name">{{ model.name }}</td>
+        <td data-field="interface_ids">{{ model.interfaces | map(attribute='name') | join(', ') or '-' }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'chip_model')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'chip_model', {{ model.id }}, '{{ url_for('options.delete_chip_model', id=model.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="locomotive_series" class="tab-content" style="display:none;">
+  <h2>机车系列</h2>
+  <form method="POST" action="{{ url_for('options.add_locomotive_series') }}" class="inline-form">
+    <input type="text" name="name" placeholder="新增机车系列" required>
+    <button type="submit">添加</button>
+  </form>
+  <table id="locomotive_series-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for series in locomotive_series %}
+      <tr data-id="{{ series.id }}" data-type="locomotive_series" data-fields="name" data-name="{{ series.name }}">
+        <td data-field="name">{{ series.name }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'locomotive_series')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'locomotive_series', {{ series.id }}, '{{ url_for('options.delete_locomotive_series', id=series.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="locomotive_models" class="tab-content" style="display:none;">
+  <h2>机车型号</h2>
+  <form method="POST" action="{{ url_for('options.add_locomotive_model') }}">
+    <div class="form-row">
+      <input type="text" name="name" placeholder="机车型号" required>
+      <select name="series_id" required>
+        <option value="">选择系列</option>
+        {% for series in locomotive_series %}
+        <option value="{{ series.id }}">{{ series.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="power_type_id" required>
+        <option value="">选择动力</option>
+        {% for type in power_types %}
+        <option value="{{ type.id }}">{{ type.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">添加</button>
+    </div>
+  </form>
+  <table id="locomotive_models-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th data-sort="series">系列</th>
+        <th data-sort="power">动力</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in locomotive_models %}
+      <tr data-id="{{ model.id }}" data-type="locomotive_model" data-fields="name,series_id,power_type_id"
+          data-name="{{ model.name }}" data-series="{{ model.series.name if model.series else '' }}" data-power="{{ model.power_type.name if model.power_type else '' }}">
+        <td data-field="name">{{ model.name }}</td>
+        <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="power_type_id">{{ model.power_type.name if model.power_type else '-' }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'locomotive_model')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'locomotive_model', {{ model.id }}, '{{ url_for('options.delete_locomotive_model', id=model.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="carriage_series" class="tab-content" style="display:none;">
+  <h2>车厢系列</h2>
+  <form method="POST" action="{{ url_for('options.add_carriage_series') }}" class="inline-form">
+    <input type="text" name="name" placeholder="新增车厢系列" required>
+    <button type="submit">添加</button>
+  </form>
+  <table id="carriage_series-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for series in carriage_series %}
+      <tr data-id="{{ series.id }}" data-type="carriage_series" data-fields="name" data-name="{{ series.name }}">
+        <td data-field="name">{{ series.name }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'carriage_series')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'carriage_series', {{ series.id }}, '{{ url_for('options.delete_carriage_series', id=series.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="carriage_models" class="tab-content" style="display:none;">
+  <h2>车厢型号</h2>
+  <form method="POST" action="{{ url_for('options.add_carriage_model') }}">
+    <div class="form-row">
+      <input type="text" name="name" placeholder="车厢型号" required>
+      <select name="series_id" required>
+        <option value="">选择系列</option>
+        {% for series in carriage_series %}
+        <option value="{{ series.id }}">{{ series.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="type" required>
+        <option value="">选择类型</option>
+        <option value="客车">客车</option>
+        <option value="货车">货车</option>
+        <option value="工程车">工程车</option>
+      </select>
+      <button type="submit">添加</button>
+    </div>
+  </form>
+  <table id="carriage_models-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th data-sort="series">系列</th>
+        <th data-sort="carriageType">类型</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in carriage_models %}
+      <tr data-id="{{ model.id }}" data-type="carriage_model" data-fields="name,series_id,type"
+          data-name="{{ model.name }}" data-series="{{ model.series.name if model.series else '' }}" data-carriageType="{{ model.type }}">
+        <td data-field="name">{{ model.name }}</td>
+        <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="type">{{ model.type }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'carriage_model')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'carriage_model', {{ model.id }}, '{{ url_for('options.delete_carriage_model', id=model.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="trainset_series" class="tab-content" style="display:none;">
+  <h2>动车组系列</h2>
+  <form method="POST" action="{{ url_for('options.add_trainset_series') }}" class="inline-form">
+    <input type="text" name="name" placeholder="新增动车组系列" required>
+    <button type="submit">添加</button>
+  </form>
+  <table id="trainset_series-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for series in trainset_series %}
+      <tr data-id="{{ series.id }}" data-type="trainset_series" data-fields="name" data-name="{{ series.name }}">
+        <td data-field="name">{{ series.name }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'trainset_series')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'trainset_series', {{ series.id }}, '{{ url_for('options.delete_trainset_series', id=series.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="trainset_models" class="tab-content" style="display:none;">
+  <h2>动车组型号</h2>
+  <form method="POST" action="{{ url_for('options.add_trainset_model') }}">
+    <div class="form-row">
+      <input type="text" name="name" placeholder="动车组型号" required>
+      <select name="series_id" required>
+        <option value="">选择系列</option>
+        {% for series in trainset_series %}
+        <option value="{{ series.id }}">{{ series.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="power_type_id" required>
+        <option value="">选择动力</option>
+        {% for type in power_types %}
+        <option value="{{ type.id }}">{{ type.name }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">添加</button>
+    </div>
+  </form>
+  <table id="trainset_models-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th data-sort="series">系列</th>
+        <th data-sort="power">动力</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in trainset_models %}
+      <tr data-id="{{ model.id }}" data-type="trainset_model" data-fields="name,series_id,power_type_id"
+          data-name="{{ model.name }}" data-series="{{ model.series.name if model.series else '' }}" data-power="{{ model.power_type.name if model.power_type else '' }}">
+        <td data-field="name">{{ model.name }}</td>
+        <td data-field="series_id">{{ model.series.name if model.series else '-' }}</td>
+        <td data-field="power_type_id">{{ model.power_type.name if model.power_type else '-' }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'trainset_model')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'trainset_model', {{ model.id }}, '{{ url_for('options.delete_trainset_model', id=model.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="light_brands" class="tab-content" style="display:none;">
+  <h2>灯品牌</h2>
+  <form method="POST" action="{{ url_for('options.add_light_brand') }}" class="inline-form">
+    <input type="text" name="name" placeholder="新增灯品牌" required>
+    <button type="submit">添加</button>
+  </form>
+  <table id="light_brands-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for brand in light_brands %}
+      <tr data-id="{{ brand.id }}" data-type="light_brand" data-fields="name" data-name="{{ brand.name }}">
+        <td data-field="name">{{ brand.name }}</td>
+        <td>
+          <button type="button" class="btn-edit" onclick="editRow(this)">编辑</button>
+          <button type="button" class="btn-save" onclick="saveRow(this, 'light_brand')" style="display:none;">保存</button>
+          <button type="button" class="btn-cancel" onclick="cancelEdit(this)" style="display:none;">取消</button>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'light_brand', {{ brand.id }}, '{{ url_for('options.delete_light_brand', id=brand.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="light_models" class="tab-content" style="display:none;">
+  <h2>灯型号</h2>
+  <form method="POST" action="{{ url_for('options.add_light_model') }}">
+    <div class="form-row">
+      <input type="text" name="name" placeholder="灯型号名称" required>
+      <select name="color_temperature" required>
+        <option value="">色温</option>
+        <option value="3000K">3000K</option>
+        <option value="4000K">4000K</option>
+        <option value="5000K">5000K</option>
+        <option value="6000K">6000K</option>
+      </select>
+      <select name="light_brand_id" required>
+        <option value="">选择灯品牌</option>
+        {% for lb in light_brands %}
+        <option value="{{ lb.id }}">{{ lb.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="scale" required>
+        <option value="N">N</option>
+        <option value="HO">HO</option>
+      </select>
+      <button type="submit">添加</button>
+    </div>
+  </form>
+  <table id="light_models-table" class="sortable">
+    <thead>
+      <tr>
+        <th data-sort="name">名称</th>
+        <th data-sort="colorTemperature">色温</th>
+        <th data-sort="scale">比例</th>
+        <th data-sort="brand">灯品牌</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for model in light_models %}
+      <tr data-id="{{ model.id }}" data-type="light_model"
+          data-name="{{ model.name }}"
+          data-colortemperature="{{ model.color_temperature }}"
+          data-scale="{{ model.scale or 'HO' }}"
+          data-brand="{{ model.light_brand.name if model.light_brand else '' }}">
+        <td data-field="name">{{ model.name }}</td>
+        <td data-field="color_temperature">{{ model.color_temperature }}</td>
+        <td data-field="scale">{{ model.scale or 'HO' }}</td>
+        <td>{{ model.light_brand.name if model.light_brand else '-' }}</td>
+        <td>
+          <a href="{{ url_for('options.edit_light_model', id=model.id) }}" class="btn-edit">编辑</a>
+          <button type="button" class="btn-danger" onclick="deleteItem(this, 'light_model', {{ model.id }}, '{{ url_for('options.delete_light_model', id=model.id) }}')">删除</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<script>
+// 芯片接口数据（供行内编辑使用）
+window.chipInterfaces = {{ chip_interfaces | map(attribute='id') | list | tojson }}
+  .map(function(id, i) {
+    var names = {{ chip_interfaces | map(attribute='name') | list | tojson }};
+    return { id: id, name: names[i] };
+  });
+</script>
+<script src="/static/js/options.js"></script>
+</div>
+{% endblock %}

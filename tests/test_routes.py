@@ -86,3 +86,9 @@ class TestLocomotiveHeadRoutes:
     def test_locomotive_head_list_no_depot_column(self, client):
         response = client.get('/locomotive-head')
         assert 'depot' not in response.data.decode('utf-8').lower()
+
+class TestOptionsRoute:
+    def test_options_page(self, client):
+        response = client.get('/options')
+        assert response.status_code == 200
+        assert '信息维护' in response.data.decode('utf-8')
