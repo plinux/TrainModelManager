@@ -128,119 +128,6 @@ class TestLocomotiveCRUD:
             assert deleted is None
 
 
-class TestCarriageCRUD:
-    """车厢 CRUD 完整测试"""
-
-    def test_carriage_set_create(self, client, sample_data):
-        """测试车厢套装创建"""
-        with client.application.app_context():
-            carriage = CarriageSet(
-                brand_id=1,
-                series_id=1,
-                scale='HO',
-                train_number='T1',
-                total_price=500
-            )
-            db.session.add(carriage)
-            db.session.commit()
-
-            saved = CarriageSet.query.first()
-            assert saved is not None
-            assert saved.total_price == 500
-            assert saved.train_number == 'T1'
-
-    def test_carriage_set_update(self, client, sample_data):
-        """测试车厢套装更新"""
-        with client.application.app_context():
-            carriage = CarriageSet(
-                brand_id=1,
-                series_id=1,
-                scale='HO',
-                train_number='T1',
-                total_price=500
-            )
-            db.session.add(carriage)
-            db.session.commit()
-            c_id = carriage.id
-
-            saved = db.session.get(CarriageSet,c_id)
-            saved.total_price = 600
-            saved.train_number = 'T2'
-            db.session.commit()
-
-            updated = db.session.get(CarriageSet,c_id)
-            assert updated.total_price == 600
-            assert updated.train_number == 'T2'
-
-    def test_carriage_set_delete(self, client, sample_data):
-        """测试车厢套装删除"""
-        with client.application.app_context():
-            carriage = CarriageSet(
-                brand_id=1,
-                series_id=1,
-                scale='HO',
-                train_number='T_DELETE'
-            )
-            db.session.add(carriage)
-            db.session.commit()
-            c_id = carriage.id
-
-            saved = db.session.get(CarriageSet,c_id)
-            db.session.delete(saved)
-            db.session.commit()
-
-            deleted = db.session.get(CarriageSet,c_id)
-            assert deleted is None
-
-    def test_carriage_set_delete_via_api(self, client, sample_data):
-        """测试通过 API 删除车厢套装"""
-        with client.application.app_context():
-            carriage = CarriageSet(
-                brand_id=1,
-                series_id=1,
-                scale='HO',
-                train_number='T_API_DEL'
-            )
-            db.session.add(carriage)
-            db.session.commit()
-            c_id = carriage.id
-
-        response = client.post(f'/carriage/delete/{c_id}', follow_redirects=True)
-        # 删除成功后重定向到列表页
-        assert response.status_code == 200
-
-        # 验证已删除
-        with client.application.app_context():
-            deleted = db.session.get(CarriageSet, c_id)
-            assert deleted is None
-
-    def test_carriage_item_create(self, client, sample_data):
-        """测试车厢项创建"""
-        with client.application.app_context():
-            # 先创建套装
-            carriage_set = CarriageSet(
-                brand_id=1,
-                series_id=1,
-                scale='HO',
-                train_number='T_ITEM'
-            )
-            db.session.add(carriage_set)
-            db.session.commit()
-            set_id = carriage_set.id
-
-            # 创建车厢项
-            item = CarriageItem(
-                set_id=set_id,
-                model_id=1,
-                car_number='01',
-                color='绿色'
-            )
-            db.session.add(item)
-            db.session.commit()
-
-            saved = CarriageItem.query.filter_by(set_id=set_id).first()
-            assert saved is not None
-            assert saved.car_number == '01'
 class TestTrainsetCRUD:
     """动车组 CRUD 完整测试"""
 
@@ -420,3 +307,116 @@ class TestLocomotiveHeadCRUD:
             assert deleted is None
 
 
+class TestCarriageCRUD:
+    """车厢 CRUD 完整测试"""
+
+    def test_carriage_set_create(self, client, sample_data):
+        """测试车厢套装创建"""
+        with client.application.app_context():
+            carriage = CarriageSet(
+                brand_id=1,
+                series_id=1,
+                scale='HO',
+                train_number='T1',
+                total_price=500
+            )
+            db.session.add(carriage)
+            db.session.commit()
+
+            saved = CarriageSet.query.first()
+            assert saved is not None
+            assert saved.total_price == 500
+            assert saved.train_number == 'T1'
+
+    def test_carriage_set_update(self, client, sample_data):
+        """测试车厢套装更新"""
+        with client.application.app_context():
+            carriage = CarriageSet(
+                brand_id=1,
+                series_id=1,
+                scale='HO',
+                train_number='T1',
+                total_price=500
+            )
+            db.session.add(carriage)
+            db.session.commit()
+            c_id = carriage.id
+
+            saved = db.session.get(CarriageSet,c_id)
+            saved.total_price = 600
+            saved.train_number = 'T2'
+            db.session.commit()
+
+            updated = db.session.get(CarriageSet,c_id)
+            assert updated.total_price == 600
+            assert updated.train_number == 'T2'
+
+    def test_carriage_set_delete(self, client, sample_data):
+        """测试车厢套装删除"""
+        with client.application.app_context():
+            carriage = CarriageSet(
+                brand_id=1,
+                series_id=1,
+                scale='HO',
+                train_number='T_DELETE'
+            )
+            db.session.add(carriage)
+            db.session.commit()
+            c_id = carriage.id
+
+            saved = db.session.get(CarriageSet,c_id)
+            db.session.delete(saved)
+            db.session.commit()
+
+            deleted = db.session.get(CarriageSet,c_id)
+            assert deleted is None
+
+    def test_carriage_set_delete_via_api(self, client, sample_data):
+        """测试通过 API 删除车厢套装"""
+        with client.application.app_context():
+            carriage = CarriageSet(
+                brand_id=1,
+                series_id=1,
+                scale='HO',
+                train_number='T_API_DEL'
+            )
+            db.session.add(carriage)
+            db.session.commit()
+            c_id = carriage.id
+
+        response = client.post(f'/carriage/delete/{c_id}', follow_redirects=True)
+        # 删除成功后重定向到列表页
+        assert response.status_code == 200
+
+        # 验证已删除
+        with client.application.app_context():
+            deleted = db.session.get(CarriageSet, c_id)
+            assert deleted is None
+
+    def test_carriage_item_create(self, client, sample_data):
+        """测试车厢项创建"""
+        with client.application.app_context():
+            # 先创建套装
+            carriage_set = CarriageSet(
+                brand_id=1,
+                series_id=1,
+                scale='HO',
+                train_number='T_ITEM'
+            )
+            db.session.add(carriage_set)
+            db.session.commit()
+            set_id = carriage_set.id
+
+            # 创建车厢项
+            item = CarriageItem(
+                set_id=set_id,
+                model_id=1,
+                car_number='01',
+                color='绿色'
+            )
+            db.session.add(item)
+            db.session.commit()
+
+            saved = CarriageItem.query.filter_by(set_id=set_id).first()
+            assert saved is not None
+            assert saved.car_number == '01'

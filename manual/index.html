@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户手册 · 火车模型管理系统</title>
+  <link rel="stylesheet" href="manual.css">
+</head>
+<body>
+  <button class="menu-toggle" onclick="toggleSidebar()" aria-label="目录">☰</button>
+  <div class="backdrop" onclick="toggleSidebar()"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">火车模型管理系统<small>用户手册</small></div>
+      <nav id="nav">
+        <div class="group-title">入门</div>
+        <a href="#quickstart">快速入门</a>
+        <a href="#home">首页与统计</a>
+        <div class="group-title">模型管理</div>
+        <a href="#locomotive">机车模型</a>
+        <a href="#carriage">车厢模型</a>
+        <a href="#trainset">动车组模型</a>
+        <a href="#head">先头车模型</a>
+        <a href="#detail">模型详情</a>
+        <div class="group-title">数据管理</div>
+        <a href="#options">信息维护</a>
+        <a href="#system">系统维护</a>
+        <a href="#wizard">自定义导入向导</a>
+        <div class="group-title">高级</div>
+        <a href="#function-table">功能表 AI/OCR 解析</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+
+      <section id="quickstart">
+        <h1>快速入门</h1>
+        <p class="lead">本手册介绍系统每个页面的功能与操作方式。系统用于管理火车模型藏品（机车、车厢、动车组、先头车）的录入、统计、文件归档与数据导入导出。</p>
+
+        <h2>访问与导航</h2>
+        <p>启动服务后，浏览器打开 <code>http://127.0.0.1:8000</code>。顶部导航栏提供七个入口：</p>
+        <ul>
+          <li><strong>首页</strong> — 藏品统计概览</li>
+          <li><strong>机车 / 车厢 / 动车组 / 先头车模型</strong> — 四类模型的列表与录入</li>
+          <li><strong>信息维护</strong> — 品牌、系列、车型等参考数据</li>
+          <li><strong>系统维护</strong> — 导入、导出、数据库重置</li>
+        </ul>
+
+        <h2>通用交互</h2>
+        <p>以下操作在所有模型列表页通用：</p>
+        <ul>
+          <li><strong>排序</strong>：点击表格列头按该列升/降序排列。</li>
+          <li><strong>筛选</strong>：列头下拉框输入文字过滤。</li>
+          <li><strong>复制</strong>：行内「复制」按钮将该行数据回填到「添加」表单，便于快速录入相似模型。</li>
+          <li><strong>检索</strong>：行内「检索」按钮用品牌搜索地址 + 货号在官网搜索（缺地址或缺货号时禁用）。</li>
+          <li><strong>可搜索下拉</strong>：型号、系列、品牌、商家、芯片等关联字段均为可输入搜索的下拉框。</li>
+        </ul>
+        <div class="callout info">
+          <div class="callout-title">💡 文件存储约定</div>
+          上传的文件按 <code>data/{模型类型}/{品牌缩写}_{货号}/</code> 自动组织；修改品牌缩写或货号时，文件夹会自动重命名。
+        </div>
+      </section>
+
+      <section id="home">
+        <h1>首页与统计</h1>
+        <p class="lead">展示全部藏品的整体统计概览，支持四个维度的表格与饼图切换。</p>
+
+        <h2>展示内容</h2>
+        <ul>
+          <li><strong>统计条</strong>：模型总数、模型总价（¥）。</li>
+          <li><strong>维度标签</strong>：按类型 / 按比例 / 按品牌 / 按商家。</li>
+          <li><strong>视图切换</strong>：每个维度可在「表格」与「饼图」间切换。</li>
+        </ul>
+        <p>饼图模式下，每个维度显示「数量分布」与「金额分布」两张图，鼠标悬停可见数量与占比。</p>
+
+        <figure class="screenshot">
+          <img src="images/home-stats.png" alt="首页统计表格视图">
+          <figcaption>首页 · 按类型统计（表格视图）</figcaption>
+        </figure>
+        <figure class="screenshot">
+          <img src="images/home-charts.png" alt="首页统计饼图视图">
+          <figcaption>首页 · 饼图视图（数量与金额分布）</figcaption>
+        </figure>
+      </section>
+
+      <section id="locomotive">
+        <h1>机车模型</h1>
+        <p class="lead">管理机车（Locomotive）的列表、录入、编辑、删除与文件归档。</p>
+
+        <figure class="screenshot">
+          <img src="images/locomotive-list.png" alt="机车模型列表">
+          <figcaption>机车模型列表：图片、型号、系列、车号、芯片、价格、文件状态、操作</figcaption>
+        </figure>
+
+        <h2>录入机车</h2>
+        <p>点击「添加机车」打开模态框，填写下表字段后保存。</p>
+        <table>
+          <tr><th>字段</th><th>说明</th></tr>
+          <tr><td>型号 / 系列 / 动力</td><td>选择型号后，系列与动力会自动联动填充</td></tr>
+          <tr><td>机车号</td><td>4–12 位数字，允许前导 0，同一比例内唯一</td></tr>
+          <tr><td>编号</td><td>1–4 位数字，无前导 0</td></tr>
+          <tr><td>芯片接口 / 芯片型号</td><td>选择接口后，芯片型号仅列出兼容项</td></tr>
+          <tr><td>价格</td><td>支持四则表达式，如 <code>288+538</code>，自动计算总价</td></tr>
+          <tr><td>品牌 / 商家 / 购买日期</td><td>品牌必填；商家与日期可选</td></tr>
+          <tr><td>货号 / 产品地址</td><td>货号用于文件命名；产品地址在列表显示为可点击链接</td></tr>
+        </table>
+
+        <figure class="screenshot">
+          <img src="images/locomotive-add.png" alt="添加机车表单">
+          <figcaption>添加机车模态框（型号联动、芯片联动、价格表达式、文件上传）</figcaption>
+        </figure>
+
+        <div class="callout warning">
+          <div class="callout-title">⚠️ 唯一性约束</div>
+          同一比例内的<strong>机车号</strong>必须唯一；违反时表单会标红提示，数据库层亦会拒绝。
+        </div>
+      </section>
+
+      <section id="carriage">
+        <h1>车厢模型</h1>
+        <p class="lead">管理车厢<strong>套装</strong>（CarriageSet），一个套装可包含多节车厢项（CarriageItem）。</p>
+
+        <figure class="screenshot">
+          <img src="images/carriage-list.png" alt="车厢模型列表">
+          <figcaption>车厢套装列表</figcaption>
+        </figure>
+
+        <h2>录入车厢套装</h2>
+        <p>套装级字段（系列、车辆段、比例、品牌、车次、货号等）与单节车厢分开填写。核心是<strong>车厢列表</strong>：可动态「添加车厢」「删除」行，每节车厢单独指定系列、车型、车辆号、颜色与室内灯型号。</p>
+
+        <figure class="screenshot">
+          <img src="images/carriage-add.png" alt="添加车厢套装表单">
+          <figcaption>添加车厢套装：套装信息 + 动态车厢列表</figcaption>
+        </figure>
+
+        <div class="callout info">
+          <div class="callout-title">💡 与机车不同</div>
+          车厢套装的<strong>总价直接输入数值</strong>，不支持价格表达式计算；每节车厢可独立选择室内灯型号。
+        </div>
+      </section>
+
+      <section id="trainset">
+        <h1>动车组模型</h1>
+        <p class="lead">管理动车组（Trainset），含编组、头车灯、室内灯、芯片等动车组特有属性。</p>
+
+        <figure class="screenshot">
+          <img src="images/trainset-list.png" alt="动车组模型列表">
+          <figcaption>动车组列表</figcaption>
+        </figure>
+
+        <h2>特有字段</h2>
+        <table>
+          <tr><th>字段</th><th>说明</th></tr>
+          <tr><td>动车号</td><td>3–12 位数字，允许前导 0，同一比例内唯一</td></tr>
+          <tr><td>编组</td><td>数字，默认 1（如 8 编组）</td></tr>
+          <tr><td>头车灯</td><td>是 / 否</td></tr>
+          <tr><td>室内灯</td><td>按「品牌 + 车型 + 比例」适用规则匹配的型号</td></tr>
+        </table>
+
+        <figure class="screenshot">
+          <img src="images/trainset-add.png" alt="添加动车组表单">
+          <figcaption>添加动车组（含编组、头车灯、室内灯）</figcaption>
+        </figure>
+
+        <div class="callout info">
+          <div class="callout-title">💡 室内灯适用规则</div>
+          室内灯下拉需先选「型号 + 品牌」，系统按三级规则（品牌级 ∪ 车型级）列出适用型号；无适用项时下拉为空。
+        </div>
+      </section>
+
+      <section id="head">
+        <h1>先头车模型</h1>
+        <p class="lead">管理动车组的驾驶头车（LocomotiveHead），字段较机车/动车组精简。</p>
+
+        <figure class="screenshot">
+          <img src="images/locomotive-head-list.png" alt="先头车列表">
+          <figcaption>先头车列表（无「功能表」列）</figcaption>
+        </figure>
+
+        <figure class="screenshot">
+          <img src="images/locomotive-head-add.png" alt="添加先头车表单">
+          <figcaption>添加先头车（无数码功能表上传项）</figcaption>
+        </figure>
+
+        <div class="callout danger">
+          <div class="callout-title">🚫 先头车不支持数码功能表</div>
+          先头车业务上不配备 DCC 芯片，因此<strong>禁止上传数码功能表</strong>：表单无该上传项，详情模态框隐藏功能表区，后端对上传请求返回 400 拒绝。
+        </div>
+        <p>先头车的室内灯适用查询采用 <strong>brand_only</strong> 模式，仅按品牌级规则匹配（不要求车型）。</p>
+      </section>
+
+      <section id="detail">
+        <h1>模型详情</h1>
+        <p class="lead">点击列表中的模型图片，打开详情模态框，查看属性并管理文件。该模态框对所有模型类型通用（先头车无功能表区）。</p>
+
+        <figure class="screenshot">
+          <img src="images/model-detail.png" alt="模型详情模态框">
+          <figcaption>模型详情：属性表 + 图片 / 功能表 / 说明书管理</figcaption>
+        </figure>
+
+        <h2>可执行操作</h2>
+        <ul>
+          <li><strong>图片</strong>：上传（覆盖旧图）、查看原图、下载、删除。</li>
+          <li><strong>数码功能表</strong>：上传后自动触发 AI/OCR 解析（见<a href="#function-table">功能表解析</a>）；可查看、下载、删除、重新解析。</li>
+          <li><strong>功能键表</strong>：解析成功后显示 F0–F31 → 功能名 → 说明；<strong>双击单元格</strong>可内联编辑。</li>
+          <li><strong>说明书</strong>：可上传多个，每个独立查看 / 下载 / 删除。</li>
+        </ul>
+        <div class="callout info">
+          <div class="callout-title">💡 唯一性</div>
+          图片与功能表每个模型唯一（上传即覆盖）；说明书可多个并存，按原始文件名去重。
+        </div>
+      </section>
+
+      <section id="options">
+        <h1>信息维护</h1>
+        <p class="lead">集中管理 14 类参考数据，分 7 组。左侧选择分类，右侧添加 + 表格（行内编辑）。</p>
+
+        <figure class="screenshot">
+          <img src="images/options-tab.png" alt="信息维护页面">
+          <figcaption>信息维护：7 组分类 + 行内编辑表格</figcaption>
+        </figure>
+
+        <h2>七个分组</h2>
+        <table>
+          <tr><th>分组</th><th>包含</th></tr>
+          <tr><td>购买信息</td><td>品牌、商家</td></tr>
+          <tr><td>铁路信息</td><td>动力、局段</td></tr>
+          <tr><td>芯片信息</td><td>芯片接口、芯片型号</td></tr>
+          <tr><td>机车 / 车厢 / 动车组信息</td><td>各自的系列、车型</td></tr>
+          <tr><td>室内灯信息</td><td>灯品牌、灯型号</td></tr>
+        </table>
+
+        <h2>特殊行为</h2>
+        <ul>
+          <li><strong>品牌缩写</strong>：留空时按名称自动生成（中文取拼音首字母；英文按长度规则）。缩写全局唯一。</li>
+          <li><strong>芯片型号</strong>：接口为多选（一个型号可支持多种接口）。</li>
+          <li><strong>灯型号</strong>：编辑走独立子页（见下图），用三列多选生成「品牌 × 车型」笛卡尔积适用规则。</li>
+          <li><strong>删除保护</strong>：被业务数据引用的参考项禁止删除。</li>
+        </ul>
+
+        <figure class="screenshot">
+          <img src="images/light-model-edit.png" alt="室内灯型号编辑子页">
+          <figcaption>灯型号编辑子页：品牌 / 车厢车型 / 动车组车型 三列多选</figcaption>
+        </figure>
+      </section>
+
+      <section id="system">
+        <h1>系统维护</h1>
+        <p class="lead">数据导入导出、文件打包、数据库重置。</p>
+
+        <figure class="screenshot">
+          <img src="images/system-page.png" alt="系统维护页面">
+          <figcaption>系统维护：数据导出、文件导出、数据导入、自定义导入、数据库初始化</figcaption>
+        </figure>
+
+        <h2>数据导出</h2>
+        <ul>
+          <li><strong>导出模型数据</strong>：四种模型记录导出为 Excel（车厢套装导出时公共字段合并单元格）。</li>
+          <li><strong>导出系统信息</strong>：品牌、系列、车型等参考数据。</li>
+          <li><strong>全部导出</strong>：模型 + 系统信息。</li>
+        </ul>
+
+        <h2>文件导出</h2>
+        <p>「导出所有模型文件」将全部图片 / 说明书 / 功能表打包为 ZIP（<code>TMM_ModelFiles_时间戳.zip</code>）。</p>
+
+        <h2>智能导入</h2>
+        <p>选择 Excel 后，系统按<strong>工作表中文名</strong>自动识别类型；先预检查冲突，无冲突直接导入，有冲突则弹窗选择「跳过」或「覆盖」。</p>
+        <div class="callout info">
+          <div class="callout-title">💡 智能导入局限</div>
+          智能导入<strong>不支持灯品牌 / 灯型号</strong>（无对应工作表）；导入这两类请用<a href="#wizard">自定义导入向导</a>。
+        </div>
+
+        <h2>数据库初始化 <span class="badge danger">危险</span></h2>
+        <p>「重新初始化数据库」会清空全部业务数据并重新播种预置参考数据，<strong>不可逆</strong>。前端需二次确认，后端要求 <code>X-Confirm</code> 请求头。</p>
+      </section>
+
+      <section id="wizard">
+        <h1>自定义导入向导</h1>
+        <p class="lead">灵活适配任意 Excel 结构，自定义「工作表 → 数据类型」「列 → 字段」映射，支持模板保存复用与灯数据导入。入口：系统维护 → 「自定义导入向导」。</p>
+
+        <figure class="screenshot">
+          <img src="images/import-wizard-step1.png" alt="自定义导入向导第一步">
+          <figcaption>自定义导入向导 · 选择模板</figcaption>
+        </figure>
+
+        <h2>五步流程</h2>
+        <ol class="steps">
+          <li><strong>选择模板</strong>：套用已保存模板，或跳过手动配置。</li>
+          <li><strong>选择文件</strong>：选择 .xlsx 文件，预览工作表数量。</li>
+          <li><strong>工作表映射</strong>：把每个工作表映射到 18 张系统表之一（系统类 + 模型类）。</li>
+          <li><strong>列映射</strong>：为每个字段指定对应 Excel 列；模型类可设冲突处理（跳过 / 覆盖）。</li>
+          <li><strong>确认导入</strong>：预览各表数据与冲突；可选保存模板；点击「开始导入」写入。</li>
+        </ol>
+
+        <div class="callout info">
+          <div class="callout-title">💡 特色能力</div>
+          <strong>车厢套装检测</strong>：智能识别合并单元格，将同套装多行还原为套装 + 多节车厢；外键按名称大小写不敏感匹配；品牌缩写为空时自动生成。
+        </div>
+      </section>
+
+      <section id="function-table">
+        <h1>功能表 AI/OCR 解析</h1>
+        <p class="lead">上传数码功能表文件后，自动提取 DCC 功能键 F0–F31 到功能名称的映射，免去手工录入。</p>
+
+        <h2>触发时机</h2>
+        <ul>
+          <li>在机车 / 动车组 / 车厢详情中上传功能表文件时自动触发（先头车不可上传）。</li>
+          <li>详情模态框内「重新解析」按钮手动触发。</li>
+        </ul>
+
+        <h2>三种解析模式</h2>
+        <table>
+          <tr><th>模式</th><th>说明</th></tr>
+          <tr><td><code>ai</code></td><td>强制 AI 视觉（Claude 或 OpenAI）；图片直接识别，PDF 先转图片</td></tr>
+          <tr><td><code>local</code></td><td>强制本地 OCR（tesseract 中文+英文）；PDF 先提文本，无文本则转图片 OCR</td></tr>
+          <tr><td><code>auto</code> <span class="badge info">默认</span></td><td>有 AI 密钥时用 AI，否则静默回退本地 OCR</td></tr>
+        </table>
+
+        <h2>解析结果</h2>
+        <p>解析后自动写入功能键表（覆盖旧键），在详情模态框显示「功能键 / 功能名称 / 说明」三列表格。双击单元格可内联编辑功能名或说明；支持「导出 Excel」。</p>
+
+        <div class="callout warning">
+          <div class="callout-title">⚠️ 系统依赖</div>
+          本地 OCR 需安装 <code>tesseract</code>（含中文语言包）与 <code>poppler</code>：macOS 用 <code>brew install tesseract tesseract-lang poppler</code>。使用 OpenAI provider 需额外 <code>pip install openai</code>。
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    // 移动端侧边栏开关
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.querySelector('.backdrop').classList.toggle('show');
+    }
+    // 滚动时高亮当前章节
+    const links = document.querySelectorAll('#nav a');
+    const sections = [...links].map(a => document.querySelector(a.getAttribute('href')));
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          const active = document.querySelector('#nav a[href="#' + e.target.id + '"]');
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(s => s && observer.observe(s));
+  </script>
+</body>
+</html>
