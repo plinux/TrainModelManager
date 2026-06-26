@@ -92,3 +92,11 @@ class TestOptionsRoute:
         response = client.get('/options')
         assert response.status_code == 200
         assert '信息维护' in response.data.decode('utf-8')
+
+class TestSystemRoute:
+    def test_system_page(self, client):
+        response = client.get('/system')
+        assert response.status_code == 200
+        assert '系统维护' in response.data.decode('utf-8')
+        assert '导出模型数据' in response.data.decode('utf-8')
+        assert '重新初始化数据库' in response.data.decode('utf-8')
