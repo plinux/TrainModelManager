@@ -1,0 +1,130 @@
+"""
+CRUD 完整测试
+验证所有模型类型的增删改查操作
+"""
+import pytest
+from models import db, Locomotive, CarriageSet, CarriageItem, Trainset, LocomotiveHead
+from models import Brand, Depot, Merchant
+from models import LocomotiveSeries, LocomotiveModel, CarriageSeries, CarriageModel, TrainsetSeries, TrainsetModel, PowerType
+
+
+class TestLocomotiveCRUD:
+    """机车 CRUD 完整测试"""
+
+    def test_locomotive_create(self, client, sample_data):
+        """测试机车创建"""
+        with client.application.app_context():
+            loco = Locomotive(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                depot_id=1,
+                scale='HO',
+                locomotive_number='1234',
+                decoder_number='01',
+                price='500',
+                total_price=500,
+                item_number='ITEM001'
+            )
+            db.session.add(loco)
+            db.session.commit()
+
+            saved = Locomotive.query.filter_by(locomotive_number='1234').first()
+            assert saved is not None
+            assert saved.price == '500'
+
+    def test_locomotive_read(self, client, sample_data):
+        """测试机车读取"""
+        with client.application.app_context():
+            loco = Locomotive(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                locomotive_number='READ001'
+            )
+            db.session.add(loco)
+            db.session.commit()
+
+            # 通过 API 读取
+            response = client.get('/locomotive')
+            assert response.status_code == 200
+            assert 'READ001' in response.data.decode('utf-8')
+
+    def test_locomotive_update(self, client, sample_data):
+        """测试机车更新"""
+        with client.application.app_context():
+            loco = Locomotive(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                locomotive_number='UPDATE001',
+                price='100'
+            )
+            db.session.add(loco)
+            db.session.commit()
+            loco_id = loco.id
+
+            # 更新
+            saved = db.session.get(Locomotive,loco_id)
+            saved.price = '200'
+            saved.locomotive_number = 'UPDATED'
+            db.session.commit()
+
+            updated = db.session.get(Locomotive,loco_id)
+            assert updated.price == '200'
+            assert updated.locomotive_number == 'UPDATED'
+
+    def test_locomotive_delete(self, client, sample_data):
+        """测试机车删除"""
+        with client.application.app_context():
+            loco = Locomotive(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                locomotive_number='DELETE001'
+            )
+            db.session.add(loco)
+            db.session.commit()
+            loco_id = loco.id
+
+            # 删除
+            saved = db.session.get(Locomotive,loco_id)
+            db.session.delete(saved)
+            db.session.commit()
+
+            # 验证已删除
+            deleted = db.session.get(Locomotive,loco_id)
+            assert deleted is None
+
+    def test_locomotive_delete_via_api(self, client, sample_data):
+        """测试通过 API 删除机车"""
+        with client.application.app_context():
+            loco = Locomotive(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                locomotive_number='API_DELETE'
+            )
+            db.session.add(loco)
+            db.session.commit()
+            loco_id = loco.id
+
+        response = client.post(f'/locomotive/delete/{loco_id}', follow_redirects=True)
+        # 删除成功后重定向到列表页
+        assert response.status_code == 200
+
+        # 验证已删除
+        with client.application.app_context():
+            deleted = db.session.get(Locomotive, loco_id)
+            assert deleted is None
+
+
