@@ -1,0 +1,236 @@
+"""
+车厢模型路由 Blueprint
+"""
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from models import db, CarriageSet, CarriageItem, CarriageModel, CarriageSeries, Brand, Depot, Merchant
+from utils.helpers import parse_purchase_date, safe_int, safe_float, api_success, api_error
+from utils.validators import validate_car_number
+from utils.file_sync import handle_folder_rename
+import logging
+
+logger = logging.getLogger(__name__)
+carriage_bp = Blueprint('carriage', __name__, url_prefix='')
+
+
+def get_carriage_form_data():
+  """
+  获取车厢表单所需的下拉框数据
+
+  @returns dict: 包含所有下拉选项的字典
+  """
+  return {
+    'carriage_models': CarriageModel.query.all(),
+    'carriage_series': CarriageSeries.query.all(),
+    'brands': Brand.query.all(),
+    'depots': Depot.query.all(),
+    'merchants': Merchant.query.all()
+  }
+
+
+def validate_carriage_items(form_data, is_json=False):
+  """
+  验证车厢项数据
+
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns list: 错误信息列表
+  """
+  errors = []
+  get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
+
+  for i in range(10):
+    model_key = f'model_{i}'
+    car_number_key = f'car_number_{i}'
+
+    if get_value(model_key):
+      car_number = get_value(car_number_key)
+      if car_number and not validate_car_number(car_number):
+        errors.append({'field': car_number_key, 'message': f'车辆号 {car_number} 格式错误：应为1-20位字母、数字或连字符'})
+
+  return errors
+
+
+def create_carriage_set_from_form(form_data, is_json=False):
+  """
+  从表单数据创建车厢套装对象
+
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns CarriageSet: 新创建的车厢套装对象（未保存到数据库）
+  """
+  get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
+
+  return CarriageSet(
+    brand_id=safe_int(get_value('brand_id')),
+    series_id=safe_int(get_value('series_id')),
+    depot_id=safe_int(get_value('depot_id')),
+    train_number=get_value('train_number'),
+    plaque=get_value('plaque'),
+    item_number=get_value('item_number'),
+    scale=get_value('scale'),
+    total_price=safe_float(get_value('total_price')),
+    product_url=get_value('product_url'),
+    purchase_date=parse_purchase_date(get_value('purchase_date')),
+    merchant_id=safe_int(get_value('merchant_id'))
+  )
+
+
+def create_carriage_items(carriage_set_id, form_data, is_json=False):
+  """
+  从表单数据创建车厢项列表
+
+  @param carriage_set_id: 车厢套装ID
+  @param form_data: 表单数据字典
+  @param is_json: 是否来自 JSON 请求
+  @returns list: CarriageItem 对象列表
+  """
+  get_value = lambda key: form_data.get(key) if is_json else form_data.get(key)
+  items = []
+
+  for i in range(10):
+    model_key = f'model_{i}'
+    if get_value(model_key):
+      item = CarriageItem(
+        set_id=carriage_set_id,
+        model_id=safe_int(get_value(model_key)),
+        car_number=get_value(f'car_number_{i}'),
+        color=get_value(f'color_{i}'),
+        light_model_id=safe_int(get_value(f'light_model_id_{i}'))
+      )
+      items.append(item)
+
+  return items
+
+
+# API 路由
+@carriage_bp.route('/api/carriage/edit/<int:id>', methods=['POST'])
+def api_edit_carriage(id):
+  """AJAX 编辑车厢套装"""
+  try:
+    carriage_set = db.get_or_404(CarriageSet, id)
+    data = request.get_json()
+
+    errors = validate_carriage_items(data, is_json=True)
+    if errors:
+      return jsonify(api_error('验证失败', errors=errors)), 400
+
+    # 保存旧的品牌和货号（用于重命名文件夹）
+    old_brand = db.session.get(Brand, carriage_set.brand_id)
+    old_item_number = carriage_set.item_number or ''
+
+    # 更新套装信息
+    carriage_set.brand_id = safe_int(data.get('brand_id'))
+    carriage_set.series_id = safe_int(data.get('series_id'))
+    carriage_set.depot_id = safe_int(data.get('depot_id'))
+    carriage_set.train_number = data.get('train_number')
+    carriage_set.plaque = data.get('plaque')
+    carriage_set.item_number = data.get('item_number')
+    carriage_set.scale = data.get('scale')
+    carriage_set.total_price = safe_float(data.get('total_price'))
+    carriage_set.product_url = data.get('product_url')
+    carriage_set.purchase_date = parse_purchase_date(data.get('purchase_date'))
+    carriage_set.merchant_id = safe_int(data.get('merchant_id'))
+
+    # 品牌或货号变化时重命名文件夹与文件记录（用品牌缩写）
+    new_brand = db.session.get(Brand, carriage_set.brand_id)
+    handle_folder_rename('carriage', id, old_brand, old_item_number,
+                         new_brand, carriage_set.item_number or '')
+
+    # 删除旧的车厢项并添加新的
+    CarriageItem.query.filter_by(set_id=id).delete()
+    items = create_carriage_items(carriage_set.id, data, is_json=True)
+    for item in items:
+      db.session.add(item)
+
+    db.session.commit()
+    logger.info(f"Carriage set updated: ID={id}")
+
+    return jsonify(api_success('车厢套装更新成功'))
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Error updating carriage: {e}")
+    return jsonify(api_error(str(e))), 500
+
+
+@carriage_bp.route('/api/carriage/add', methods=['POST'])
+def api_add_carriage():
+  """AJAX 添加车厢模型"""
+  try:
+    data = request.get_json()
+
+    errors = validate_carriage_items(data, is_json=True)
+    if errors:
+      return jsonify(api_error('验证失败', errors=errors)), 400
+
+    carriage_set = create_carriage_set_from_form(data, is_json=True)
+    db.session.add(carriage_set)
+    db.session.flush()  # 获取 ID
+
+    items = create_carriage_items(carriage_set.id, data, is_json=True)
+    for item in items:
+      db.session.add(item)
+
+    db.session.commit()
+    logger.info(f"Carriage set added: ID={carriage_set.id}")
+
+    return jsonify(api_success('车厢套装添加成功', data={'id': carriage_set.id}))
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Error adding carriage: {e}")
+    return jsonify(api_error(str(e))), 500
+
+
+# 页面路由
+@carriage_bp.route('/carriage', methods=['GET', 'POST'])
+def carriage():
+  """车厢模型列表和添加"""
+  if request.method == 'POST':
+    errors = validate_carriage_items(request.form)
+    if errors:
+      form_data = get_carriage_form_data()
+      form_data['carriage_sets'] = CarriageSet.query.all()
+      form_data['errors'] = [e['message'] for e in errors]
+      return render_template('carriage.html', **form_data)
+
+    try:
+      carriage_set = create_carriage_set_from_form(request.form)
+      db.session.add(carriage_set)
+      db.session.commit()
+      db.session.refresh(carriage_set)
+
+      items = create_carriage_items(carriage_set.id, request.form)
+      for item in items:
+        db.session.add(item)
+
+      db.session.commit()
+      return redirect(url_for('carriage.carriage'))
+    except Exception as e:
+      db.session.rollback()
+      logger.error(f"Error adding carriage: {e}")
+      form_data = get_carriage_form_data()
+      form_data['carriage_sets'] = CarriageSet.query.all()
+      form_data['errors'] = [str(e)]
+      return render_template('carriage.html', **form_data)
+
+  form_data = get_carriage_form_data()
+  form_data['carriage_sets'] = CarriageSet.query.all()
+  form_data['errors'] = []
+  return render_template('carriage.html', **form_data)
+
+
+@carriage_bp.route('/carriage/delete/<int:id>', methods=['POST'])
+def delete_carriage(id):
+  """删除车厢套装"""
+  try:
+    carriage_set = db.get_or_404(CarriageSet, id)
+    logger.info(f"Deleting carriage set: {carriage_set}")
+    from utils.file_cleanup import delete_model_files
+    delete_model_files('carriage', id)
+    db.session.delete(carriage_set)
+    db.session.commit()
+    logger.info(f"Carriage set deleted: ID={id}")
+  except Exception as e:
+    db.session.rollback()
+    logger.error(f"Error deleting carriage: {e}")
+
+  return redirect(url_for('carriage.carriage'))

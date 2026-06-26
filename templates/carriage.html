@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% from "macros/form.html" import autocomplete_field, text_field, date_field, scale_select %}
+{% from "macros/table.html" import relation_name %}
+{% from "macros/modal.html" import model_detail_modal %}
+
+{% block title %}车厢模型 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+  <h1>车厢模型</h1>
+  <div class="page-header-actions">
+    <button type="button" class="btn btn-primary" id="btn-add-carriage">添加车厢套装</button>
+  </div>
+</div>
+
+<div class="table-wrapper">
+  <table id="carriage-table" class="sortable-filterable">
+    <thead>
+      <tr>
+        <th>图片</th>
+        <th data-sort="series" data-filter="series">系列</th>
+        <th data-sort="brand" data-filter="brand">品牌</th>
+        <th data-sort="depot" data-filter="depot">车辆段</th>
+        <th data-sort="train_number" data-filter="train_number">车次</th>
+        <th data-sort="scale" data-filter="scale">比例</th>
+        <th data-sort="item_number" data-filter="item_number">货号</th>
+        <th data-sort="count">车厢数</th>
+        <th data-sort="price">总价</th>
+        <th>功能表</th>
+        <th>说明书</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for set in carriage_sets %}
+      <tr data-model_type="carriage" data-model_id="{{ set.id }}" data-series="{{ set.series.name if set.series else '' }}" data-series_id="{{ set.series_id or '' }}" data-brand="{{ set.brand.name }}" data-brand_id="{{ set.brand_id }}" data-depot="{{ set.depot.name if set.depot else '' }}" data-depot_id="{{ set.depot_id or '' }}" data-train_number="{{ set.train_number or '' }}" data-scale="{{ set.scale }}" data-plaque="{{ set.plaque or '' }}" data-item_number="{{ set.item_number or '' }}" data-total_price="{{ set.total_price or '' }}" data-merchant="{{ set.merchant.name if set.merchant else '' }}" data-merchant_id="{{ set.merchant_id or '' }}" data-product_url="{{ set.product_url or '' }}" data-purchase_date="{{ set.purchase_date or '' }}" data-count="{{ set.items|length }}" data-price="{{ set.total_price or 0 }}">
+        <td class="image-cell" data-file-type="image">
+          <div class="thumbnail-placeholder" onclick="FileManager.showModelDetail('carriage', {{ set.id }})" title="点击查看详情">
+            <span>+</span>
+          </div>
+        </td>
+        <td>{{ relation_name(set.series) }}</td>
+        <td>{{ set.brand.name }}</td>
+        <td>{{ relation_name(set.depot) }}</td>
+        <td>{{ set.train_number }}</td>
+        <td>{{ set.scale }}</td>
+        <td class="item-number-cell">
+          {% if set.product_url %}
+          <a href="{{ set.product_url }}" target="_blank" title="点击打开产品页面">{{ set.item_number }}</a>
+          {% else %}
+          {{ set.item_number }}
+          {% endif %}
+        </td>
+        <td>{{ set.items|length }}</td>
+        <td>{{ set.total_price }}</td>
+        <td class="file-status-cell" data-file-type="function_table">
+          <span class="file-status file-status-none" onclick="FileManager.showModelDetail('carriage', {{ set.id }})" title="点击上传功能表">-</span>
+        </td>
+        <td class="file-status-cell" data-file-type="manual">
+          <span class="file-status file-status-none" onclick="FileManager.showModelDetail('carriage', {{ set.id }})" title="点击查看/上传说明书">0</span>
+        </td>
+        <td class="action-cell">
+          {% set search_url = set.brand.search_url %}
+          {% set item_number = set.item_number %}
+          {% if search_url and item_number %}
+          <button type="button" class="btn-search" onclick='searchProduct(this, {{ search_url | tojson }}, {{ item_number | tojson }})' title="在官网搜索此货号">检索</button>
+          {% else %}
+          <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
+          {% endif %}
+          <button type="button" class="btn-copy" onclick="copyCarriage(this)" title="复制此行数据到表单">复制</button>
+          <button type="button" class="btn-edit" onclick="editCarriage(this)" title="编辑此车厢套装">编辑</button>
+          <form action="{{ url_for('carriage.delete_carriage', id=set.id) }}" method="POST" onsubmit="return confirm('确定删除？')">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 添加/编辑车厢套装模态框 -->
+<div id="carriage-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-dialog modal-form">
+    <div class="modal-header">
+      <h3 id="carriage-modal-title">添加车厢套装</h3>
+      <button type="button" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="carriage-form">
+        <input type="hidden" id="carriage-edit-id" name="edit_id" value="">
+        <div class="form-grid-3">
+          {{ autocomplete_field('series_id', '系列', carriage_series, required=true) }}
+          {{ autocomplete_field('depot_id', '车辆段', depots) }}
+          {{ scale_select() }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ text_field('train_number', '车次') }}
+          {{ text_field('plaque', '挂牌') }}
+          <div class="form-group">
+            <label for="total_price">总价</label>
+            <input type="number" id="total_price" name="total_price" step="0.01" placeholder="不支持表达式计算">
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
+          {{ autocomplete_field('merchant_id', '购买商家', merchants) }}
+          {{ date_field('purchase_date', '购买日期', value=today) }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ text_field('item_number', '货号') }}
+          {{ text_field('product_url', '产品地址', field_class='col-2') }}
+        </div>
+
+        <h4 class="form-section-title">文件上传（可选）</h4>
+        <div class="form-grid-3 file-upload-row">
+          <div class="form-group">
+            <label>模型图片</label>
+            <input type="file" id="carriage-image-file" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('carriage-image-file').click()">
+              <span id="carriage-image-name">选择文件</span>
+            </button>
+          </div>
+          <div class="form-group">
+            <label>数码功能表</label>
+            <input type="file" id="carriage-function-file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('carriage-function-file').click()">
+              <span id="carriage-function-name">选择文件</span>
+            </button>
+          </div>
+          <div class="form-group">
+            <label>说明书（可多选）</label>
+            <input type="file" id="carriage-manual-file" accept=".pdf,.doc,.docx,.zip" multiple style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('carriage-manual-file').click()">
+              <span id="carriage-manual-name">选择文件</span>
+            </button>
+          </div>
+        </div>
+
+        <h3>车厢列表</h3>
+        <div class="carriage-header">
+          <span>系列</span>
+          <span>车型</span>
+          <span>车辆号</span>
+          <span>颜色</span>
+          <span>灯光</span>
+          <span></span>
+        </div>
+        <div id="carriage-items" class="carriage-items-container">
+          <!-- 车厢项将动态添加 -->
+        </div>
+
+        <button type="button" onclick="addCarriageRow()">添加车厢</button>
+      </form>
+    </div>
+    <div class="modal-form-actions">
+      <button type="button" class="btn btn-secondary" onclick="ModalManager.close('carriage-modal')">取消</button>
+      <button type="button" class="btn btn-primary" onclick="submitCarriageForm()">保存</button>
+    </div>
+  </div>
+</div>
+
+{{ model_detail_modal(show_function_table=true) }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.carriageSeriesData = [
+    {% for series in carriage_series %}
+    { id: '{{ series.id }}', name: '{{ series.name | replace("'", "\\'") }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  window.carriageModelData = [
+    {% for model in carriage_models %}
+    { id: '{{ model.id }}', name: '{{ model.name | replace("'", "\\'") }}', series_id: '{{ model.series_id or '' }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  initTableSortFilter('carriage-table');
+
+  // 添加按钮 - 打开添加模态框
+  document.getElementById('btn-add-carriage').addEventListener('click', function() {
+    openCarriageModal();
+  });
+
+  // 模态框关闭按钮
+  document.querySelector('#carriage-modal .modal-close').addEventListener('click', function() {
+    ModalManager.close('carriage-modal');
+  });
+
+  // 点击遮罩关闭
+  document.getElementById('carriage-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      ModalManager.close('carriage-modal');
+    }
+  });
+
+  // 打开车厢模态框（添加或编辑模式）
+  function openCarriageModal(editId) {
+    var modal = document.getElementById('carriage-modal');
+    var title = document.getElementById('carriage-modal-title');
+    var editIdInput = document.getElementById('carriage-edit-id');
+    var form = document.getElementById('carriage-form');
+
+    // 重置表单
+    form.reset();
+    FormHelper.clearErrors(form);
+    FormHelper.clearErrorSummary(form);
+
+    // 清空自动完成字段
+    var autocompleteInputs = form.querySelectorAll('input[type="text"][id$="_text"]');
+    autocompleteInputs.forEach(function(input) {
+      input.value = '';
+      var hidden = document.getElementById(input.id.replace('_text', ''));
+      if (hidden) hidden.value = '';
+    });
+
+    // 清空车厢项
+    var carriageItems = document.getElementById('carriage-items');
+    while (carriageItems.firstChild) {
+      carriageItems.removeChild(carriageItems.firstChild);
+    }
+    CarriageManager.itemCount = 0;
+
+    // 清空文件选择
+    document.getElementById('carriage-image-file').value = '';
+    document.getElementById('carriage-function-file').value = '';
+    document.getElementById('carriage-manual-file').value = '';
+    document.getElementById('carriage-image-name').textContent = '选择文件';
+    document.getElementById('carriage-function-name').textContent = '选择文件';
+    document.getElementById('carriage-manual-name').textContent = '选择文件';
+
+    if (editId) {
+      // 编辑模式
+      title.textContent = '编辑车厢套装';
+      editIdInput.value = editId;
+    } else {
+      // 添加模式
+      title.textContent = '添加车厢套装';
+      editIdInput.value = '';
+    }
+
+    ModalManager.open('carriage-modal');
+  }
+
+  // 编辑车厢套装
+  function editCarriage(button) {
+    var row = button.closest('tr');
+    var editId = row.dataset.model_id;
+
+    // 打开模态框
+    openCarriageModal(editId);
+
+    // 填充表单数据
+    var fieldMappings = {
+      'series_id': row.dataset.series_id,
+      'depot_id': row.dataset.depot_id,
+      'scale': row.dataset.scale,
+      'train_number': row.dataset.train_number,
+      'plaque': row.dataset.plaque,
+      'total_price': row.dataset.total_price,
+      'merchant_id': row.dataset.merchant_id,
+      'brand_id': row.dataset.brand_id,
+      'item_number': row.dataset.item_number,
+      'product_url': row.dataset.product_url,
+      'purchase_date': row.dataset.purchase_date
+    };
+
+    Object.entries(fieldMappings).forEach(function(entry) {
+      var fieldId = entry[0];
+      var value = entry[1];
+      var element = document.getElementById(fieldId);
+
+      if (!element) return;
+
+      var wrapper = element.closest('.autocomplete-wrapper');
+      if (wrapper) {
+        // 自动完成字段
+        var inputId = wrapper.querySelector('input[type="text"]')?.id;
+        if (inputId) {
+          var nameAttr = fieldId.replace('_id', '');
+          var nameValue = row.dataset[nameAttr] || value;
+          AutocompleteManager.setValue(inputId, value || '', nameValue || '');
+        }
+      } else {
+        // 普通表单字段
+        element.value = value || '';
+      }
+    });
+
+    // 注意：车厢项在编辑模式下需要从服务器获取，此处暂不处理
+    // 可以通过 API 获取车厢项详情后填充
+  }
+
+  // 提交车厢表单
+  function submitCarriageForm() {
+    var form = document.getElementById('carriage-form');
+    var editId = document.getElementById('carriage-edit-id').value;
+    var apiUrl = editId ? '/api/carriage/edit/' + editId : '/api/carriage/add';
+
+    // 收集表单数据
+    var formData = new FormData(form);
+    var formDataObj = {};
+    formData.forEach(function(value, key) {
+      formDataObj[key] = value;
+    });
+
+    FormHelper.clearErrors(form);
+    FormHelper.clearErrorSummary(form);
+
+    // 先提交表单数据
+    Api.post(apiUrl, formDataObj).then(function(data) {
+      if (data.success) {
+        // 表单提交成功后，上传文件
+        var modelId = editId || data.id;
+        uploadCarriageFiles(modelId, function() {
+          FormHelper.showSuccess(form, data.message || '保存成功');
+          setTimeout(function() {
+            ModalManager.close('carriage-modal');
+            location.reload();
+          }, 1000);
+        });
+      } else {
+        if (data.errors && data.errors.length > 0) {
+          FormHelper.showErrors(form, data.errors);
+        } else if (data.error) {
+          FormHelper.showErrorSummary(form, data.error);
+        }
+      }
+    }).catch(function(error) {
+      console.error('Submit error:', error);
+      if (error.errors && error.errors.length > 0) {
+        FormHelper.showErrors(form, error.errors);
+      } else {
+        var errorMsg = error.error || error.message || '提交失败，请重试';
+        FormHelper.showErrorSummary(form, errorMsg);
+      }
+    });
+  }
+
+  // 上传车厢文件
+  function uploadCarriageFiles(modelId, callback) {
+    var imageFile = document.getElementById('carriage-image-file').files[0];
+    var functionFile = document.getElementById('carriage-function-file').files[0];
+    var manualFiles = document.getElementById('carriage-manual-file').files;
+
+    var uploadPromises = [];
+
+    if (imageFile) {
+      uploadPromises.push(uploadModelFile('carriage', modelId, 'image', imageFile));
+    }
+    if (functionFile) {
+      uploadPromises.push(uploadModelFile('carriage', modelId, 'function_table', functionFile));
+    }
+    // 说明书支持多文件上传
+    for (var i = 0; i < manualFiles.length; i++) {
+      uploadPromises.push(uploadModelFile('carriage', modelId, 'manual', manualFiles[i]));
+    }
+
+    if (uploadPromises.length > 0) {
+      Promise.all(uploadPromises).then(function() {
+        if (callback) callback();
+      }).catch(function(error) {
+        alert('文件上传失败: ' + error.message);
+        if (callback) callback();
+      });
+    } else {
+      if (callback) callback();
+    }
+  }
+
+  // 文件选择显示文件名
+  document.getElementById('carriage-image-file').addEventListener('change', function(e) {
+    var nameSpan = document.getElementById('carriage-image-name');
+    nameSpan.textContent = e.target.files[0] ? e.target.files[0].name : '选择文件';
+  });
+  document.getElementById('carriage-function-file').addEventListener('change', function(e) {
+    var nameSpan = document.getElementById('carriage-function-name');
+    nameSpan.textContent = e.target.files[0] ? e.target.files[0].name : '选择文件';
+  });
+  document.getElementById('carriage-manual-file').addEventListener('change', function(e) {
+    var nameSpan = document.getElementById('carriage-manual-name');
+    var count = e.target.files.length;
+    if (count === 0) {
+      nameSpan.textContent = '选择文件';
+    } else if (count === 1) {
+      nameSpan.textContent = e.target.files[0].name;
+    } else {
+      nameSpan.textContent = '已选择 ' + count + ' 个文件';
+    }
+  });
+
+  // 初始化车厢项计数
+  if (document.getElementById('carriage-items')) {
+    CarriageManager.itemCount = document.querySelectorAll('.carriage-item').length;
+  }
+</script>
+{% endblock %}

@@ -35,3 +35,18 @@ class TestLocomotiveCRUD:
     def test_locomotive_add_page(self, client):
         response = client.get('/locomotive')
         assert b'model_id' in response.data and b'brand_id' in response.data
+
+class TestCarriageRoutes:
+    def test_carriage_page(self, client):
+        response = client.get('/carriage')
+        assert response.status_code == 200
+        assert '车厢模型' in response.data.decode('utf-8')
+
+    def test_carriage_copy_button(self, client, sample_data):
+        from models import db, CarriageSet
+        with client.application.app_context():
+            c = CarriageSet(brand_id=1, series_id=1, scale='HO', train_number='COPY001')
+            db.session.add(c); db.session.commit()
+        response = client.get('/carriage')
+        html = response.data.decode('utf-8')
+        assert '复制' in html and 'copyCarriage' in html
