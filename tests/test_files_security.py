@@ -80,3 +80,44 @@ class TestGetAbsoluteFilePath:
 class TestEndpointPathTraversal:
   """端到端：恶意 file_path 不能读取 DATA_DIR 外的文件"""
 
+  def test_download_malicious_path_does_not_leak(self, client, app, sample_data, tmp_path):
+    """DB 中存指向 DATA_DIR 外的恶意 file_path，download 不得返回其内容"""
+    from models import ModelFile, db
+    # 在 DATA_DIR 外放置标记文件
+    secret = tmp_path / 'secret.txt'
+    secret.write_text('TOP_SECRET_CONTENT_12345')
+
+    with app.app_context():
+      data_dir = os.path.realpath(app.config.get('DATA_DIR'))
+      rel = os.path.relpath(str(secret), data_dir)  # 形如 ../../tmp/xxx/secret.txt
+      mf = ModelFile(
+        model_type='locomotive', model_id=1, file_type='image',
+        file_path=rel, original_filename='evil.jpg',
+        mime_type='image/jpeg'
+      )
+      db.session.add(mf)
+      db.session.commit()
+      fid = mf.id
+
+    resp = client.get(f'/api/files/download/{fid}')
+    # 关键：净化后路径被限制在 DATA_DIR 内，读不到 secret 文件
+    assert b'TOP_SECRET_CONTENT_12345' not in resp.data
+
+
+class TestDeleteModelFiles:
+  """删除模型时清理关联文件和功能键（P2-2）"""
+
+  def test_delete_clears_files_and_function_keys(self, app):
+    from utils.file_cleanup import delete_model_files
+    from models import ModelFile, FunctionKey, db
+    with app.app_context():
+      db.session.add_all([
+        ModelFile(model_type='locomotive', model_id=999, file_type='image',
+                  file_path='locomotive/X_999/X.jpg', original_filename='X.jpg'),
+        FunctionKey(model_type='locomotive', model_id=999, key_number=0, function_name='test'),
+      ])
+      db.session.commit()
+      delete_model_files('locomotive', 999)
+      db.session.commit()
+      assert ModelFile.query.filter_by(model_type='locomotive', model_id=999).count() == 0
+      assert FunctionKey.query.filter_by(model_type='locomotive', model_id=999).count() == 0
