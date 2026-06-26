@@ -241,3 +241,101 @@ class TestCarriageCRUD:
             saved = CarriageItem.query.filter_by(set_id=set_id).first()
             assert saved is not None
             assert saved.car_number == '01'
+class TestTrainsetCRUD:
+    """动车组 CRUD 完整测试"""
+
+    def test_trainset_create(self, client, sample_data):
+        """测试动车组创建"""
+        with client.application.app_context():
+            trainset = Trainset(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                trainset_number='CRH001',
+                formation=8,
+                head_light=True,
+                light_model_id=None,
+                color='白色'
+            )
+            db.session.add(trainset)
+            db.session.commit()
+
+            saved = Trainset.query.filter_by(trainset_number='CRH001').first()
+            assert saved is not None
+            assert saved.formation == 8
+
+    def test_trainset_update(self, client, sample_data):
+        """测试动车组更新"""
+        with client.application.app_context():
+            trainset = Trainset(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                trainset_number='UPDATE_TS',
+                formation=8
+            )
+            db.session.add(trainset)
+            db.session.commit()
+            ts_id = trainset.id
+
+            # 更新编组
+            saved = db.session.get(Trainset,ts_id)
+            saved.formation = 16
+            saved.color = '绿色'
+            db.session.commit()
+
+            updated = db.session.get(Trainset,ts_id)
+            assert updated.formation == 16
+            assert updated.color == '绿色'
+
+    def test_trainset_delete(self, client, sample_data):
+        """测试动车组删除"""
+        with client.application.app_context():
+            trainset = Trainset(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                trainset_number='DELETE_TS'
+            )
+            db.session.add(trainset)
+            db.session.commit()
+            ts_id = trainset.id
+
+            saved = db.session.get(Trainset,ts_id)
+            db.session.delete(saved)
+            db.session.commit()
+
+            deleted = db.session.get(Trainset,ts_id)
+            assert deleted is None
+
+    def test_trainset_delete_via_api(self, client, sample_data):
+        """测试通过 API 删除动车组"""
+        with client.application.app_context():
+            trainset = Trainset(
+                series_id=1,
+                power_type_id=1,
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                trainset_number='API_DEL_TS'
+            )
+            db.session.add(trainset)
+            db.session.commit()
+            ts_id = trainset.id
+
+        response = client.post(f'/trainset/delete/{ts_id}', follow_redirects=True)
+        # 删除成功后重定向到列表页
+        assert response.status_code == 200
+
+        # 验证已删除
+        with client.application.app_context():
+            deleted = db.session.get(Trainset, ts_id)
+            assert deleted is None
+
+

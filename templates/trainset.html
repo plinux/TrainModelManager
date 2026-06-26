@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+{% from "macros/form.html" import autocomplete_field, text_field, date_field, price_field, scale_select, boolean_select, number_field %}
+{% from "macros/table.html" import relation_name %}
+{% from "macros/modal.html" import model_detail_modal %}
+
+{% block title %}动车组模型 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header-row">
+  <h1>动车组模型</h1>
+  <div class="page-header-actions">
+    <button type="button" class="btn btn-primary" id="btn-add-trainset">添加动车组</button>
+  </div>
+</div>
+
+<div class="table-wrapper">
+  <table id="trainset-table" class="sortable-filterable">
+    <thead>
+      <tr>
+        <th>图片</th>
+        <th data-sort="model" data-filter="model">型号</th>
+        <th data-sort="series" data-filter="series">系列</th>
+        <th data-sort="brand" data-filter="brand">品牌</th>
+        <th data-sort="depot" data-filter="depot">动车段</th>
+        <th data-sort="scale" data-filter="scale">比例</th>
+        <th data-sort="number" data-filter="number">动车号</th>
+        <th data-sort="decoder" data-filter="decoder">编号</th>
+        <th data-sort="formation" data-filter="formation">编组</th>
+        <th data-sort="head_light" data-filter="head_light">头车灯</th>
+        <th data-sort="light_model" data-filter="light_model">室内灯</th>
+        <th data-sort="chip_interface" data-filter="chip_interface">芯片接口</th>
+        <th data-sort="chip_model" data-filter="chip_model">芯片型号</th>
+        <th data-sort="item_number" data-filter="item_number">货号</th>
+        <th data-sort="price">总价</th>
+        <th>功能表</th>
+        <th>说明书</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trainset in trainsets %}
+      <tr data-model_type="trainset" data-model_id="{{ trainset.id }}" data-model="{{ trainset.model.name }}" data-model_id_field="{{ trainset.model_id }}" data-series="{{ trainset.series.name if trainset.series else '' }}" data-series_id="{{ trainset.series_id or '' }}" data-power_type="{{ trainset.power_type.name if trainset.power_type else '' }}" data-power_type_id="{{ trainset.power_type_id or '' }}" data-brand="{{ trainset.brand.name }}" data-brand_id="{{ trainset.brand_id }}" data-depot="{{ trainset.depot.name if trainset.depot else '' }}" data-depot_id="{{ trainset.depot_id or '' }}" data-scale="{{ trainset.scale }}" data-trainset_number="{{ trainset.trainset_number or '' }}" data-decoder_number="{{ trainset.decoder_number or '' }}" data-formation="{{ trainset.formation or '' }}" data-head_light="{{ 'true' if trainset.head_light else 'false' }}" data-light_model_id="{{ trainset.light_model_id or '' }}" data-light_model_name="{{ trainset.light_model.name if trainset.light_model else '' }}" data-chip_interface="{{ trainset.chip_interface.name if trainset.chip_interface else '' }}" data-chip_interface_id="{{ trainset.chip_interface_id or '' }}" data-chip_model="{{ trainset.chip_model.name if trainset.chip_model else '' }}" data-chip_model_id="{{ trainset.chip_model_id or '' }}" data-color="{{ trainset.color or '' }}" data-price="{{ trainset.price or '' }}" data-merchant="{{ trainset.merchant.name if trainset.merchant else '' }}" data-merchant_id="{{ trainset.merchant_id or '' }}" data-item_number="{{ trainset.item_number or '' }}" data-product_url="{{ trainset.product_url or '' }}" data-purchase_date="{{ trainset.purchase_date or '' }}">
+        <td class="image-cell" data-file-type="image">
+          <div class="thumbnail-placeholder" onclick="FileManager.showModelDetail('trainset', {{ trainset.id }})" title="点击查看详情">
+            <span>+</span>
+          </div>
+        </td>
+        <td>{{ trainset.model.name }}</td>
+        <td>{{ relation_name(trainset.series) }}</td>
+        <td>{{ trainset.brand.name }}</td>
+        <td>{{ relation_name(trainset.depot) }}</td>
+        <td>{{ trainset.scale }}</td>
+        <td>{{ trainset.trainset_number }}</td>
+        <td>{{ trainset.decoder_number }}</td>
+        <td>{{ trainset.formation }}</td>
+        <td>{{ '有' if trainset.head_light else '无' }}</td>
+        <td>{{ trainset.light_model.name if trainset.light_model else '-' }}</td>
+        <td>{{ relation_name(trainset.chip_interface) }}</td>
+        <td>{{ relation_name(trainset.chip_model) }}</td>
+        <td class="item-number-cell">
+          {% if trainset.product_url %}
+          <a href="{{ trainset.product_url }}" target="_blank" title="点击打开产品页面">{{ trainset.item_number }}</a>
+          {% else %}
+          {{ trainset.item_number }}
+          {% endif %}
+        </td>
+        <td>{{ trainset.total_price }}</td>
+        <td class="file-status-cell" data-file-type="function_table">
+          <span class="file-status file-status-none" onclick="FileManager.showModelDetail('trainset', {{ trainset.id }})" title="点击上传功能表">-</span>
+        </td>
+        <td class="file-status-cell" data-file-type="manual">
+          <span class="file-status file-status-none" onclick="FileManager.showModelDetail('trainset', {{ trainset.id }})" title="点击查看/上传说明书">0</span>
+        </td>
+        <td class="action-cell">
+          {% set search_url = trainset.brand.search_url %}
+          {% set item_number = trainset.item_number %}
+          {% if search_url and item_number %}
+          <button type="button" class="btn-search" onclick='searchProduct(this, {{ search_url | tojson }}, {{ item_number | tojson }})' title="在官网搜索此货号">检索</button>
+          {% else %}
+          <button type="button" class="btn-search" disabled title="缺少品牌搜索URL或货号">检索</button>
+          {% endif %}
+          <button type="button" class="btn-copy" onclick="copyTrainset(this)" title="复制此行数据到表单">复制</button>
+          <button type="button" class="btn-edit" onclick="editTrainset(this)" title="编辑此动车组">编辑</button>
+          <form action="{{ url_for('trainset.delete_trainset', id=trainset.id) }}" method="POST" onsubmit="return confirm('确定删除？')">
+            <button type="submit" class="btn-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- 添加/编辑动车组模态框 -->
+<div id="trainset-modal" class="modal-overlay" style="display: none;">
+  <div class="modal-dialog modal-form">
+    <div class="modal-header">
+      <h3 id="trainset-modal-title">添加动车组模型</h3>
+      <button type="button" class="modal-close">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="trainset-form">
+        <input type="hidden" id="trainset-edit-id" name="edit_id" value="">
+        <div class="form-grid-3">
+          {{ autocomplete_field('model_id', '型号', trainset_models, required=true, onchange='autoFillTrainset()') }}
+          {{ autocomplete_field('series_id', '系列', trainset_series, onchange='handleTrainsetSeriesChange()') }}
+          {{ autocomplete_field('power_type_id', '动力', power_types) }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ text_field('trainset_number', '动车号', required=true) }}
+          {{ autocomplete_field('depot_id', '动车段', depots) }}
+          {{ scale_select() }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ text_field('decoder_number', '编号') }}
+          {{ text_field('plaque', '挂牌') }}
+          {{ text_field('color', '涂装') }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ boolean_select('head_light', '头车灯', default=true) }}
+          <div class="form-group"><label for="light_model_id_text">室内灯</label><div class="autocomplete-wrapper"><input type="text" id="light_model_id_text" placeholder="请先选择型号和品牌" autocomplete="off" readonly><input type="hidden" id="light_model_id" name="light_model_id"></div></div>
+          {{ number_field('formation', '编组', value=1) }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ autocomplete_field('chip_interface_id', '芯片接口', chip_interfaces, onchange='filterChipModelsByInterface()') }}
+          {{ autocomplete_field('chip_model_id', '芯片型号', chip_models) }}
+          {{ price_field() }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ autocomplete_field('brand_id', '品牌', brands, required=true) }}
+          {{ autocomplete_field('merchant_id', '购买商家', merchants) }}
+          {{ date_field('purchase_date', '购买日期') }}
+        </div>
+
+        <div class="form-grid-3">
+          {{ text_field('item_number', '货号') }}
+          {{ text_field('product_url', '产品地址', field_class='col-2') }}
+        </div>
+
+        <h4 class="form-section-title">文件上传（可选）</h4>
+        <div class="form-grid-3 file-upload-row">
+          <div class="form-group">
+            <label>模型图片</label>
+            <input type="file" id="trainset-image-file" accept="image/*" style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('trainset-image-file').click()">
+              <span id="trainset-image-name">选择文件</span>
+            </button>
+          </div>
+          <div class="form-group">
+            <label>数码功能表</label>
+            <input type="file" id="trainset-function-file" accept=".pdf,.doc,.docx,.xls,.xlsx,image/*" style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('trainset-function-file').click()">
+              <span id="trainset-function-name">选择文件</span>
+            </button>
+          </div>
+          <div class="form-group">
+            <label>说明书（可多选）</label>
+            <input type="file" id="trainset-manual-file" accept=".pdf,.doc,.docx,.zip" multiple style="display: none;">
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('trainset-manual-file').click()">
+              <span id="trainset-manual-name">选择文件</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-form-actions">
+      <button type="button" class="btn btn-secondary" onclick="ModalManager.close('trainset-modal')">取消</button>
+      <button type="button" class="btn btn-primary" onclick="submitTrainsetForm()">保存</button>
+    </div>
+  </div>
+</div>
+
+{{ model_detail_modal(show_function_table=true) }}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.trainsetSeriesData = [
+    {% for series in trainset_series %}
+    { id: '{{ series.id }}', name: '{{ series.name | replace("'", "\\'") }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  window.trainsetModelData = [
+    {% for model in trainset_models %}
+    { id: '{{ model.id }}', name: '{{ model.name | replace("'", "\\'") }}', series_id: '{{ model.series_id or '' }}', power_type_id: '{{ model.power_type_id or '' }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+  window.trainsetPowerTypes = [
+    {% for pt in power_types %}
+    { id: '{{ pt.id }}', name: '{{ pt.name }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  initTableSortFilter('trainset-table');
+
+  // 添加按钮 - 打开添加模态框
+  document.getElementById('btn-add-trainset').addEventListener('click', function() {
+    openTrainsetModal();
+  });
+
+  // 模态框关闭按钮
+  document.querySelector('#trainset-modal .modal-close').addEventListener('click', function() {
+    ModalManager.close('trainset-modal');
+  });
+
+  // 点击遮罩关闭
+  document.getElementById('trainset-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      ModalManager.close('trainset-modal');
+    }
+  });
+
+  // 打开动车组模态框（添加或编辑模式）
+  function openTrainsetModal(editId) {
+    var modal = document.getElementById('trainset-modal');
+    var title = document.getElementById('trainset-modal-title');
+    var editIdInput = document.getElementById('trainset-edit-id');
+    var form = document.getElementById('trainset-form');
+
+    // 重置表单
+    form.reset();
+    FormHelper.clearErrors(form);
+    FormHelper.clearErrorSummary(form);
+
+    // 清空自动完成字段
+    var autocompleteInputs = form.querySelectorAll('input[type="text"][id$="_text"]');
+    autocompleteInputs.forEach(function(input) {
+      input.value = '';
+      var hidden = document.getElementById(input.id.replace('_text', ''));
+      if (hidden) hidden.value = '';
+    });
+
+    // 清空文件选择
+    document.getElementById('trainset-image-file').value = '';
+    document.getElementById('trainset-function-file').value = '';
+    document.getElementById('trainset-manual-file').value = '';
+    document.getElementById('trainset-image-name').textContent = '选择文件';
+    document.getElementById('trainset-function-name').textContent = '选择文件';
+    document.getElementById('trainset-manual-name').textContent = '选择文件';
+
+    if (editId) {
+      // 编辑模式
+      title.textContent = '编辑动车组模型';
+      editIdInput.value = editId;
+    } else {
+      // 添加模式
+      title.textContent = '添加动车组模型';
+      editIdInput.value = '';
+    }
+
+    ModalManager.open('trainset-modal');
+  }
+
+  // 编辑动车组
+  function editTrainset(button) {
+    var row = button.closest('tr');
+    var editId = row.dataset.model_id;
+
+    // 打开模态框
+    openTrainsetModal(editId);
+
+    // 填充表单数据
+    var fieldMappings = {
+      'model_id': row.dataset.model_id_field,
+      'series_id': row.dataset.series_id,
+      'power_type_id': row.dataset.power_type_id,
+      'depot_id': row.dataset.depot_id,
+      'scale': row.dataset.scale,
+      'trainset_number': row.dataset.trainset_number,
+      'decoder_number': row.dataset.decoder_number,
+      'formation': row.dataset.formation,
+      'head_light': row.dataset.head_light,
+      'light_model_id': row.dataset.light_model_id,
+      'chip_interface_id': row.dataset.chip_interface_id,
+      'chip_model_id': row.dataset.chip_model_id,
+      'color': row.dataset.color,
+      'price': row.dataset.price,
+      'merchant_id': row.dataset.merchant_id,
+      'brand_id': row.dataset.brand_id,
+      'item_number': row.dataset.item_number,
+      'product_url': row.dataset.product_url,
+      'purchase_date': row.dataset.purchase_date
+    };
+
+    Object.entries(fieldMappings).forEach(function(entry) {
+      var fieldId = entry[0];
+      var value = entry[1];
+      var element = document.getElementById(fieldId);
+
+      if (!element) return;
+
+      var wrapper = element.closest('.autocomplete-wrapper');
+      if (wrapper) {
+        // 自动完成字段
+        var inputId = wrapper.querySelector('input[type="text"]')?.id;
+        if (inputId) {
+          var nameAttr = fieldId.replace('_id', '');
+          var nameValue = row.dataset[nameAttr] || value;
+          AutocompleteManager.setValue(inputId, value || '', nameValue || '');
+        }
+      } else if (element.type === 'checkbox') {
+        // 复选框字段
+        element.checked = value === 'true';
+      } else {
+        // 普通表单字段
+        element.value = value || '';
+      }
+    });
+  }
+
+  // 提交动车组表单
+  function submitTrainsetForm() {
+    var form = document.getElementById('trainset-form');
+    var editId = document.getElementById('trainset-edit-id').value;
+    var apiUrl = editId ? '/api/trainset/edit/' + editId : '/api/trainset/add';
+
+    // 收集表单数据
+    var formData = new FormData(form);
+    var formDataObj = {};
+    formData.forEach(function(value, key) {
+      formDataObj[key] = value;
+    });
+
+    FormHelper.clearErrors(form);
+    FormHelper.clearErrorSummary(form);
+
+    // 先提交表单数据
+    Api.post(apiUrl, formDataObj).then(function(data) {
+      if (data.success) {
+        // 表单提交成功后，上传文件
+        var modelId = editId || data.id;
+        uploadTrainsetFiles(modelId, function() {
+          FormHelper.showSuccess(form, data.message || '保存成功');
+          setTimeout(function() {
+            ModalManager.close('trainset-modal');
+            location.reload();
+          }, 1000);
+        });
+      } else {
+        if (data.errors && data.errors.length > 0) {
+          FormHelper.showErrors(form, data.errors);
+        } else if (data.error) {
+          FormHelper.showErrorSummary(form, data.error);
+        }
+      }
+    }).catch(function(error) {
+      console.error('Submit error:', error);
+      if (error.errors && error.errors.length > 0) {
+        FormHelper.showErrors(form, error.errors);
+      } else {
+        var errorMsg = error.error || error.message || '提交失败，请重试';
+        FormHelper.showErrorSummary(form, errorMsg);
+      }
+    });
+  }
+
+  // 上传动车组文件
+  function uploadTrainsetFiles(modelId, callback) {
+    var imageFile = document.getElementById('trainset-image-file').files[0];
+    var functionFile = document.getElementById('trainset-function-file').files[0];
+    var manualFiles = document.getElementById('trainset-manual-file').files;
+
+    var uploadPromises = [];
+
+    if (imageFile) {
+      uploadPromises.push(uploadModelFile('trainset', modelId, 'image', imageFile));
+    }
+    if (functionFile) {
+      uploadPromises.push(uploadModelFile('trainset', modelId, 'function_table', functionFile));
+    }
+    // 说明书支持多文件上传
+    for (var i = 0; i < manualFiles.length; i++) {
+      uploadPromises.push(uploadModelFile('trainset', modelId, 'manual', manualFiles[i]));
+    }
+
+    if (uploadPromises.length > 0) {
+      Promise.all(uploadPromises).then(function() {
+        if (callback) callback();
+      }).catch(function(error) {
+        alert('文件上传失败: ' + error.message);
+        if (callback) callback();
+      });
+    } else {
+      if (callback) callback();
+    }
+  }
+
+  // 文件选择显示文件名
+  document.getElementById('trainset-image-file').addEventListener('change', function(e) {
+    var nameSpan = document.getElementById('trainset-image-name');
+    nameSpan.textContent = e.target.files[0] ? e.target.files[0].name : '选择文件';
+  });
+  document.getElementById('trainset-function-file').addEventListener('change', function(e) {
+    var nameSpan = document.getElementById('trainset-function-name');
+    nameSpan.textContent = e.target.files[0] ? e.target.files[0].name : '选择文件';
+  });
+  document.getElementById('trainset-manual-file').addEventListener('change', function(e) {
+    var nameSpan = document.getElementById('trainset-manual-name');
+    var count = e.target.files.length;
+    if (count === 0) {
+      nameSpan.textContent = '选择文件';
+    } else if (count === 1) {
+      nameSpan.textContent = e.target.files[0].name;
+    } else {
+      nameSpan.textContent = '已选择 ' + count + ' 个文件';
+    }
+  });
+
+  function autoFillTrainset() {
+    var value = AutocompleteManager.getValue('model_id_text');
+    if (!value || !value.id) return;
+
+    var model = window.trainsetModelData.find(function(m) { return m.id === value.id; });
+    if (model) {
+      if (model.series_id) {
+        var series = window.trainsetSeriesData.find(function(s) { return s.id === model.series_id; });
+        if (series) {
+          AutocompleteManager.setValue('series_id_text', model.series_id, series.name);
+        }
+      }
+      if (model.power_type_id) {
+        var pt = window.trainsetPowerTypes.find(function(p) { return p.id === model.power_type_id; });
+        if (pt) {
+          AutocompleteManager.setValue('power_type_id_text', model.power_type_id, pt.name);
+        }
+      }
+    }
+  }
+
+  // 初始化灯型号下拉
+  LightDropdownManager.init({
+    textInputId: 'light_model_id_text',
+    hiddenInputId: 'light_model_id',
+    scaleSource: function() { return document.getElementById('scale')?.value || ''; },
+    modelType: 'trainset',
+    modelIdSource: function() { return document.getElementById('model_id')?.value || ''; },
+    brandIdSource: function() { return document.getElementById('brand_id')?.value || ''; }
+  });
+
+  // 芯片型号-接口关联数据（用于联动过滤）
+  window.chipModelInterfaceData = [
+    {% for cm in chip_models %}
+    { id: {{ cm.id }}, name: {{ cm.name | tojson }}, interface_ids: [{{ cm.interfaces | map(attribute='id') | join(',') }}] }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
+
+  // 根据选择的芯片接口过滤芯片型号下拉列表
+  function filterChipModelsByInterface() {
+    var iface = AutocompleteManager.getValue('chip_interface_id_text');
+    var ifaceId = iface ? parseInt(iface.id) : null;
+    var allModels = window.chipModelInterfaceData || [];
+    var filtered;
+    if (ifaceId) {
+      filtered = allModels.filter(function(m) {
+        return m.interface_ids && m.interface_ids.indexOf(ifaceId) !== -1;
+      });
+    } else {
+      filtered = allModels;
+    }
+    AutocompleteManager.setOptions('chip_model_id_text', filtered);
+    // 清空当前芯片型号选择
+    AutocompleteManager.setValue('chip_model_id_text', '', '');
+  }
+</script>
+{% endblock %}

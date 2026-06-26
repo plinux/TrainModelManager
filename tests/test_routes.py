@@ -50,3 +50,21 @@ class TestCarriageRoutes:
         response = client.get('/carriage')
         html = response.data.decode('utf-8')
         assert '复制' in html and 'copyCarriage' in html
+
+class TestTrainsetRoutes:
+    def test_trainset_page(self, client):
+        response = client.get('/trainset')
+        assert response.status_code == 200
+        assert '动车组模型' in response.data.decode('utf-8')
+
+    def test_trainset_copy_button(self, client, sample_data):
+        from models import db, Trainset
+        with client.application.app_context():
+            ts = Trainset(series_id=1, power_type_id=1, model_id=1, brand_id=1, scale='HO', trainset_number='COPY001')
+            db.session.add(ts); db.session.commit()
+        response = client.get('/trainset')
+        assert 'copyTrainset' in response.data.decode('utf-8')
+
+    def test_trainset_add_page(self, client):
+        response = client.get('/trainset')
+        assert b'model_id' in response.data and b'formation' in response.data
