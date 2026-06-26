@@ -1,0 +1,10 @@
+{#
+表格宏集合
+包含常用的表格组件
+#}
+
+
+{# 显示关联对象名称（带默认值） #}
+{% macro relation_name(obj, default='-') %}
+{{ obj.name if obj else default }}
+{% endmacro %}
