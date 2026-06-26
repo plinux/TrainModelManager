@@ -339,3 +339,84 @@ class TestTrainsetCRUD:
             assert deleted is None
 
 
+class TestLocomotiveHeadCRUD:
+    """先头车 CRUD 完整测试"""
+
+    def test_locomotive_head_create(self, client, sample_data):
+        """测试先头车创建"""
+        with client.application.app_context():
+            head = LocomotiveHead(
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                head_light=True,
+                special_color='红色'
+            )
+            db.session.add(head)
+            db.session.commit()
+
+            saved = LocomotiveHead.query.first()
+            assert saved is not None
+            assert saved.special_color == '红色'
+
+    def test_locomotive_head_update(self, client, sample_data):
+        """测试先头车更新"""
+        with client.application.app_context():
+            head = LocomotiveHead(
+                model_id=1,
+                brand_id=1,
+                scale='HO',
+                special_color='红色'
+            )
+            db.session.add(head)
+            db.session.commit()
+            head_id = head.id
+
+            saved = db.session.get(LocomotiveHead,head_id)
+            saved.special_color = '蓝色'
+            db.session.commit()
+
+            updated = db.session.get(LocomotiveHead,head_id)
+            assert updated.special_color == '蓝色'
+
+    def test_locomotive_head_delete(self, client, sample_data):
+        """测试先头车删除"""
+        with client.application.app_context():
+            head = LocomotiveHead(
+                model_id=1,
+                brand_id=1,
+                scale='HO'
+            )
+            db.session.add(head)
+            db.session.commit()
+            head_id = head.id
+
+            saved = db.session.get(LocomotiveHead,head_id)
+            db.session.delete(saved)
+            db.session.commit()
+
+            deleted = db.session.get(LocomotiveHead,head_id)
+            assert deleted is None
+
+    def test_locomotive_head_delete_via_api(self, client, sample_data):
+        """测试通过 API 删除先头车"""
+        with client.application.app_context():
+            head = LocomotiveHead(
+                model_id=1,
+                brand_id=1,
+                scale='HO'
+            )
+            db.session.add(head)
+            db.session.commit()
+            head_id = head.id
+
+        response = client.post(f'/locomotive-head/delete/{head_id}', follow_redirects=True)
+        # 删除成功后重定向到列表页
+        assert response.status_code == 200
+
+        # 验证已删除
+        with client.application.app_context():
+            deleted = db.session.get(LocomotiveHead, head_id)
+            assert deleted is None
+
+

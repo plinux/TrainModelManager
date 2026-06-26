@@ -68,3 +68,21 @@ class TestTrainsetRoutes:
     def test_trainset_add_page(self, client):
         response = client.get('/trainset')
         assert b'model_id' in response.data and b'formation' in response.data
+
+class TestLocomotiveHeadRoutes:
+    def test_locomotive_head_page(self, client):
+        response = client.get('/locomotive-head')
+        assert response.status_code == 200
+        assert '先头车模型' in response.data.decode('utf-8')
+
+    def test_locomotive_head_copy_button(self, client, sample_data):
+        from models import db, LocomotiveHead
+        with client.application.app_context():
+            head = LocomotiveHead(model_id=1, brand_id=1, scale='HO')
+            db.session.add(head); db.session.commit()
+        response = client.get('/locomotive-head')
+        assert 'copyLocomotiveHead' in response.data.decode('utf-8')
+
+    def test_locomotive_head_list_no_depot_column(self, client):
+        response = client.get('/locomotive-head')
+        assert 'depot' not in response.data.decode('utf-8').lower()
