@@ -132,3 +132,152 @@ class TestStatisticsAPI:
         assert 'merchant_stats' in data
 
 
+class TestLightModelAPI:
+    """灯型号兼容查询 API 测试"""
+
+    def test_get_all_light_models(self, client, sample_data):
+        """测试获取所有灯型号"""
+        response = client.get('/api/light-models/all')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        assert 'groups' in data
+        # 应至少有一个灯品牌分组
+        assert len(data['groups']) >= 1
+        # 每个分组应包含 light_brand_name 和 models
+        for group in data['groups']:
+            assert 'light_brand_name' in group
+            assert 'models' in group
+            assert 'light_brand_id' in group
+
+    def test_compatible_light_models_carriage(self, client, sample_data):
+        """测试查询车厢兼容灯型号"""
+        with client.application.app_context():
+            from models import CarriageModel, Brand
+            cm = CarriageModel.query.first()
+            br = Brand.query.first()
+            cm_id = cm.id if cm else 1
+            br_id = br.id if br else 1
+
+        response = client.get(f'/api/light-models/compatible?model_type=carriage&model_id={cm_id}&brand_id={br_id}')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        assert 'groups' in data
+
+    def test_compatible_light_models_trainset(self, client, sample_data):
+        """测试查询动车组兼容灯型号"""
+        with client.application.app_context():
+            from models import TrainsetModel, Brand
+            tm = TrainsetModel.query.first()
+            br = Brand.query.first()
+            tm_id = tm.id if tm else 1
+            br_id = br.id if br else 1
+
+        response = client.get(f'/api/light-models/compatible?model_type=trainset&model_id={tm_id}&brand_id={br_id}')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        assert 'groups' in data
+
+    def test_compatible_invalid_model_type(self, client, sample_data):
+        """测试无效 model_type 返回 400"""
+        response = client.get('/api/light-models/compatible?model_type=invalid&model_id=1&brand_id=1')
+        assert response.status_code == 400
+        data = response.get_json()
+        assert data['success'] is False
+
+    def test_compatible_missing_params(self, client, sample_data):
+        """测试缺少必填参数返回 400"""
+        response = client.get('/api/light-models/compatible?model_type=carriage')
+        assert response.status_code == 400
+
+    def test_compatible_with_scale_filter(self, client, sample_data):
+        """测试 scale 过滤功能"""
+        with client.application.app_context():
+            from models import CarriageModel, Brand
+            cm = CarriageModel.query.first()
+            br = Brand.query.first()
+            cm_id = cm.id if cm else 1
+            br_id = br.id if br else 1
+
+        # 查询 HO 比例
+        response = client.get(
+            f'/api/light-models/compatible?model_type=carriage&model_id={cm_id}&brand_id={br_id}&scale=HO')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        # 所有返回的灯型号 scale 应为 HO
+        for group in data['groups']:
+            for model in group['models']:
+                assert model['scale'] == 'HO'
+
+    def test_compatible_wrong_scale_excluded(self, client, sample_data):
+        """测试 N 比例灯不出现在 HO 查询中"""
+        with client.application.app_context():
+            from models import CarriageModel, Brand
+            cm = CarriageModel.query.first()
+            br = Brand.query.first()
+            cm_id = cm.id if cm else 1
+            br_id = br.id if br else 1
+
+        response = client.get(
+            f'/api/light-models/compatible?model_type=carriage&model_id={cm_id}&brand_id={br_id}&scale=HO')
+        data = response.get_json()
+        for group in data['groups']:
+            for model in group['models']:
+                assert model['scale'] != 'N'
+
+    def test_all_light_models_include_scale(self, client, sample_data):
+        """测试所有灯型号响应包含 scale 字段"""
+        response = client.get('/api/light-models/all')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        for group in data['groups']:
+            for model in group['models']:
+                assert 'scale' in model
+
+    def test_compatible_brand_only_mode(self, client, sample_data):
+        """测试 brand_only 模式：只按品牌查询，不需要 model_id"""
+        with client.application.app_context():
+            from models import Brand
+            brand = Brand.query.first()
+            br_id = brand.id if brand else 1
+
+        # brand_only 模式只需要 brand_id
+        response = client.get(f'/api/light-models/compatible?model_type=brand_only&brand_id={br_id}')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['success'] is True
+        assert 'groups' in data
+
+    def test_compatible_brand_only_no_model_id(self, client, sample_data):
+        """测试 brand_only 模式不传 model_id 不报错"""
+        with client.application.app_context():
+            from models import Brand
+            brand = Brand.query.first()
+            br_id = brand.id if brand else 1
+
+        response = client.get(f'/api/light-models/compatible?model_type=brand_only&brand_id={br_id}')
+        assert response.status_code == 200
+
+    def test_compatible_brand_only_missing_brand(self, client, sample_data):
+        """测试 brand_only 模式缺少 brand_id 返回 400"""
+        response = client.get('/api/light-models/compatible?model_type=brand_only')
+        assert response.status_code == 400
+
+    def test_compatible_brand_only_ignores_model_id(self, client, sample_data):
+        """测试 brand_only 模式下传入 model_id 不影响结果（只看品牌级规则）"""
+        with client.application.app_context():
+            from models import Brand
+            brand = Brand.query.first()
+            br_id = brand.id if brand else 1
+
+        # 带 model_id 和不带 model_id 结果应相同
+        r1 = client.get(f'/api/light-models/compatible?model_type=brand_only&brand_id={br_id}')
+        r2 = client.get(f'/api/light-models/compatible?model_type=brand_only&brand_id={br_id}&model_id=999')
+        d1 = r1.get_json()
+        d2 = r2.get_json()
+        assert d1['success'] and d2['success']
+        assert len(d1['groups']) == len(d2['groups'])

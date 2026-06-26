@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}编辑灯型号 - 火车模型管理系统{% endblock %}
+
+{% block content %}
+<h1>编辑灯型号</h1>
+
+<form method="POST" action="{{ action_url }}">
+  <div class="form-row">
+    <div class="form-group">
+      <label for="name">型号名称 *</label>
+      <input type="text" id="name" name="name" required value="{{ item.name }}">
+    </div>
+    <div class="form-group">
+      <label for="color_temperature">色温 *</label>
+      <select id="color_temperature" name="color_temperature" required>
+        <option value="3000K" {{ 'selected' if item.color_temperature == '3000K' else '' }}>3000K</option>
+        <option value="4000K" {{ 'selected' if item.color_temperature == '4000K' else '' }}>4000K</option>
+        <option value="5000K" {{ 'selected' if item.color_temperature == '5000K' else '' }}>5000K</option>
+        <option value="6000K" {{ 'selected' if item.color_temperature == '6000K' else '' }}>6000K</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="light_brand_id">灯品牌 *</label>
+      <select id="light_brand_id" name="light_brand_id" required>
+        {% for lb in light_brands %}
+        <option value="{{ lb.id }}" {{ 'selected' if lb.id == item.light_brand_id else '' }}>{{ lb.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="scale">比例 *</label>
+      <select id="scale" name="scale" required>
+        <option value="HO" {{ 'selected' if item.scale == 'HO' or not item.scale else '' }}>HO</option>
+        <option value="N" {{ 'selected' if item.scale == 'N' else '' }}>N</option>
+      </select>
+    </div>
+  </div>
+
+  <fieldset class="applicability-section">
+    <legend>适用车型</legend>
+
+    {% if brands %}
+    <p class="applicability-hint">分别勾选适用的品牌和车型，保存时将自动生成所有组合。</p>
+
+    <div class="applicability-columns">
+      <!-- 品牌 -->
+      <div class="applicability-column">
+        <h3 class="column-title">品牌</h3>
+        <div class="column-toolbar">
+          <input type="text" class="column-search" id="brand-search" placeholder="搜索品牌..." oninput="filterCheckList('brand')">
+          <label class="select-all-label"><input type="checkbox" id="brand-select-all" onchange="toggleSelectAll('brand')"> 全选</label>
+          <span class="column-count" id="brand-count"></span>
+        </div>
+        <div class="check-list-wrapper">
+          <ul class="check-list" id="brand-list">
+            {% for brand in brands %}
+            <li class="check-item" data-search="{{ brand.name.lower() }}">
+              <label>
+                <input type="checkbox" name="applicable_brands" value="{{ brand.id }}"
+                       {{ 'checked' if brand.id in selected_brand_ids else '' }}
+                       onchange="updateCount('brand')">
+                {{ brand.name }}
+                {% if brand.id in brand_level_brand_ids %}
+                <span class="brand-level-tag">品牌级</span>
+                {% endif %}
+              </label>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <!-- 车厢车型 -->
+      <div class="applicability-column">
+        <h3 class="column-title">车厢车型</h3>
+
+        <div class="column-toolbar">
+          <input type="text" class="column-search" id="carriage-search" placeholder="搜索车厢车型..." oninput="filterCheckList('carriage')">
+          <label class="select-all-label"><input type="checkbox" id="carriage-select-all" onchange="toggleSelectAll('carriage')"> 全选</label>
+          <span class="column-count" id="carriage-count"></span>
+        </div>
+        <div class="check-list-wrapper">
+          <ul class="check-list" id="carriage-list">
+            {% for cm in carriage_models %}
+            <li class="check-item" data-search="{{ cm.name.lower() }}">
+              <label>
+                <input type="checkbox" name="carriage_models" value="{{ cm.id }}"
+                       {{ 'checked' if cm.id in selected_carriage_model_ids else '' }}
+                       onchange="updateCount('carriage')">
+                {{ cm.name }}
+              </label>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <!-- 动车组车型 -->
+      <div class="applicability-column">
+        <h3 class="column-title">动车组车型</h3>
+        <div class="column-toolbar">
+          <input type="text" class="column-search" id="trainset-search" placeholder="搜索动车组车型..." oninput="filterCheckList('trainset')">
+          <label class="select-all-label"><input type="checkbox" id="trainset-select-all" onchange="toggleSelectAll('trainset')"> 全选</label>
+          <span class="column-count" id="trainset-count"></span>
+        </div>
+        <div class="check-list-wrapper">
+          <ul class="check-list" id="trainset-list">
+            {% for tm in trainset_models %}
+            <li class="check-item" data-search="{{ tm.name.lower() }}">
+              <label>
+                <input type="checkbox" name="trainset_models" value="{{ tm.id }}"
+                       {{ 'checked' if tm.id in selected_trainset_model_ids else '' }}
+                       onchange="updateCount('trainset')">
+                {{ tm.name }}
+              </label>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="hint">请先在"购买信息"中添加品牌。</p>
+    {% endif %}
+  </fieldset>
+
+  <div class="form-actions">
+    <button type="submit" onclick="return confirmSave()">保存</button>
+    <a href="{{ url_for('options.options') }}" class="btn-cancel">取消</a>
+  </div>
+</form>
+
+<script>
+/**
+ * 保存前确认：如果品牌或车型列表为空，提示用户避免误操作清空关联
+ */
+function confirmSave() {
+  const brands = document.querySelectorAll('input[name="applicable_brands"]:checked');
+  const carriages = document.querySelectorAll('input[name="carriage_models"]:checked');
+  const trainsets = document.querySelectorAll('input[name="trainset_models"]:checked');
+  if (brands.length === 0) {
+    return confirm('品牌未勾选，保存将清除所有适用车型关联。确定继续？');
+  }
+  if (carriages.length === 0 && trainsets.length === 0) {
+    return confirm('车型未勾选，将仅保存品牌关联（适用该品牌所有车型）。确定继续？');
+  }
+  return true;
+}
+
+/**
+ * 过滤 checkbox 列表
+ * @param {string} groupId - 列表标识（brand / carriage / trainset）
+ */
+function filterCheckList(groupId) {
+  const searchInput = document.getElementById(groupId + '-search');
+  const list = document.getElementById(groupId + '-list');
+  const keyword = searchInput.value.toLowerCase();
+  const items = list.querySelectorAll('.check-item');
+  let visible = 0;
+
+  items.forEach(item => {
+    const text = item.dataset.search;
+    const show = !keyword || text.includes(keyword);
+    item.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  updateCount(groupId);
+}
+
+/**
+ * 全选/全不选（仅操作当前可见项）
+ * @param {string} groupId - 列表标识
+ */
+function toggleSelectAll(groupId) {
+  const selectAll = document.getElementById(groupId + '-select-all');
+  const list = document.getElementById(groupId + '-list');
+  const checked = selectAll.checked;
+
+  list.querySelectorAll('.check-item').forEach(item => {
+    if (item.style.display !== 'none') {
+      item.querySelector('input[type="checkbox"]').checked = checked;
+    }
+  });
+
+  updateCount(groupId);
+}
+
+/**
+ * 更新计数显示
+ * @param {string} groupId - 列表标识
+ */
+function updateCount(groupId) {
+  const list = document.getElementById(groupId + '-list');
+  const countEl = document.getElementById(groupId + '-count');
+  const items = list.querySelectorAll('.check-item');
+  let visible = 0, checked = 0;
+
+  items.forEach(item => {
+    if (item.style.display !== 'none') {
+      visible++;
+      if (item.querySelector('input[type="checkbox"]').checked) checked++;
+    }
+  });
+
+  countEl.textContent = checked + '/' + visible;
+
+  // 更新全选框状态
+  const selectAll = document.getElementById(groupId + '-select-all');
+  if (visible > 0 && checked === visible) {
+    selectAll.checked = true;
+    selectAll.indeterminate = false;
+  } else if (checked > 0) {
+    selectAll.checked = false;
+    selectAll.indeterminate = true;
+  } else {
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+  }
+}
+
+// 初始化计数
+['brand', 'carriage', 'trainset'].forEach(updateCount);
+</script>
+
+{% endblock %}
